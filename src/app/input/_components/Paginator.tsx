@@ -21,9 +21,11 @@ const Paginator = ({ totalPages = 10 }: _Props) => {
       <div className="flex flex-col items-center">
         <h1 className="text-4xl font-bold">Paginator</h1>
         <hr className="my-4" />
-        <div className="pagination-buttonss">
+        <div className="flex justify-between gap-2">
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-            <button key={page} onClick={() => handlePageChange(page)}>
+            <button 
+            // className="px-4 py-2"
+             key={page} onClick={() => handlePageChange(page)}>
               {page}
             </button>
           ))}
