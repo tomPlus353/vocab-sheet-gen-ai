@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import React from "react";
 
@@ -28,10 +28,18 @@ const Paginator = ({ allText = [] }: Props) => {
     const endIndex = startIndex + NUM_PER_PAGE;
     setActiveText(allText.slice(startIndex, endIndex));
   };
-  //set
-  if (!cannotPaginate && activeText.length === 0) {
+
+  //set update active text when allText is changed
+  useEffect(() => {
+    setCurrentPage(1);
+    router.push(`?page=${1}`, undefined);
     handleSetActiveText(currentPage, allText);
-  }
+  }, [allText]);
+
+  //set first page by default
+  // if (!cannotPaginate && activeText.length === 0) {
+  //   handleSetActiveText(currentPage, allText);
+  // }
 
   return !cannotPaginate ? (
     <div className="pagination">

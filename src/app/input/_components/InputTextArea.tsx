@@ -10,12 +10,13 @@ interface Props {
 
 const InputTextArea = ({ handleTextEntry, userText, textArray }: Props) => {
   return (
-    <div className="flex flex-col items-center bg-blue-400/20 text-indigo-300">
+    <div className="flex flex-col items-center bg-blue-400/20 text-gray-100">
       <h1 className="text-4xl font-bold">Input Text</h1>
       <hr className="my-2 w-[100%] border-2 border-blue-100/20" />
       <textarea
         onChange={handleTextEntry}
-        className="min-h-32 w-[80%] rounded-md bg-gray-800 text-gray-100"
+        //set cursor to white
+        className="h-auto min-h-32 w-[80%] rounded-md bg-gray-800 text-gray-100 caret-white outline-none focus-within:outline-indigo-600"
       />
       <p>{"Value of data: " + typeof userText}</p>
       <p>{"Length of data: " + userText?.length}</p>
