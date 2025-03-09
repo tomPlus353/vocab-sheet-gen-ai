@@ -25,7 +25,7 @@ function InputAndPaginate() {
     allText: textArray,
   };
   return (
-    <div className="h-screen bg-gray-800 text-gray-100">
+    <div className="min-width-screen h-screen bg-gray-800 text-gray-100">
       {/* ... other content ... */}
       <InputTextArea {...textAreaProps} />
       {/* ... more content ... */}

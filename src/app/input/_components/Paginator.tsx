@@ -29,22 +29,20 @@ const Paginator = ({ allText = [] }: Props) => {
     setActiveText(allText.slice(startIndex, endIndex));
   };
 
-  return allText.length > 0 ? (
+  return !cannotPaginate ? (
     <div className="pagination">
       <div className="flex flex-col items-center">
         <h1 className="text-4xl font-bold">Paginator</h1>
         <hr className="my-2 w-[100%] border-2 border-blue-100/20" />
         <div className="flex flex-col items-center">
           {activeText &&
-            Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <p
-                className="px-4 py-2"
-                key={page}
-                onClick={() => handlePageChange(page)}
-              >
-                {page}
-              </p>
-            ))}
+            Array.from({ length: activeText.length }, (_, i) => i + 1).map(
+              (key) => (
+                <p key={key} className="">
+                  {activeText[key - 1]}
+                </p>
+              ),
+            )}
         </div>
         <div className="flex justify-between gap-3">
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
