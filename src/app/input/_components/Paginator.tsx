@@ -28,6 +28,10 @@ const Paginator = ({ allText = [] }: Props) => {
     const endIndex = startIndex + NUM_PER_PAGE;
     setActiveText(allText.slice(startIndex, endIndex));
   };
+  //set
+  if (!cannotPaginate && activeText.length === 0) {
+    handleSetActiveText(currentPage, allText);
+  }
 
   return !cannotPaginate ? (
     <div className="pagination">
@@ -38,7 +42,7 @@ const Paginator = ({ allText = [] }: Props) => {
           {activeText &&
             Array.from({ length: activeText.length }, (_, i) => i + 1).map(
               (key) => (
-                <p key={key} className="">
+                <p key={key} className="w-[80%]">
                   {activeText[key - 1]}
                 </p>
               ),
