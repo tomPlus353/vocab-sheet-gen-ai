@@ -44,22 +44,34 @@ const Paginator = ({ allText = [] }: Props) => {
   return !cannotPaginate ? (
     <div className="pagination">
       <div className="flex flex-col items-center">
-        <h1 className="text-4xl font-bold">Paginator</h1>
+        <h1 className="text-4xl font-bold text-gray-300">Paginator</h1>
         <hr className="my-2 w-[100%] border-2 border-blue-100/20" />
-        <div className="flex flex-col items-center">
-          {activeText &&
+        <div className="mx-2 my-4 flex flex-col rounded-xl border border-blue-400/30 bg-blue-400/10 px-2 py-4 shadow-md">
+          <h2 className="px-2 text-lg font-semibold text-blue-300">
+            {" "}
+            {`Page ${currentPage} of ${totalPages}`}
+          </h2>
+          {activeText.length > 0 &&
             Array.from({ length: activeText.length }, (_, i) => i + 1).map(
               (key) => (
-                <p key={key} className="w-[80%]">
+                <p
+                  key={key}
+                  className="text-l px-2 py-1 text-gray-300 sm:text-base"
+                >
                   {activeText[key - 1]}
                 </p>
               ),
             )}
+          {activeText.length > 0 && (
+            <button className="ml-auto w-[20%] rounded-xl bg-blue-500/20 px-4 py-2 text-sm hover:bg-blue-500">
+              Show Breakdown
+            </button>
+          )}
         </div>
-        <div className="flex justify-between gap-3">
+        <div className="flex justify-between gap-3 px-4 py-2">
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
             <button
-              className="px-4 py-2"
+              className="rounded-xl bg-blue-500/20 px-4 py-2 hover:bg-blue-500"
               key={page}
               onClick={() => handlePageChange(page)}
             >
