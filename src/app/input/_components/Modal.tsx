@@ -14,11 +14,14 @@ import {
 
 interface Props {
   allText: string[];
-  isShowModal: boolean;
-  setIsShowModal: Function;
+  //   isShowModal: boolean;
+  //   setIsShowModal: Function;
 }
 
-const Modal = ({ allText, isShowModal, setIsShowModal }: Props) => {
+const Modal = ({
+  allText,
+  // isShowModal, setIsShowModal
+}: Props) => {
   //modal
   return (
     <Dialog>
