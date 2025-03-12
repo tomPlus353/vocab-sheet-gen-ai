@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import React from "react";
+import Modal from "./Modal";
 
 interface Props {
   allText?: string[];
@@ -62,11 +63,7 @@ const Paginator = ({ allText = [] }: Props) => {
                 </p>
               ),
             )}
-          {activeText.length > 0 && (
-            <button className="ml-auto w-[20%] rounded-xl bg-blue-500/20 px-4 py-2 text-sm hover:bg-blue-500">
-              Show Breakdown
-            </button>
-          )}
+          {activeText.length > 0 && <Modal activeText={activeText} />}
         </div>
         <div className="flex justify-between gap-3 px-4 py-2">
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (

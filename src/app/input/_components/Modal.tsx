@@ -5,6 +5,7 @@ import React from "react";
 import {
   Dialog,
   DialogContent,
+  DialogOverlay,
   DialogDescription,
   DialogFooter,
   DialogHeader,
@@ -13,27 +14,26 @@ import {
 } from "@/components/ui/dialog";
 
 interface Props {
-  allText: string[];
-  //   isShowModal: boolean;
-  //   setIsShowModal: Function;
+  activeText: string[];
 }
 
-const Modal = ({
-  allText,
-  // isShowModal, setIsShowModal
-}: Props) => {
+const Modal = ({ activeText }: Props) => {
   //modal
   return (
     <Dialog>
-      <DialogTrigger>Open</DialogTrigger>
-      <DialogContent>
+      <DialogTrigger className="ml-auto w-[20%] rounded-xl bg-blue-500/20 px-4 py-2 text-sm hover:bg-blue-500">
+        {" "}
+        Show Breakdown
+      </DialogTrigger>
+      <DialogContent className="w-[80%] min-w-[80%]">
         <DialogHeader>
           <DialogTitle>Are you absolutely sure?</DialogTitle>
-          <DialogDescription>
-            This action cannot be undone. This will permanently delete your
-            account and remove your data from our servers.
-          </DialogDescription>
+          <DialogDescription></DialogDescription>
         </DialogHeader>
+        <div className="max-h-96 overflow-y-auto">
+          {/* render cheatsheet here? */}
+          {activeText.join("\n")}
+        </div>
       </DialogContent>
     </Dialog>
   );
