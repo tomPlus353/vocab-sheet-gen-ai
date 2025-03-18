@@ -1,6 +1,3 @@
-"use client";
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import React from "react";
 import {
   Dialog,
@@ -13,11 +10,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
+import CheatSheet from "./Cheatsheet";
+
 interface Props {
   activeText: string[];
 }
 
-const Modal = ({ activeText }: Props) => {
+const Modal = ({ activeText }: Props, children: React.ReactNode) => {
   //modal
   return (
     <Dialog>
@@ -27,12 +26,14 @@ const Modal = ({ activeText }: Props) => {
       </DialogTrigger>
       <DialogContent className="w-[80%] min-w-[80%]">
         <DialogHeader>
-          <DialogTitle>Are you absolutely sure?</DialogTitle>
-          <DialogDescription></DialogDescription>
+          <DialogTitle>Cheatsheet</DialogTitle>
+          <DialogDescription>
+            A quick overview of difficult vocab and grammar.
+          </DialogDescription>
         </DialogHeader>
         <div className="max-h-96 overflow-y-auto">
-          {/* render cheatsheet here? */}
-          {activeText.join("\n")}
+          {/* render cheatsheet here */}
+          <CheatSheet activeText={activeText.join("\n")} />
         </div>
       </DialogContent>
     </Dialog>

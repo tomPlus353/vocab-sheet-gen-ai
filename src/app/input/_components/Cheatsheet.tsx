@@ -17,11 +17,14 @@ function CheatSheet(props: CheatSheetProps) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ text: props.activeText }),
-      }).then((res) => res.text());
+      });
+      const jsonResponse = await response.json();
+      console.log(JSON.stringify(jsonResponse));
+      const reply: string = jsonResponse?.data || "Error: no reply from llm";
+      setSheetContent(reply);
     }
     fetchData();
   }, []);
-
   return <p>{sheetContent}</p>;
 }
 

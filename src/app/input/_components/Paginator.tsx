@@ -1,4 +1,3 @@
-"use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import React from "react";
@@ -63,7 +62,7 @@ const Paginator = ({ allText = [] }: Props) => {
                 </p>
               ),
             )}
-          {activeText.length > 0 && <Modal activeText={activeText} />}
+          {activeText.length > 0 && <Modal activeText={activeText}></Modal>}
         </div>
         <div className="flex justify-between gap-3 px-4 py-2">
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (

@@ -1,11 +1,14 @@
 import process from 'process';
 export const revalidate = 60
 import {GoogleGenerativeAI} from '@google/generative-ai'
-export async function GET(request: Request) {
+import SYSTEM_PROMPT from './system_prompt';
+export async function POST(request: Request) {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_KEY as string);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-    console.log(request.text())
-    const prompt = "Explain how AI works";
+    const model = genAI.getGenerativeModel({ systemInstruction: SYSTEM_PROMPT, model: "gemini-1.5-flash" });
+    const requestBody = await request.json();
+    console.log("resquest from the client: " , JSON.stringify(requestBody));
+
+    const prompt = "Create a cheat sheet for this japanese text: \n\n" + JSON.stringify(requestBody);
     
     const result = await model.generateContent(prompt);
     console.log(result.response.text());
