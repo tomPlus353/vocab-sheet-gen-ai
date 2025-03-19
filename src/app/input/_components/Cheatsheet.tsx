@@ -20,12 +20,22 @@ function CheatSheet(props: CheatSheetProps) {
       });
       const jsonResponse = await response.json();
       console.log(JSON.stringify(jsonResponse));
-      const reply: string = jsonResponse?.data || "Error: no reply from llm";
+      const reply: string =
+        jsonResponse?.htmlMarkdownString || "Error: no reply from llm";
       setSheetContent(reply);
     }
-    fetchData();
+    //fetch data if rendering on the client only
+    if (typeof window !== "undefined") {
+      fetchData();
+    }
   }, []);
-  return <p>{sheetContent}</p>;
+  return (
+    <div
+      dangerouslySetInnerHTML={{
+        __html: sheetContent,
+      }}
+    />
+  );
 }
 
 export default CheatSheet;
