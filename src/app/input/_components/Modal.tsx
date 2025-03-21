@@ -31,7 +31,7 @@ const Modal = ({ activeText }: Props, children: React.ReactNode) => {
             A quick overview of difficult vocab and grammar.
           </DialogDescription>
         </DialogHeader>
-        <div className="max-h-[95%] overflow-y-auto">
+        <div className="flex max-h-[95%] flex-col overflow-y-auto">
           {/* render cheatsheet here */}
           <CheatSheet activeText={activeText.join("\n")} />
         </div>

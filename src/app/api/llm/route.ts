@@ -3,15 +3,26 @@ export const revalidate = 60;
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import SYSTEM_PROMPT from "./system_prompt";
 import { getHtmlStringFromMarkdown } from "./utils/renderMarkdown";
-export async function POST(request: Request) {
-  const requestBody = await request.json();
-  console.log("resquest from the client: ", JSON.stringify(requestBody));
-  const prompt = JSON.stringify(requestBody);
 
-  const markdownResponse = await handleGeminiPrompt(prompt);
-  console.log("markdownResponse: ", markdownResponse);
-  const htmlMarkdownString = await getHtmlStringFromMarkdown(markdownResponse);
-  return Response.json({ htmlMarkdownString: htmlMarkdownString });
+export async function POST(request: Request) {
+  try {
+    //get request from the client
+    const requestBody = await request.json();
+    console.log("resquest from the client: ", JSON.stringify(requestBody));
+    const prompt = JSON.stringify(requestBody);
+
+    //get raw gemini response
+    const markdownResponse = await handleGeminiPrompt(prompt);
+    console.log("markdownResponse: ", markdownResponse);
+
+    //convert response to markdown
+    const htmlMarkdownString =
+      await getHtmlStringFromMarkdown(markdownResponse);
+    return Response.json({ htmlMarkdownString: htmlMarkdownString });
+  } catch (error) {
+    console.error("error: ", error);
+    return Response.json({ error: error });
+  }
 }
 
 async function handleGeminiPrompt(prompt: string): Promise<string> {
