@@ -20,7 +20,7 @@ const Modal = ({ activeText }: Props, children: React.ReactNode) => {
   //modal
   return (
     <Dialog>
-      <DialogTrigger className="ml-auto w-[20%] rounded-xl bg-blue-500/20 px-4 py-2 text-sm hover:bg-blue-500">
+      <DialogTrigger className="ml-auto w-auto rounded-xl bg-blue-500/20 px-3 py-2 text-xs hover:bg-blue-500">
         {" "}
         Show Breakdown
       </DialogTrigger>
