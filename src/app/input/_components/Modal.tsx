@@ -20,11 +20,11 @@ const Modal = ({ activeText }: Props, children: React.ReactNode) => {
   //modal
   return (
     <Dialog>
-      <DialogTrigger className="ml-auto w-auto rounded-xl bg-blue-500/20 px-3 py-2 text-xs hover:bg-blue-500">
+      <DialogTrigger className="ml-auto w-auto rounded-xl border-2 border-solid border-blue-100/20 bg-blue-500/20 px-3 py-2 hover:bg-blue-500">
         {" "}
         Show Breakdown
       </DialogTrigger>
-      <DialogContent className="h-[95%] min-h-[95%] w-[95%] min-w-[95%]">
+      <DialogContent className="min-h-[95%] min-w-[95%]">
         <DialogHeader>
           <DialogTitle>Cheatsheet</DialogTitle>
           <DialogDescription>

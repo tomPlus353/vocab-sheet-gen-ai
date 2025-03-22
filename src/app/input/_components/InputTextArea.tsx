@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import React from "react";
+import SectionHeader from "./SectionHeader";
 
 interface Props {
   handleTextEntry: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
@@ -11,12 +12,11 @@ interface Props {
 const InputTextArea = ({ handleTextEntry, userText, textArray }: Props) => {
   return (
     <div className="flex flex-col items-center bg-blue-400/20 text-gray-100">
-      <h1 className="text-4xl font-bold">Input Text</h1>
-      <hr className="my-2 w-[100%] border-2 border-blue-100/20" />
+      <SectionHeader title="Input Text" />
       <textarea
         onChange={handleTextEntry}
         //set cursor to white
-        className="h-auto min-h-32 w-[80%] rounded-md bg-gray-800 text-gray-100 caret-white outline-none focus-within:outline-indigo-600"
+        className="h-auto min-h-32 w-[80%] rounded-md bg-gray-900 p-4 text-gray-100 caret-white outline-none focus-within:outline-indigo-600"
       />
       <p>{"Value of data: " + typeof userText}</p>
       <p>{"Length of data: " + userText?.length}</p>
