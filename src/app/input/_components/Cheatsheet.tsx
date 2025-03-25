@@ -1,6 +1,6 @@
 "use client"; // Important for client-side components
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Key } from "react";
 
 interface CheatSheetProps {
   activeText: string;
@@ -9,18 +9,23 @@ interface CheatSheetProps {
 function CheatSheet(props: CheatSheetProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [sheetContent, setSheetContent] = useState("");
+  const [currentPageHash, setCurrentPageHash] = useState("");
 
   useEffect(() => {
-    async function fetchData() {
+    async function fetchData(): Promise<void> {
       setIsLoading(true);
-      const response = await fetch("/api/llm", {
+      const response: Response = await fetch("/api/llm", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        cache: "force-cache",
         body: JSON.stringify({ text: props.activeText }),
       });
-      const jsonResponse = await response.json();
+      const jsonResponse = (await response.json()) as unknown as Record<
+        string,
+        string
+      >;
       console.log(JSON.stringify(jsonResponse));
       const responseCode: number = response.status;
 
@@ -35,14 +40,14 @@ function CheatSheet(props: CheatSheetProps) {
 
       //handle success
       const reply: string =
-        jsonResponse?.htmlMarkdownString || "Error: no reply from llm";
+        jsonResponse?.htmlMarkdownString ?? "Error: no reply from llm";
       setSheetContent(reply);
       setIsLoading(false);
     }
 
     //fetch data if rendering on the client only
     if (typeof window !== "undefined") {
-      fetchData();
+      fetchData().catch(console.error);
     }
   }, []);
   return isLoading ? (

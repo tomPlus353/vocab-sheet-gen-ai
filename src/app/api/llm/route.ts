@@ -1,13 +1,13 @@
 import process from "process";
-export const revalidate = 60;
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import SYSTEM_PROMPT from "./system_prompt";
 import { getHtmlStringFromMarkdown } from "./utils/renderMarkdown";
+import { JsonArray } from "@prisma/client/runtime/library";
 
 export async function POST(request: Request) {
   try {
     //get request from the client
-    const requestBody = await request.json();
+    const requestBody = (await request.json()) as unknown as JsonArray;
     console.log("resquest from the client: ", JSON.stringify(requestBody));
     const prompt = JSON.stringify(requestBody);
 
@@ -26,7 +26,11 @@ export async function POST(request: Request) {
 }
 
 async function handleGeminiPrompt(prompt: string): Promise<string> {
-  const genAI = new GoogleGenerativeAI(process.env.GEMINI_KEY as string);
+  const key: string | undefined = process.env.GEMINI_KEY;
+  if (!key) {
+    throw new Error("GEMINI_KEY is not set");
+  }
+  const genAI = new GoogleGenerativeAI(key);
   const model = genAI.getGenerativeModel({
     systemInstruction: SYSTEM_PROMPT,
     model: "gemini-1.5-flash",

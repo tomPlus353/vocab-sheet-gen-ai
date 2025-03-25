@@ -1,4 +1,4 @@
-const SYSTEM_PROMPT: string = `**Instructions:**
+const SYSTEM_PROMPT = `**Instructions:**
 
 1.  **Vocabulary Extraction:**
     *   Analyze the provided Japanese text and identify 20-30 words that would likely be challenging for intermediate to advanced Japanese language learners (JLPT N3 level and above) in a business context.

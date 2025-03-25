@@ -2,9 +2,9 @@ import React from "react";
 import {
   Dialog,
   DialogContent,
-  DialogOverlay,
+  // DialogOverlay,
   DialogDescription,
-  DialogFooter,
+  // DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -16,7 +16,7 @@ interface Props {
   activeText: string[];
 }
 
-const Modal = ({ activeText }: Props, children: React.ReactNode) => {
+const Modal = ({ activeText }: Props) => {
   //modal
   return (
     <Dialog>
