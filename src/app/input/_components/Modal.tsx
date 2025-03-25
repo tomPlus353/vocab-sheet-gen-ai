@@ -24,14 +24,14 @@ const Modal = ({ activeText }: Props) => {
         {" "}
         Show Breakdown
       </DialogTrigger>
-      <DialogContent className="min-h-[95%] min-w-[95%]">
+      <DialogContent className="max-h-[90%] max-w-[90%] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Cheatsheet</DialogTitle>
           <DialogDescription>
             A quick overview of difficult vocab and grammar.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex max-h-[95%] flex-col overflow-y-auto">
+        <div className="flex flex-col">
           {/* render cheatsheet here */}
           <CheatSheet activeText={activeText.join("\n")} />
         </div>
