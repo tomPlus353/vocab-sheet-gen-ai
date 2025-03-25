@@ -54,10 +54,7 @@ const Paginator = ({ allText = [] }: Props) => {
           {activeText.length > 0 &&
             Array.from({ length: activeText.length }, (_, i) => i + 1).map(
               (key) => (
-                <p
-                  key={key}
-                  className="text-l px-2 py-1 text-gray-300 sm:text-base"
-                >
+                <p key={key} className="px-2 py-1 text-lg text-gray-300">
                   {activeText[key - 1]}
                 </p>
               ),
