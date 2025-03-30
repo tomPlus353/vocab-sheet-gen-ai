@@ -46,6 +46,9 @@ const Paginator = ({ allText = [] }: Props) => {
     <div className="pagination">
       <div className="flex flex-col items-center">
         <SectionHeader title="Paginator" />
+        <button className="mr-auto">Previous</button>
+
+        <button className="ml-auto">Next</button>
         <div className="mx-2 my-4 flex flex-col rounded-xl border border-blue-400/30 bg-blue-400/10 px-2 py-4 shadow-md">
           <h2 className="px-2 text-lg font-semibold text-blue-300">
             {" "}
