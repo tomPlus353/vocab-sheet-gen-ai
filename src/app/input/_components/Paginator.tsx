@@ -3,6 +3,7 @@ import { useRouter } from "next/navigation";
 import React from "react";
 import Modal from "./Modal";
 import SectionHeader from "./SectionHeader";
+import CommonButton from "./CommonButton";
 
 interface Props {
   allText?: string[];
@@ -46,33 +47,42 @@ const Paginator = ({ allText = [] }: Props) => {
     <div className="pagination">
       <div className="flex flex-col items-center">
         <SectionHeader title="Paginator" />
-        <button className="mr-auto">Previous</button>
-
-        <button className="ml-auto">Next</button>
-        <div className="mx-2 my-4 flex flex-col rounded-xl border border-blue-400/30 bg-blue-400/10 px-2 py-4 shadow-md">
-          <h2 className="px-2 text-lg font-semibold text-blue-300">
-            {" "}
-            {`Page ${currentPage} of ${totalPages}`}
-          </h2>
-          {activeText.length > 0 &&
-            Array.from({ length: activeText.length }, (_, i) => i + 1).map(
-              (key) => (
-                <p key={key} className="px-2 py-1 text-lg text-gray-300">
-                  {activeText[key - 1]}
-                </p>
-              ),
-            )}
-          {activeText.length > 0 && <Modal activeText={activeText}></Modal>}
+        <div className="flex flex-row">
+          {currentPage - 1 > 0 &&
+            <CommonButton
+              label={'<'}
+              onClick={() => handlePageChange(currentPage - 1)}
+            />
+          }
+          <div className="mx-2 my-4 flex flex-col rounded-xl border border-blue-400/30 bg-blue-400/10 px-2 py-4 shadow-md">
+            <h2 className="px-2 text-lg font-semibold text-blue-300">
+              {" "}
+              {`Page ${currentPage} of ${totalPages}`}
+            </h2>
+            {activeText.length > 0 &&
+              Array.from({ length: activeText.length }, (_, i) => i + 1).map(
+                (key) => (
+                  <p key={key} className="px-2 py-1 text-lg text-gray-300">
+                    {activeText[key - 1]}
+                  </p>
+                ),
+              )}
+            {activeText.length > 0 && <Modal activeText={activeText}></Modal>}
+          </div>
+          {currentPage + 1 <= totalPages &&
+            <CommonButton
+              label={'>'}
+              onClick={() => handlePageChange(currentPage + 1)}
+            />
+          }
         </div>
         <div className="flex justify-between gap-3 px-4 py-2">
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-            <button
-              className="rounded-xl border-2 border-blue-100/20 bg-blue-500/20 px-4 py-2 shadow-md hover:bg-blue-500"
+            <CommonButton
               key={page}
+              label={page}
               onClick={() => handlePageChange(page)}
-            >
-              {page}
-            </button>
+            />
           ))}
         </div>
       </div>
