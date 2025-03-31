@@ -54,7 +54,7 @@ const Paginator = ({ allText = [] }: Props) => {
               onClick={() => handlePageChange(currentPage - 1)}
             />
           }
-          <div className="mx-2 flex flex-col rounded-xl border border-blue-400/30 bg-blue-400/10 px-4 py-2 shadow-md">
+          <div className="mx-2 flex flex-col rounded-xl border border-blue-400/30 bg-gray-900 px-4 py-2 shadow-md">
             <h2 className="px-2 text-lg font-semibold text-blue-300">
               {" "}
               {`Page ${currentPage} of ${totalPages}`}
@@ -62,7 +62,7 @@ const Paginator = ({ allText = [] }: Props) => {
             {activeText.length > 0 &&
               Array.from({ length: activeText.length }, (_, i) => i + 1).map(
                 (key) => (
-                  <p key={key} className="px-2 py-1 text-lg text-gray-300">
+                  <p key={key} className="px-2 py-1 text-lg text-gray-100">
                     {activeText[key - 1]}
                   </p>
                 ),
