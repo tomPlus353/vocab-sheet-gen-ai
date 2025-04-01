@@ -24,7 +24,7 @@ const Modal = ({ activeText }: Props) => {
         {" "}
         Show Breakdown
       </DialogTrigger>
-      <DialogContent className="max-h-[90%] max-w-[90%] overflow-y-auto">
+      <DialogContent className="max-h-[90%] max-w-[90%] bg-gray-600 text-gray-100 overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Cheatsheet</DialogTitle>
           <DialogDescription>

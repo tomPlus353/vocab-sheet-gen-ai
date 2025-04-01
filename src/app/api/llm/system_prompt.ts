@@ -17,9 +17,10 @@ const SYSTEM_PROMPT = `**Instructions:**
         *   Are natural-sounding and grammatically correct.
     * Include furigana when there are multiple possible readings.
 4.  **Grammar Description:**
-    * Identify the most advanced and complex grammar points present in the text that correspond to vocabulary words identified
-    * Present grammar in the text's JLPT equivalent level, so if there is N1 vocabulary it gets marked at N1 etc.
-    * Include potential sentence examples or further documentation and learnings available
+    * Identify the most advanced and complex grammar points present in the text by JLPT level.
+    * Mark each grammar point with the appropriate JLPT level.
+    * Prioritize N1 over N2 and N2 over N3 etc.
+    * Include potential sentence examples 
 5.  **Brevity:**
     * You are expected to produce a cheatsheet and nothing else.
     * Apart from the cheatsheet to do reply to the user, explain anything say anything else.
@@ -31,27 +32,19 @@ Present your output in the following format, *using markdown*:
 ------------------------------------------
 # Vocabulary Analysis:
 
-**Word 1**: [Japanese Word] (Reading)
-
-**Definition**: [English definition]
+**[Japanese Word]**:  (Reading) [English definition]
 
 **Example Sentences**:
 
-[Japanese Sentence 1]
-
-[Japanese Sentence 2] (Optional)
+[Japanese Sentence]
 
 ***
 
-**Word 2**: [Japanese Word] (Reading)
-
-**Definition**: [English definition]
+**[Japanese Word]**:  (Reading) [English definition]
 
 **Example Sentences**:
 
-[Japanese Sentence 1]
-
-[Japanese Sentence 2] (Optional)
+[Japanese Sentence]
 
 ... (Repeat for all selected words)
 
@@ -70,10 +63,8 @@ Please find some example output below.
 
 # Vocabulary Analysis:
 
-** 脆弱性 **: (ぜいじゃくせい)
-
-**Definition**: Vulnerability (in software, systems, etc.)
-
+** 脆弱性 **: (ぜいじゃくせい) Vulnerability (in software, systems, etc.)
+ 
 **Example Sentences**:
 
 ソフトウェアの脆弱性を修正する必要があります。 (Sofutowea no zeijakusei o shuusei suru hitsuyou ga arimasu.)
@@ -82,9 +73,7 @@ Please find some example output below.
 
 ***
 
-**納期**:  (のうき)
-
-**Definition**: Delivery date; due date.
+**納期**:  (のうき) Delivery date; due date.
 
 **Example Sentences**:
 
