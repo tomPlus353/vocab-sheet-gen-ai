@@ -45,15 +45,27 @@ const Paginator = ({ allText = [] }: Props) => {
 
   return !cannotPaginate ? (
     <div className="pagination">
-      <div className="flex flex-col items-center">
+      <div
+        className="flex flex-col items-center"
+        onKeyDown={(e) => {
+          if (e.key === "ArrowLeft") {
+            // handle previous page	so long as we're not on the first page
+            currentPage > 1 && handlePageChange(currentPage - 1);
+          }
+          if (e.key === "ArrowRight") {
+            // handle next page so long as we're not on the last page
+            currentPage < totalPages && handlePageChange(currentPage + 1);
+          }
+        }}
+      >
         <SectionHeader title="Paginator" />
         <div className="flex flex-row">
-          {currentPage - 1 > 0 &&
+          {currentPage - 1 > 0 && (
             <CommonButton
-              label={'<'}
+              label={"<"}
               onClick={() => handlePageChange(currentPage - 1)}
             />
-          }
+          )}
           <div className="mx-2 flex flex-col rounded-xl border border-blue-400/30 bg-gray-900 px-4 py-2 shadow-md">
             <h2 className="px-2 text-lg font-semibold text-blue-300">
               {" "}
@@ -69,12 +81,12 @@ const Paginator = ({ allText = [] }: Props) => {
               )}
             {activeText.length > 0 && <Modal activeText={activeText}></Modal>}
           </div>
-          {currentPage + 1 <= totalPages &&
+          {currentPage + 1 <= totalPages && (
             <CommonButton
-              label={'>'}
+              label={">"}
               onClick={() => handlePageChange(currentPage + 1)}
             />
-          }
+          )}
         </div>
         <div className="flex justify-between gap-3 px-4 py-2">
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
