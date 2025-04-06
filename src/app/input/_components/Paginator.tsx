@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import React from "react";
 import Modal from "./Modal";
@@ -10,6 +10,8 @@ interface Props {
 }
 
 const Paginator = ({ allText = [] }: Props) => {
+  console.log("Paginator rendered!");
+
   const NUM_PER_PAGE = 3; //Warning, cannot be 0 or lower!
   const cannotPaginate = allText.length === 0;
   const totalPages = cannotPaginate
@@ -18,6 +20,7 @@ const Paginator = ({ allText = [] }: Props) => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [activeText, setActiveText] = useState<string[]>([]);
   const router = useRouter();
+  const focusTarget = useRef<HTMLDivElement>(null);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -36,6 +39,14 @@ const Paginator = ({ allText = [] }: Props) => {
     setCurrentPage(1);
     router.push(`?page=${1}`, undefined);
     handleSetActiveText(currentPage, allText);
+    //set focus on the paginator
+    console.log("focusTarget.current:", focusTarget.current);
+
+    if (focusTarget.current) {
+      focusTarget.current.focus();
+    } else {
+      console.log("focusTarget is null");
+    }
   }, [allText]);
 
   //set first page by default
@@ -57,6 +68,8 @@ const Paginator = ({ allText = [] }: Props) => {
             currentPage < totalPages && handlePageChange(currentPage + 1);
           }
         }}
+        ref={focusTarget}
+        tabIndex={0}
       >
         <SectionHeader title="Paginator" />
         <div className="flex flex-row">

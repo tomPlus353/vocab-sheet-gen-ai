@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import InputTextArea from "./_components/InputTextArea";
 import Paginator from "./_components/Paginator";
 
@@ -9,14 +9,15 @@ function InputAndPaginate() {
 
   const handleTextEntry = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setUserText(event.target.value);
+  };
+  const handleTextSubmit = () => {
     //split user text into an array
     //for any of these sentence endings: .?!\n。！？
-    setTextArray(
-      event.target.value.split(/[\.\?!\n。！？]/).filter((x) => x !== ""),
-    );
+    setTextArray(userText.split(/[\.\?!\n。！？]/).filter((x) => x !== ""));
   };
   const textAreaProps = {
     handleTextEntry,
+    handleTextSubmit,
     userText,
     textArray,
   };
