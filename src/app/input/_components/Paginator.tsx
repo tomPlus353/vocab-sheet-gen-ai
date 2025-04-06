@@ -21,6 +21,7 @@ const Paginator = ({ allText = [] }: Props) => {
   const [activeText, setActiveText] = useState<string[]>([]);
   const router = useRouter();
   const focusTarget = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -49,11 +50,16 @@ const Paginator = ({ allText = [] }: Props) => {
     }
   }, [allText]);
 
+  function handleEnter() {
+    setOpen(true);
+  }
+
   return !cannotPaginate ? (
     <div className="pagination">
       <div
         className="flex h-full flex-col items-center focus-within:outline-none"
         onKeyDown={(e) => {
+          console.log("e.key:", e.key);
           if (e.key === "ArrowLeft") {
             // handle previous page	so long as we're not on the first page
             currentPage > 1 && handlePageChange(currentPage - 1);
@@ -61,6 +67,20 @@ const Paginator = ({ allText = [] }: Props) => {
           if (e.key === "ArrowRight") {
             // handle next page so long as we're not on the last page
             currentPage < totalPages && handlePageChange(currentPage + 1);
+          }
+          if (e.key === "Enter" && !open) {
+            // handle enter key
+            e.preventDefault();
+            console.log("open: ", open);
+            setOpen(true);
+            console.log("open: ", open);
+          }
+          if (e.key === "Enter" && open) {
+            // handle enter key
+            e.preventDefault();
+            console.log("open: ", open);
+            setOpen(false);
+            console.log("open: ", open);
           }
         }}
         ref={focusTarget}
@@ -89,7 +109,13 @@ const Paginator = ({ allText = [] }: Props) => {
                   </p>
                 ),
               )}
-            {activeText.length > 0 && <Modal activeText={activeText}></Modal>}
+            {activeText.length > 0 && (
+              <Modal
+                activeText={activeText}
+                open={open}
+                setOpen={setOpen}
+              ></Modal>
+            )}
           </div>
           {currentPage + 1 <= totalPages && (
             <CommonButton
