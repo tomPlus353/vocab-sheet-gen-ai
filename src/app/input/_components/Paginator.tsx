@@ -39,9 +39,9 @@ const Paginator = ({ allText = [] }: Props) => {
     setCurrentPage(1);
     router.push(`?page=${1}`, undefined);
     handleSetActiveText(currentPage, allText);
+
     //set focus on the paginator
     console.log("focusTarget.current:", focusTarget.current);
-
     if (focusTarget.current) {
       focusTarget.current.focus();
     } else {
@@ -49,15 +49,10 @@ const Paginator = ({ allText = [] }: Props) => {
     }
   }, [allText]);
 
-  //set first page by default
-  // if (!cannotPaginate && activeText.length === 0) {
-  //   handleSetActiveText(currentPage, allText);
-  // }
-
   return !cannotPaginate ? (
     <div className="pagination">
       <div
-        className="flex flex-col items-center"
+        className="flex h-full flex-col items-center focus-within:outline-none"
         onKeyDown={(e) => {
           if (e.key === "ArrowLeft") {
             // handle previous page	so long as we're not on the first page
@@ -71,15 +66,17 @@ const Paginator = ({ allText = [] }: Props) => {
         ref={focusTarget}
         tabIndex={0}
       >
+        {/* header */}
         <SectionHeader title="Paginator" />
         <div className="flex flex-row">
+          {/* ereader with next/prev buttons */}
           {currentPage - 1 > 0 && (
             <CommonButton
               label={"<"}
               onClick={() => handlePageChange(currentPage - 1)}
             />
           )}
-          <div className="mx-2 flex flex-col rounded-xl border border-blue-400/30 bg-gray-900 px-4 py-2 shadow-md">
+          <div className="mx-2 flex flex-col rounded-xl border border-blue-400/30 bg-gray-800 px-4 py-2 shadow-md">
             <h2 className="px-2 text-lg font-semibold text-blue-300">
               {" "}
               {`Page ${currentPage} of ${totalPages}`}
@@ -87,7 +84,7 @@ const Paginator = ({ allText = [] }: Props) => {
             {activeText.length > 0 &&
               Array.from({ length: activeText.length }, (_, i) => i + 1).map(
                 (key) => (
-                  <p key={key} className="px-2 py-1 text-lg text-gray-100">
+                  <p key={key} className="px-2 py-1 text-lg">
                     {activeText[key - 1]}
                   </p>
                 ),
@@ -101,6 +98,7 @@ const Paginator = ({ allText = [] }: Props) => {
             />
           )}
         </div>
+        {/* pagination buttons sections */}
         <div className="flex justify-between gap-3 px-4 py-2">
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
             <CommonButton

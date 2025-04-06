@@ -17,13 +17,17 @@ const InputTextArea = ({
   textArray,
 }: Props) => {
   return (
-    <div className="flex flex-col items-center bg-blue-400/20 text-gray-100">
+    <div className="flex flex-col items-center">
       <SectionHeader title="Input Text" />
       <textarea
         onChange={handleTextEntry}
-        className="h-auto min-h-32 w-[80%] rounded-md bg-gray-900 p-4 text-gray-100 caret-white outline-none focus-within:outline-indigo-600"
+        className="h-auto min-h-32 w-[80%] rounded-md bg-gray-800 p-4 caret-white outline-none focus-within:outline-indigo-600"
       />
-      <CommonButton onClick={handleTextSubmit} label="Submit" />
+      <CommonButton
+        className="my-4"
+        onClick={handleTextSubmit}
+        label="Submit"
+      />
       <p>{"Value of data: " + typeof userText}</p>
       <p>{"Length of data: " + userText?.length}</p>
       <p>{"Words in data: " + userText?.split(" ")?.length}</p>
