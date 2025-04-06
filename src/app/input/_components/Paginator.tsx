@@ -50,10 +50,6 @@ const Paginator = ({ allText = [] }: Props) => {
     }
   }, [allText]);
 
-  function handleEnter() {
-    setOpen(true);
-  }
-
   return !cannotPaginate ? (
     <div className="pagination">
       <div
