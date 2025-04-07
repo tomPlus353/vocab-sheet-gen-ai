@@ -58,12 +58,17 @@ const Paginator = ({ allText = [] }: Props) => {
           console.log("e.key:", e.key);
           if (e.key === "ArrowLeft") {
             // handle previous page	so long as we're not on the first page
-            currentPage > 1 && handlePageChange(currentPage - 1);
+            if (currentPage > 1) {
+              handlePageChange(currentPage - 1);
+            }
           }
           if (e.key === "ArrowRight") {
             // handle next page so long as we're not on the last page
-            currentPage < totalPages && handlePageChange(currentPage + 1);
+            if (currentPage < totalPages) {
+              handlePageChange(currentPage + 1);
+            }
           }
+          // toggle modal open and closed on enter
           if (e.key === "Enter" && !open) {
             // handle enter key
             e.preventDefault();
