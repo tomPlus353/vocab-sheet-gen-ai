@@ -17,7 +17,11 @@ function PaginatePage() {
         console.error(error);
       });
     }
-    setTextArray(JSON.parse(textArrayString));
+    try {
+      setTextArray(JSON.parse(textArrayString) as unknown as string[]);
+    } catch (error) {
+      console.error("error when parsing textArray from local storage", error);
+    }
   }, []);
 
   const paginatorProps = {
