@@ -9,11 +9,13 @@ function PaginatePage() {
 
   useEffect(() => {
     // Retrieve textArray from local storage during mounting
-    const textArrayString = localStorage.getItem("textArray") || "[]";
+    const textArrayString = localStorage.getItem("textArray") ?? "[]";
     if (!textArrayString) {
       alert("Please input text first before using the ereader.");
       console.error("Please input text first before using the ereader.");
-      Router.push("/input");
+      Router.push("/input").catch((error) => {
+        console.error(error);
+      });
     }
     setTextArray(JSON.parse(textArrayString));
   }, []);
