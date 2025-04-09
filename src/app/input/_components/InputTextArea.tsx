@@ -20,15 +20,16 @@ const InputTextArea = ({
   const [japaneseWordCount, setJapaneseWordCount] = useState(0);
 
   useEffect(() => {
-    getTokenizer({ dicPath: "dict" }).then((tokenizer) => {
-      // kuromoji.js's `tokenizer` instance
-    });
+    // getTokenizer({ dicPath: "dict" }).then((tokenizer) => {
+    //   // kuromoji.js's `tokenizer` instance
+    // });
 
-    tokenize(userText).then((tokens) => {
-      console.log(tokens);
-      setJapaneseWordCount(tokens.length);
+    tokenize(userText)
+      .then((tokens) => {
+        console.log(tokens);
+        setJapaneseWordCount(tokens.length);
 
-      /*
+        /*
       [ {
         word_id: 509800,          // 辞書内での単語ID
         word_type: 'KNOWN',       // 単語タイプ(辞書に登録されている単語ならKNOWN, 未知語ならUNKNOWN)
@@ -45,7 +46,8 @@ const InputTextArea = ({
         pronunciation: 'クロモジ'  // 発音
         } ]
         */
-    });
+      })
+      .catch((e) => console.error(e));
   }, [userText]);
 
   return (
