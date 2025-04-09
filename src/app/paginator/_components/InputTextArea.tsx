@@ -7,12 +7,14 @@ interface Props {
   handleTextEntry: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
   handleTextSubmit: () => void;
   userText: string;
+  textArray: string[];
 }
 
 const InputTextArea = ({
   handleTextEntry,
   handleTextSubmit,
   userText,
+  textArray,
 }: Props) => {
   return (
     <div className="flex flex-col items-center">
@@ -26,9 +28,10 @@ const InputTextArea = ({
         onClick={handleTextSubmit}
         label="Submit"
       />
+      <p>{"Value of data: " + typeof userText}</p>
       <p>{"Length of data: " + userText?.length}</p>
       <p>{"Words in data: " + userText?.split(" ")?.length}</p>
-      {/* <p>{"Sentences in data: " + textArray.length}</p> */}
+      <p>{"Sentences in data: " + textArray.length}</p>
     </div>
   );
 };
