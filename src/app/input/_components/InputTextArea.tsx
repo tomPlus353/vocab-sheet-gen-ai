@@ -5,6 +5,7 @@ import SectionHeader from "./SectionHeader";
 import CommonButton from "./CommonButton";
 
 import { tokenize, getTokenizer } from "kuromojin";
+import { start } from "repl";
 
 interface Props {
   handleTextEntry: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
@@ -18,42 +19,47 @@ const InputTextArea = ({
   userText,
 }: Props) => {
   const [japaneseWordCount, setJapaneseWordCount] = useState(0);
+  // async function tokenizePromise(userText: string) {
+  //   await tokenize(userText)
+  //     .then((tokens) => {
+  //       console.log(tokens);
+  //       setJapaneseWordCount(tokens.length);
+  //     })
+  //     .catch((e) => console.error(e));
+  // }
 
   useEffect(() => {
-    getTokenizer({ dicPath: "dict" })
-      .then((tokenizer) => {
-        // kuromoji.js's `tokenizer` instance
-      })
-      .catch((error) => {
-        console.error(error);
-      });
+    try {
+      console.log("start input text area");
+      console.log("userText: ", userText);
+      getTokenizer({ dicPath: "/dict" })
+        .then((tokenizer) => {
+          console.log("tokenizer: ", tokenizer);
 
-    tokenize(userText)
-      .then((tokens) => {
-        console.log(tokens);
-        setJapaneseWordCount(tokens.length);
+          // kuromoji.js's `tokenizer` instance
+          const tokens = tokenizer.tokenize(userText);
+          console.log("tokens: ", tokens);
 
-        /*
-      [ {
-        word_id: 509800,          // 辞書内での単語ID
-        word_type: 'KNOWN',       // 単語タイプ(辞書に登録されている単語ならKNOWN, 未知語ならUNKNOWN)
-        word_position: 1,         // 単語の開始位置
-        surface_form: '黒文字',    // 表層形
-        pos: '名詞',               // 品詞
-        pos_detail_1: '一般',      // 品詞細分類1
-        pos_detail_2: '*',        // 品詞細分類2
-        pos_detail_3: '*',        // 品詞細分類3
-        conjugated_type: '*',     // 活用型
-        conjugated_form: '*',     // 活用形
-        basic_form: '黒文字',      // 基本形
-        reading: 'クロモジ',       // 読み
-        pronunciation: 'クロモジ'  // 発音
-        } ]
-        */
-      })
-      .catch((e) => console.error(e));
+          if (Array.isArray(tokens)) {
+            console.log("tokens length: ", tokens.length);
+            setJapaneseWordCount(tokens.length);
+          }
+        })
+        .catch((error) => {
+          console.error("error when running getTokenizer", error);
+        });
+
+      // tokenizePromise(userText).catch((error) => {
+      //   console.error("error when running tokenizePromise", error);
+      // });
+
+      console.log("userText:", userText);
+      console.log("typeof userText:", typeof userText);
+    } catch (error) {
+      console.error("error when running useEffect", error);
+    }
   }, [userText]);
-
+  // pnpm build && NODE_OPTIONS="--inspect" pnpm start
   return (
     <div className="flex flex-col items-center">
       <SectionHeader title="Input Text" />
