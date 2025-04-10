@@ -20,9 +20,13 @@ const InputTextArea = ({
   const [japaneseWordCount, setJapaneseWordCount] = useState(0);
 
   useEffect(() => {
-    // getTokenizer({ dicPath: "dict" }).then((tokenizer) => {
-    //   // kuromoji.js's `tokenizer` instance
-    // });
+    getTokenizer({ dicPath: "dict" })
+      .then((tokenizer) => {
+        // kuromoji.js's `tokenizer` instance
+      })
+      .catch((error) => {
+        console.error(error);
+      });
 
     tokenize(userText)
       .then((tokens) => {
