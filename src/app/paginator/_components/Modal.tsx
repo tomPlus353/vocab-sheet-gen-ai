@@ -10,7 +10,11 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
+//lucide sparkle
+import { Sparkles } from "lucide-react";
+
 import CheatSheet from "./Cheatsheet";
+import { SP } from "next/dist/shared/lib/utils";
 
 interface Props {
   activeText: string[];
@@ -23,8 +27,10 @@ const Modal: React.FC<Props> = (props: Props) => {
   return (
     <Dialog open={props.open} onOpenChange={props.setOpen}>
       <DialogTrigger className="ml-auto w-auto rounded-xl border-2 border-solid border-blue-100/20 bg-blue-500/20 px-3 py-2 hover:bg-blue-500">
-        {" "}
-        Show Breakdown
+        <div className="flex flex-row">
+          <Sparkles className="mr-2 h-5 w-5" />
+          <span>Cheatsheet</span>
+        </div>
       </DialogTrigger>
       <DialogContent className="max-h-[90%] max-w-[90%] overflow-y-auto bg-gray-600 text-gray-100">
         <DialogHeader>

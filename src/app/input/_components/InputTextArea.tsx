@@ -62,7 +62,7 @@ const InputTextArea = ({
   return (
     <div>
       <SectionHeader title="Input Text" />
-      <Card className="mx-auto flex max-w-md flex-col items-center justify-center rounded-xl border border-blue-400/30 bg-gray-700/50 bg-gray-800 px-4 py-2 text-gray-100 shadow-md">
+      <Card className="mx-auto flex max-w-md flex-col items-center justify-center rounded-xl border border-blue-400/30 bg-gray-800 px-4 py-2 text-gray-100 shadow-xl">
         <CardHeader className="border-b border-gray-700/50 pb-2">
           <CardTitle className="text-center text-lg font-bold text-white">
             {"Insert text you want to analyze below"}
