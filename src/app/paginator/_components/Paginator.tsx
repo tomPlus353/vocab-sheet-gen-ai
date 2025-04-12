@@ -90,9 +90,9 @@ const Paginator = ({ allText = [] }: Props) => {
         {/* header */}
         <SectionHeader title="Paginator" />
         <CommonButton
-          additionalClasses="self-baseline"
-          className="align-baseline"
-          label={"Enter new text"}
+          additionalclasses="align-start mr-auto"
+          //emoji for going back
+          label={"↩ Enter new text"}
           onClick={() => router.push("/input", undefined)}
         />
         <div className="flex flex-row">

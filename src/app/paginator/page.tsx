@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react";
 import Paginator from "./_components/Paginator";
-import Router from "next/router";
+import { useRouter } from "next/navigation";
 
 function PaginatePage() {
   const [textArray, setTextArray] = useState<string[]>([]);
+  const router = useRouter();
 
   useEffect(() => {
     // Retrieve textArray from local storage during mounting
@@ -13,9 +14,7 @@ function PaginatePage() {
     if (!textArrayString) {
       alert("Please input text first before using the ereader.");
       console.error("Please input text first before using the ereader.");
-      Router.push("/input").catch((error) => {
-        console.error(error);
-      });
+      router.push("/input");
     }
     try {
       setTextArray(JSON.parse(textArrayString) as unknown as string[]);
@@ -29,7 +28,8 @@ function PaginatePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100">
+    //set gradient
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 text-gray-100">
       {/* ... other content ... */}
       <Paginator {...paginatorProps} />
     </div>
