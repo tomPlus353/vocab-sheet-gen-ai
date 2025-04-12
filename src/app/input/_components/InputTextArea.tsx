@@ -1,11 +1,10 @@
 "use client";
 import React from "react";
 import { useEffect, useState } from "react";
-import SectionHeader from "./SectionHeader";
-import CommonButton from "./CommonButton";
+import SectionHeader from "../../../components/common/SectionHeader";
+import CommonButton from "@/components/common/CommonButton";
 
-import { tokenize, getTokenizer } from "kuromojin";
-import { start } from "repl";
+import { getTokenizer } from "kuromojin";
 
 interface Props {
   handleTextEntry: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;

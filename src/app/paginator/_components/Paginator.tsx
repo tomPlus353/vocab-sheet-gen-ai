@@ -2,8 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import React from "react";
 import Modal from "./Modal";
-import SectionHeader from "./SectionHeader";
-import CommonButton from "./CommonButton";
+import SectionHeader from "../../../components/common/SectionHeader";
+import CommonButton from "@/components/common/CommonButton";
 
 interface Props {
   allText?: string[];
@@ -89,6 +89,12 @@ const Paginator = ({ allText = [] }: Props) => {
       >
         {/* header */}
         <SectionHeader title="Paginator" />
+        <CommonButton
+          additionalClasses="self-baseline"
+          className="align-baseline"
+          label={"Enter new text"}
+          onClick={() => router.push("/input", undefined)}
+        />
         <div className="flex flex-row">
           {/* ereader with next/prev buttons */}
           {currentPage - 1 > 0 && (
