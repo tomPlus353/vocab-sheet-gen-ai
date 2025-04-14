@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 
 //lucide sparkle
-import { Sparkles } from "lucide-react";
+import { BookType, Sparkles } from "lucide-react";
 
 import CheatSheet from "./Cheatsheet";
 import { SP } from "next/dist/shared/lib/utils";
@@ -32,10 +32,14 @@ const Modal: React.FC<Props> = (props: Props) => {
           <span>Cheatsheet</span>
         </div>
       </DialogTrigger>
-      <DialogContent className="max-h-[90%] max-w-[90%] overflow-y-auto bg-gray-800 text-gray-100">
+      <DialogContent className="max-h-[90%] max-w-[90%] overflow-y-auto bg-slate-900 text-white">
         <DialogHeader>
-          <DialogTitle>Cheatsheet</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-blue-300 text-2xl flex flex-row items-center">
+            <BookType className="h-5 w-5" />
+            Cheatsheet
+          </DialogTitle>
+          <DialogDescription className="text-white">
+
             A quick overview of difficult vocab and grammar.
           </DialogDescription>
         </DialogHeader>
