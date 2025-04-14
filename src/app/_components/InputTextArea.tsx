@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import { useEffect, useState } from "react";
-import SectionHeader from "../../../components/common/SectionHeader";
+import SectionHeader from "@/components/common/SectionHeader";
 import CommonButton from "@/components/common/CommonButton";
 import { Send, AlignLeft, FileText } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

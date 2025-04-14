@@ -32,7 +32,7 @@ const Modal: React.FC<Props> = (props: Props) => {
           <span>Cheatsheet</span>
         </div>
       </DialogTrigger>
-      <DialogContent className="max-h-[90%] max-w-[90%] overflow-y-auto bg-gray-600 text-gray-100">
+      <DialogContent className="max-h-[90%] max-w-[90%] overflow-y-auto bg-gray-800 text-gray-100">
         <DialogHeader>
           <DialogTitle>Cheatsheet</DialogTitle>
           <DialogDescription>
