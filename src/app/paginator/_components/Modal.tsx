@@ -10,11 +10,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+
+
 //lucide sparkle
 import { BookType, Sparkles } from "lucide-react";
 
 import CheatSheet from "./Cheatsheet";
-//import { SP } from "next/dist/shared/lib/utils";
 
 interface Props {
   activeText: string[];
@@ -32,7 +34,7 @@ const Modal: React.FC<Props> = (props: Props) => {
           <span>Cheatsheet</span>
         </div>
       </DialogTrigger>
-      <DialogContent className="max-h-[90%] max-w-[90%] overflow-y-auto bg-slate-900 text-white">
+      <DialogContent className="[&>button]:hidden max-h-[90%] max-w-[90%] overflow-y-auto bg-slate-900 text-white">
         <DialogHeader>
           <DialogTitle className="text-blue-300 text-2xl flex flex-row items-center">
             <BookType className="h-5 w-5" />
@@ -43,10 +45,19 @@ const Modal: React.FC<Props> = (props: Props) => {
             A quick overview of difficult vocab and grammar.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex flex-col">
+        <Tabs defaultValue="vocab" className="w-full flex flex-col">
+          <TabsList className="mr-auto bg-slate-800 mb-2">
+            <TabsTrigger value="vocab" className="data-[state=active]:bg-purple-600 data-[state=active]:text-white">vocab</TabsTrigger>
+            <TabsTrigger value="grammar" className="data-[state=active]:bg-purple-600 data-[state=active]:text-white">grammar</TabsTrigger>
+          </TabsList>
           {/* render cheatsheet here */}
-          <CheatSheet activeText={props.activeText.join("\n")} />
-        </div>
+          <TabsContent value="vocab">
+            <CheatSheet activeText={props.activeText.join("\n")} />
+          </TabsContent>
+          <TabsContent value="grammar">
+            <CheatSheet activeText={props.activeText.join("\n")} />
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );
