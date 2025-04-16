@@ -2,7 +2,7 @@ import process from "process";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import SYSTEM_PROMPT from "./system_prompt";
 import { getHtmlStringFromMarkdown } from "./utils/renderMarkdown";
-import { JsonArray } from "@prisma/client/runtime/library";
+import type { JsonArray } from "@prisma/client/runtime/library";
 
 export async function POST(request: Request) {
   try {

@@ -1,6 +1,9 @@
 "use client"; // Important for client-side components
 
-import React, { useState, useEffect, Key } from "react";
+import React, {
+  useState, useEffect,
+  //  Key 
+} from "react";
 import { createHash } from "crypto";
 
 interface CheatSheetProps {

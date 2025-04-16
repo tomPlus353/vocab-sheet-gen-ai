@@ -14,7 +14,7 @@ import {
 import { BookType, Sparkles } from "lucide-react";
 
 import CheatSheet from "./Cheatsheet";
-import { SP } from "next/dist/shared/lib/utils";
+//import { SP } from "next/dist/shared/lib/utils";
 
 interface Props {
   activeText: string[];
