@@ -10,8 +10,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 //lucide sparkle
 import { BookType, Sparkles } from "lucide-react";
@@ -34,28 +33,43 @@ const Modal: React.FC<Props> = (props: Props) => {
           <span>Cheatsheet</span>
         </div>
       </DialogTrigger>
-      <DialogContent className="[&>button]:hidden max-h-[90%] max-w-[90%] overflow-y-auto bg-slate-900 text-white">
+      <DialogContent className="max-h-[90%] max-w-[90%] overflow-y-auto bg-slate-900 text-white [&>button]:hidden">
         <DialogHeader>
-          <DialogTitle className="text-blue-300 text-2xl flex flex-row items-center">
+          <DialogTitle className="flex flex-row items-center text-2xl text-blue-300">
             <BookType className="h-5 w-5" />
             Cheatsheet
           </DialogTitle>
           <DialogDescription className="text-white">
-
             A quick overview of difficult vocab and grammar.
           </DialogDescription>
         </DialogHeader>
-        <Tabs defaultValue="vocab" className="w-full flex flex-col">
-          <TabsList className="mr-auto bg-slate-800 mb-2">
-            <TabsTrigger value="vocab" className="data-[state=active]:bg-purple-600 data-[state=active]:text-white">vocab</TabsTrigger>
-            <TabsTrigger value="grammar" className="data-[state=active]:bg-purple-600 data-[state=active]:text-white">grammar</TabsTrigger>
+        <Tabs defaultValue="vocab" className="flex w-full flex-col">
+          <TabsList className="mb-2 mr-auto bg-slate-800">
+            <TabsTrigger
+              value="vocab"
+              className="data-[state=active]:bg-purple-600 data-[state=active]:text-white"
+            >
+              vocab
+            </TabsTrigger>
+            <TabsTrigger
+              value="grammar"
+              className="data-[state=active]:bg-purple-600 data-[state=active]:text-white"
+            >
+              grammar
+            </TabsTrigger>
           </TabsList>
           {/* render cheatsheet here */}
           <TabsContent value="vocab">
-            <CheatSheet activeText={props.activeText.join("\n")} />
+            <CheatSheet
+              activeText={props.activeText.join("\n")}
+              mode={"vocab"}
+            />
           </TabsContent>
           <TabsContent value="grammar">
-            <CheatSheet activeText={props.activeText.join("\n")} />
+            <CheatSheet
+              activeText={props.activeText.join("\n")}
+              mode={"grammar"}
+            />
           </TabsContent>
         </Tabs>
       </DialogContent>

@@ -1,13 +1,15 @@
 "use client"; // Important for client-side components
 
 import React, {
-  useState, useEffect,
-  //  Key 
+  useState,
+  useEffect,
+  //  Key
 } from "react";
 import { createHash } from "crypto";
 
 interface CheatSheetProps {
   activeText: string;
+  mode: string;
 }
 
 function CheatSheet(props: CheatSheetProps) {
@@ -21,7 +23,7 @@ function CheatSheet(props: CheatSheetProps) {
 
       //check if the request has been cached
       const hashToCheck = createHash("sha256")
-        .update(props.activeText)
+        .update(props.mode + props.activeText)
         .digest("hex");
       const cachedResponse = localStorage.getItem(hashToCheck);
       if (cachedResponse) {
@@ -37,7 +39,10 @@ function CheatSheet(props: CheatSheetProps) {
           "Content-Type": "application/json",
         },
         cache: "force-cache",
-        body: JSON.stringify({ text: props.activeText }),
+        body: JSON.stringify({
+          text: props.activeText,
+          mode: props.mode,
+        }),
       });
 
       //get the response
@@ -71,7 +76,7 @@ function CheatSheet(props: CheatSheetProps) {
 
       //cache the request using hash of activeText
       const hashToSet = createHash("sha256")
-        .update(props.activeText)
+        .update(props.mode + props.activeText)
         .digest("hex");
       localStorage.setItem(hashToSet, reply);
     }

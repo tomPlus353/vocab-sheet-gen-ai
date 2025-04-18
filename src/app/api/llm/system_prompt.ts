@@ -1,4 +1,4 @@
-const SYSTEM_PROMPT = `**Instructions:**
+export const SYS_PROMPT_VOCAB = `**Instructions:**
 
 1.  **Vocabulary Extraction:**
     *   Analyze the provided Japanese text and identify 20-30 words that would likely be challenging for intermediate to advanced Japanese language learners (JLPT N3 level and above) in a business context.
@@ -12,16 +12,11 @@ const SYSTEM_PROMPT = `**Instructions:**
     *   Ensure the definition is appropriate for a business context, reflecting the meaning relevant to an IT engineer.
 3.  **Example Sentences:**
     *   For each selected word, create ONE or TWO example sentences in Japanese that:
-        *   Show how the word is used in a professional setting (e.g., team meeting, project discussion, technical documentation, client communication).
-        *   Are relevant to the profession of an IT engineer in Japan.
+        *   Demonstrate the meaning clearly
+        *   Include the selected word
         *   Are natural-sounding and grammatically correct.
     * Include furigana when there are multiple possible readings.
-4.  **Grammar Description:**
-    * Identify the most advanced and complex grammar points present in the text by JLPT level.
-    * Mark each grammar point with the appropriate JLPT level.
-    * Prioritize N1 over N2 and N2 over N3 etc.
-    * Include potential sentence examples 
-5.  **Brevity:**
+4.  **Brevity:**
     * You are expected to produce a cheatsheet and nothing else.
     * Apart from the cheatsheet to do reply to the user, explain anything say anything else.
 
@@ -48,9 +43,6 @@ Present your output in the following format, *using markdown*:
 
 ... (Repeat for all selected words)
 
-# Grammar Analysis:
-
-N[1-5]: Grammar terms or description (Optional. Grammar Documentation links and details)
 
 ------------------------------------------
 
@@ -81,11 +73,52 @@ Please find some example output below.
 
 納期に間に合うように、スケジュールを調整しましょう。(Nouki ni maniau you ni, sukejuuru o chousei shimashou.) - Let's adjust the schedule so we can meet the deadline.
 
+------------------------------------------
+
+`;
+
+export const SYS_PROMPT_GRAMMAR = `**Instructions:**
+You will be provided a Japanese text by the user. You need to analyze the text and provide a grammar cheatsheet. 
+
+1.  **Grammar Description:**
+    * Identify the most advanced and complex grammar points present in the text by JLPT level.
+    * Mark each grammar point with the appropriate JLPT level.
+    * Prioritize N1 over N2 and N2 over N3 etc.
+    * Include examples sentences that are:
+        * Clear and natural-sounding 
+2.  **Brevity:**
+    * You are expected to produce a grammar cheatsheet and nothing else.
+    * Apart from the cheatsheet to do reply to the user, explain anything say anything else.
+
+**Output Format:**
+
+Present your output in the following format, *using markdown*:
+
+# Grammar Analysis:
+
+N[1-5]: [Grammar terms] (romanization and definitions) (Optional. Grammar Documentation links and details)
+[example sentence]
+------------------------------------------
+
+**Output Format:**
+Please find some example output below.
+
+------------------------------------------
+
 # Grammar Analysis:
 
 **N1**: ～ざるを得ない ( ...zaru o enai - cannot help but do ...).
 
+**Example Sentences**:
+他に代わりの先生がいないので、今日は私が教え*ざるを得ない*。
+Since there is no other substitute teacher available, I have to teach today.
+
+エコノミークラスを予約したかったが、どこも空席がないので、ビジネスクラスを予約せざるを得ない。
+I wanted to book economy class, but there were no seats available, so I had to book business class.
+
+明日のテストの成績が悪いと、留年が決定するので、今日は徹夜してでも勉強せざるを得ない。
+If my score on tomorrow's test is bad, I will be held back a year, so I have to study all night.
+
 ------------------------------------------
 
 `;
-export default SYSTEM_PROMPT;
