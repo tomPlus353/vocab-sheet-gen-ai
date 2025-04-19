@@ -13,9 +13,10 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 //lucide sparkle
-import { BookType, Sparkles } from "lucide-react";
+import { BookType, Sparkles, RefreshCcw, Gamepad } from "lucide-react";
 
 import CheatSheet from "./Cheatsheet";
+import CommonButton from "@/components/common/CommonButton";
 
 interface Props {
   activeText: string[];
@@ -71,6 +72,20 @@ const Modal: React.FC<Props> = (props: Props) => {
               mode={"grammar"}
             />
           </TabsContent>
+          <div className="ml-auto flex flex-row items-end">
+            <CommonButton
+              label=""
+              additionalclasses="ml-auto h-10 w-10 flex flex-row items-center px-0 py-0"
+            >
+              <Gamepad className="m-auto h-5 w-5" />
+            </CommonButton>
+            <CommonButton
+              label=""
+              additionalclasses="ml-auto h-10 w-10 flex flex-row items-center px-0 py-0"
+            >
+              <RefreshCcw className="m-auto h-5 w-5" />
+            </CommonButton>
+          </div>
         </Tabs>
       </DialogContent>
     </Dialog>

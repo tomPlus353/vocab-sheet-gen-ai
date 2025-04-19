@@ -93,7 +93,7 @@ const Paginator = ({ allText = [] }: Props) => {
           additionalclasses="align-start mr-auto"
           //emoji for going back
           label={"↩ Enter new text"}
-          onClick={() => router.push("/input", undefined)}
+          onClick={() => router.push("/", undefined)}
         />
         <div className="flex flex-row">
           {/* ereader with next/prev buttons */}

@@ -67,7 +67,7 @@ Please find some example output below.
 
 **納期**:  (のうき) Delivery date; due date.
 
-**Example Sentences**:
+Example:
 
 プロジェクトの納期は来月末です。(Purojekuto no nouki wa raigetsu matsu desu.) – The project's delivery date is the end of next month.
 
@@ -109,7 +109,7 @@ Please find some example output below.
 
 **N1**: ～ざるを得ない ( ...zaru o enai - cannot help but do ...).
 
-**Example Sentences**:
+Example:
 他に代わりの先生がいないので、今日は私が教え*ざるを得ない*。
 Since there is no other substitute teacher available, I have to teach today.
 
