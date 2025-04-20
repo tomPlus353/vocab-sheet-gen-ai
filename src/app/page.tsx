@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import InputTextArea from "./_components/InputTextArea";
+import PageContainer from "@/components/common/PageContainer";
 
 function TextInputPage() {
   const [userText, setUserText] = useState<string>("");
@@ -31,12 +32,12 @@ function TextInputPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 text-gray-100">
+    <PageContainer>
       {/* ... other content ... */}
       <div className="mx-2">
         <InputTextArea {...textAreaProps} />
       </div>
-    </div>
+    </PageContainer>
   );
 }
 

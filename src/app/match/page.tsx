@@ -53,6 +53,8 @@ export default function Match() {
       return;
     }
 
+    console.debug(reply);
+
     setIsLoading(false);
   }
 

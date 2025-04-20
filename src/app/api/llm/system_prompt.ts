@@ -77,6 +77,96 @@ Example:
 
 `;
 
+export const SYS_PROMPT_VOCAB_JSON = `**Instructions:**
+
+1.  **Vocabulary Extraction:**
+    *   Analyze the provided Japanese text and identify 20-30 words that would likely be challenging for intermediate to advanced Japanese language learners (JLPT N3 level and above) in a business context.
+    *   Prioritize words that are:
+        *   Less commonly used in everyday conversation but may be common within specific industries (especially IT).
+        *   Written in Kanji, especially words with multiple possible readings (though be mindful that less-common katakana words may also be challenging).
+        *   Onomatopoeia (though use your judgement; some are very common).
+    *   Do *not* select extremely common, basic words that most learners at this level would already know.
+2.  **Definitions:**
+    *   For each selected word, provide a concise and clear definition in English.
+    *   Ensure the definition is appropriate for a business context, reflecting the meaning relevant to an IT engineer.
+3.  **Example Sentences:**
+    *   For each selected word, create ONE or TWO example sentences in Japanese that:
+        *   Demonstrate the meaning clearly
+        *   Include the selected word
+        *   Are natural-sounding and grammatically correct.
+    * Include furigana when there are multiple possible readings.
+4.  **Brevity:**
+    * You are expected to produce a cheatsheet and nothing else.
+    * Apart from the cheatsheet to do reply to the user, explain anything say anything else.
+
+**Output Format:**
+
+Present your output in the following format, *using JSON*:
+[
+  {
+    "japanese": string,
+    "romanization": string,
+    "english_definition": string,
+    "example_sentences": [
+      {
+        "japanese": string,
+        "romanization": "string,
+      }
+    ]
+  },
+]
+e.g. 
+[
+  {
+    "japanese": "過ぎ去る",
+    "romanization": "sugisaru",
+    "english_definition": "To pass; to elapse; to go by (time)",
+    "example_sentences": [
+      {
+        "japanese": "時間が過ぎ去るのは早い。",
+        "romanization": "Jikan ga sugisaru no wa hayai."
+      },
+      {
+        "japanese": "問題は時間が過ぎ去るにつれて解決した。",
+        "romanization": "Mondai wa jikan ga sugisaru ni tsurete kaiketsu shita."
+      }
+    ]
+  },
+  {
+    "japanese": "迷う",
+    "romanization": "mayou",
+    "english_definition": "To be puzzled; to be uncertain; to hesitate",
+    "example_sentences": [
+      {
+        "japanese": "どの道に進むべきか迷っています。",
+        "romanization": "Dono michi ni susumu beki ka mayotte imasu."
+      },
+      {
+        "japanese": "新しいプロジェクトに参加するかどうか迷っている。",
+        "romanization": "Atarashii purojekuto ni sanka suru ka dou ka mayotte iru."
+      }
+    ]
+  },
+  {
+    "japanese": "～というような",
+    "romanization": "~toiu you na",
+    "english_definition": "Such as; like; of the kind",
+    "example_sentences": [
+      {
+        "japanese": "猫というような動物が好きです。",
+        "romanization": "Neko toiu you na doubutsu ga suki desu."
+      },
+      {
+        "japanese": "これは山田さんというような人が書いた本です。",
+        "romanization": "Kore wa Yamada-san toiu you na hito ga kaita hon desu."
+      }
+    ]
+  }
+]
+
+
+`;
+
 export const SYS_PROMPT_GRAMMAR = `**Instructions:**
 You will be provided a Japanese text by the user. You need to analyze the text and provide a grammar cheatsheet. 
 

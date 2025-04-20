@@ -1,6 +1,10 @@
 import process from "process";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { SYS_PROMPT_VOCAB, SYS_PROMPT_GRAMMAR } from "./system_prompt";
+import { GenerateContentResponse, GoogleGenAI, Type } from "@google/genai";
+import {
+  SYS_PROMPT_VOCAB,
+  SYS_PROMPT_GRAMMAR,
+  SYS_PROMPT_VOCAB_JSON,
+} from "./system_prompt";
 import { getHtmlStringFromMarkdown } from "./utils/renderMarkdown";
 import type { JsonArray } from "@prisma/client/runtime/library";
 
@@ -43,6 +47,8 @@ async function handleGeminiPrompt(
     sys_prompt = SYS_PROMPT_GRAMMAR;
   } else if (mode === "vocab") {
     sys_prompt = SYS_PROMPT_VOCAB;
+  } else if (mode === "vocabGame") {
+    sys_prompt = SYS_PROMPT_VOCAB_JSON;
   }
 
   //get gemini key
@@ -52,18 +58,91 @@ async function handleGeminiPrompt(
   }
 
   //initialize gemini
-  const genAI = new GoogleGenerativeAI(key);
+  const ai = new GoogleGenAI({ apiKey: key });
 
-  //initialize model
-  const model = genAI.getGenerativeModel({
-    systemInstruction: sys_prompt,
-    model: "gemini-2.0-flash",
-  });
+  if (["vocabGame"].includes(mode)) {
+    //json output
 
-  //create prompt
-  prompt = "Create a cheat sheet for this japanese text: \n\n" + prompt;
+    //create prompt
+    prompt = "Create json data for this japanese text: \n\n" + prompt;
 
-  //generate response
-  const result = await model.generateContent(prompt);
-  return result.response.text();
+    //generate response
+    const response: GenerateContentResponse = await ai.models.generateContent({
+      model: "gemini-2.0-flash",
+      contents: prompt,
+      config: {
+        systemInstruction: sys_prompt,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              japanese: {
+                type: Type.STRING,
+                description: "The Japanese term",
+                nullable: false,
+              },
+              romanization: {
+                type: Type.STRING,
+                description: "The romanization of the Japanese term",
+                nullable: false,
+              },
+              english_definition: {
+                type: Type.STRING,
+                description: "The English definition of the term",
+                nullable: false,
+              },
+              example_sentences: {
+                type: Type.ARRAY,
+                description:
+                  "Example sentences in Japanese and their romanization",
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    japanese: {
+                      type: Type.STRING,
+                      description: "Example sentence in Japanese",
+                      nullable: false,
+                    },
+                    romanization: {
+                      type: Type.STRING,
+                      description: "Romanization of the example sentence",
+                      nullable: false,
+                    },
+                  },
+                  required: ["japanese", "romanization"],
+                },
+                nullable: false,
+              },
+            },
+            required: [
+              "japanese",
+              "romanization",
+              "english_definition",
+              "example_sentences",
+            ],
+          },
+        },
+      },
+    });
+    if (response) {
+      return response.text || "";
+    }
+  } else {
+    //text output
+
+    //create prompt
+    prompt = "Create a cheat sheet for this japanese text: \n\n" + prompt;
+
+    //generate response
+    const response = await ai.models.generateContent({
+      model: "gemini-2.0-flash",
+      contents: prompt,
+      config: {
+        systemInstruction: sys_prompt,
+      },
+    });
+    return response.text || "";
+  }
 }
