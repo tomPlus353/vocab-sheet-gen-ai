@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Paginator from "./_components/Paginator";
 import { useRouter } from "next/navigation";
+import PageContainer from "@/components/common/PageContainer";
 
 function PaginatePage() {
   const [textArray, setTextArray] = useState<string[]>([]);
@@ -29,10 +30,10 @@ function PaginatePage() {
 
   return (
     //set gradient
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 text-gray-100">
+    <PageContainer>
       {/* ... other content ... */}
       <Paginator {...paginatorProps} />
-    </div>
+    </PageContainer>
   );
 }
 

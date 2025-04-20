@@ -33,6 +33,8 @@ const Paginator = ({ allText = [] }: Props) => {
     const startIndex = (page - 1) * NUM_PER_PAGE;
     const endIndex = startIndex + NUM_PER_PAGE;
     setActiveText(allText.slice(startIndex, endIndex));
+
+    localStorage.setItem("activeText", activeText.join("\n"));
   };
 
   //set update active text when allText is changed
@@ -92,7 +94,7 @@ const Paginator = ({ allText = [] }: Props) => {
         <CommonButton
           additionalclasses="align-start mr-auto"
           //emoji for going back
-          label={"↩ Enter new text"}
+          label={"↩ Start Again"}
           onClick={() => router.push("/", undefined)}
         />
         <div className="flex flex-row">
