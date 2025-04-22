@@ -25,9 +25,13 @@ export async function POST(request: Request) {
     console.log("markdownResponse: ", markdownResponse);
 
     //convert response to markdown
-    const htmlMarkdownString =
-      await getHtmlStringFromMarkdown(markdownResponse);
-    return Response.json({ htmlMarkdownString: htmlMarkdownString });
+    if (["vocab", "grammar"].includes(mode)) {
+      const htmlMarkdownString =
+        await getHtmlStringFromMarkdown(markdownResponse);
+      return Response.json({ htmlMarkdownString: htmlMarkdownString });
+    } else {
+      return Response.json({ jsonMarkdownString: markdownResponse });
+    }
   } catch (error) {
     console.error("error: ", error);
     return Response.json({ error: error });
@@ -127,7 +131,11 @@ async function handleGeminiPrompt(
       },
     });
     if (response) {
-      return response.text || "";
+      if (response.text) {
+        return response.text;
+      } else {
+        return "";
+      }
     }
   } else {
     //text output
