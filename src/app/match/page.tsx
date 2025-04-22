@@ -15,6 +15,7 @@ export default function Match() {
   async function startGame() {
     setIsLoading(true);
     const activeTextStr = localStorage.getItem("activeText");
+
     //prompt the llm
     const response: Response = await fetch("/api/llm", {
       method: "POST",
@@ -46,12 +47,15 @@ export default function Match() {
       return;
     }
 
-    //handle success
+    //handle empty reply
     const reply: string | undefined | null = jsonResponse?.htmlMarkdownString;
     if (!reply) {
       setIsLoading(false);
+      alert("Server Error: LLM could not generate the game");
       return;
     }
+
+    //handle success
 
     console.debug(reply);
 
@@ -73,16 +77,16 @@ export default function Match() {
   }
   function computeSelectStyle(id: number) {
     const selectedStyle =
-      " bg-amber-500 text-black font-bold hover:bg-amber-500";
+      "bg-amber-500 text-black font-bold hover:bg-amber-500";
     if (id === selected1 || id === selected2) {
       return selectedStyle;
     }
     return "";
   }
 
-  // useEffect(() => {
-  //   console.log("use effect triggered for selected card");
-  // }, [selected1, selected2]);
+  useEffect(() => {
+    console.log("use effect triggered for selected card");
+  }, [selected1, selected2]);
   const router = useRouter();
   return (
     <PageContainer>
