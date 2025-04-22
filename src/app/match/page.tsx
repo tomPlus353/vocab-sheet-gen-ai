@@ -36,7 +36,7 @@ export default function Match() {
   const [selected2, setSelected2] = useState(0);
   const [score, setScore] = useState(0);
   const [answered, setAnswered] = useState<number[]>([]);
-  const [isCurrentCorrect, setIsCurrentCorrect] = useState(false);
+  const [latestCorrectAnw, setLatestCorrectAnw] = useState<number[]>([]);
   const [gameVocabJson, setGameVocabJson] = useState<vocabObj[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -97,8 +97,18 @@ export default function Match() {
       ...(obj as vocabObj),
       type: "back",
     }));
+    const frontShuffled = shuffleArray(front);
+    const backShuffled = shuffleArray(back);
+    const joinedArray: vocabObj[] = [];
+    Array.from({ length: frontShuffled.length }, (_, id) => id).forEach(
+      (i: number) => {
+        joinedArray.push(frontShuffled[i]!);
+        joinedArray.push(backShuffled[i]!);
+      },
+    );
     //sort random
-    setGameVocabJson(shuffleArray([...front, ...back]));
+    setGameVocabJson(joinedArray);
+    //[...frontShuffled, ...backShuffled]);
 
     setIsLoading(false);
   }
@@ -116,15 +126,25 @@ export default function Match() {
 
   function computeSelectStyle(id: number) {
     let selectedStyle = "";
+    //turn buttons green briefly after correct answer
+    if (latestCorrectAnw.includes(id)) {
+      selectedStyle = "bg-green-500 text-black font-bold hover:bg-green-500";
+      return selectedStyle;
+    }
+
+    //todo: mark red if wrong answer
+
+    //hide if already answered
+    if (answered.includes(id)) {
+      //hide the button
+      selectedStyle = "hidden";
+      return selectedStyle;
+    }
+    //mark amber if button is selected
     if (id === selected1 || id === selected2) {
       //check for correct answer
-      if (isCurrentCorrect) {
-        selectedStyle = "bg-green-500 text-black font-bold hover:bg-green-500";
-        return selectedStyle;
-      } else {
-        selectedStyle = "bg-amber-500 text-black font-bold hover:bg-amber-500";
-        return selectedStyle;
-      }
+      selectedStyle = "bg-amber-500 text-black font-bold hover:bg-amber-500";
+      return selectedStyle;
     }
     return selectedStyle;
   }
@@ -151,7 +171,9 @@ export default function Match() {
       const selectedObj2 = gameVocabJson[selected2 - 1];
       //check if the selected objects are the same
       if (selectedObj1?.japanese === selectedObj2?.japanese) {
-        setIsCurrentCorrect(true);
+        setAnswered([...answered, selected1, selected2]);
+        setScore(score + 1);
+        setLatestCorrectAnw([selected1, selected2]);
         //show succcess to the user
         toast({
           title: "Correct Match!",
@@ -159,16 +181,15 @@ export default function Match() {
           duration: 2000,
           variant: "success",
         });
-        setScore(score + 1);
-        sleep(2000)
+        sleep(10000)
           .then(() => {
-            setAnswered([...answered, selected1, selected2]);
+            setSelected1(0);
+            setSelected2(0);
+            setLatestCorrectAnw([]);
           })
           .catch((err) => {
             console.error("Error in sleep: ", err);
           });
-        setSelected1(0);
-        setSelected2(0);
       } else {
         toast({
           title: "Incorrect Match!",
@@ -180,7 +201,7 @@ export default function Match() {
         setSelected2(0);
       }
     }
-  }, [selected1, selected2, gameVocabJson, score]);
+  }, [selected1, selected2]);
 
   const router = useRouter();
   return (
@@ -210,7 +231,7 @@ export default function Match() {
       </div>
       {!isLoading ? (
         <div>
-          <div className="m-auto grid grid-cols-3 lg:w-[80%]">
+          <div className="m-auto grid grid-cols-2 lg:w-[80%]">
             {/* <div className="m-auto flex flex-row lg:w-[80%]"> */}
             {Array.from(
               { length: gameVocabJson.length },
