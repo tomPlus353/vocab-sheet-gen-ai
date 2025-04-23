@@ -8,7 +8,7 @@ import * as React from "react";
 import SectionHeader from "@/components/common/SectionHeader";
 import PageContainer from "@/components/common/PageContainer";
 import { Toaster } from "@/components/ui/toaster";
-import { JsonArray } from "@prisma/client/runtime/library";
+import type { JsonArray } from "@prisma/client/runtime/library";
 import { sleep } from "@trpc/server/unstable-core-do-not-import";
 
 type vocabObj = Record<string, string>;

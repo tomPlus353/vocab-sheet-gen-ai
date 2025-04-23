@@ -4,7 +4,7 @@ import { twMerge } from "tailwind-merge";
 interface Props extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   label?: string | number | undefined;
   additionalclasses?: string;
-  isDisabled?: false;
+  isDisabled?: boolean;
 }
 
 const CommonButton: React.FC<Props> = ({ label, ...props }) => {

@@ -1,12 +1,12 @@
 import process from "process";
-import { GenerateContentResponse, GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
+import type { GenerateContentResponse } from "@google/genai";
 import {
   SYS_PROMPT_VOCAB,
   SYS_PROMPT_GRAMMAR,
   SYS_PROMPT_VOCAB_JSON,
 } from "./system_prompt";
 import { getHtmlStringFromMarkdown } from "./utils/renderMarkdown";
-import type { JsonArray } from "@prisma/client/runtime/library";
 
 type RequestBody = {
   text: string;
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
 async function handleGeminiPrompt(
   prompt: string,
   mode?: string,
-): Promise<string> {
+): Promise<string | undefined> {
   //get system prompt
   let sys_prompt = "";
   if (!mode) {
@@ -151,6 +151,6 @@ async function handleGeminiPrompt(
         systemInstruction: sys_prompt,
       },
     });
-    return response.text || "";
+    return response.text ?? "";
   }
 }
