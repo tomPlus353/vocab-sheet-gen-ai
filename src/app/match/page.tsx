@@ -106,6 +106,7 @@ export default function Match() {
         joinedArray.push(backShuffled[i]!);
       },
     );
+    console.log("joined array: ", joinedArray);
     //sort random
     setGameVocabJson(joinedArray);
     //[...frontShuffled, ...backShuffled]);
@@ -182,10 +183,10 @@ export default function Match() {
         toast({
           title: "Correct Match!",
           description: `You matched ${selectedObj1?.japanese} with ${selectedObj2?.english_definition}`,
-          duration: 2000,
+          duration: 1500,
           variant: "success",
         });
-        sleep(2000)
+        sleep(1000)
           .then(() => {
             setSelected1(0);
             setSelected2(0);
@@ -198,7 +199,7 @@ export default function Match() {
         toast({
           title: "Incorrect Match!",
           description: `You matched ${selectedObj1?.japanese} with ${selectedObj2?.english_definition}`,
-          duration: 2000,
+          duration: 1500,
           variant: "destructive",
         });
         setSelected1(0);
@@ -236,19 +237,48 @@ export default function Match() {
       {!isLoading ? (
         <div>
           <div className="m-auto grid grid-cols-2 lg:w-[80%]">
-            {/* <div className="m-auto flex flex-row lg:w-[80%]"> */}
-            {Array.from(
-              { length: gameVocabJson.length },
-              (_, id) => id + 1,
-            ).map((oneIndex, zeroIndex) => (
-              <CommonButton
-                key={zeroIndex}
-                label={computeLabel(zeroIndex)} //get the label from the json object which starts at 0
-                additionalclasses={computeSelectStyle(oneIndex) ?? ""} //plus one to target the term
-                isDisabled={computeIsDisabled()}
-                onClick={() => handleSelection(oneIndex)} //plus one to target the term
-              />
-            ))}
+            {/* col 1 */}
+            <div>
+              {Array.from(
+                {
+                  length: gameVocabJson.length,
+                },
+                (_, id) => id + 1,
+              ).map((oneIndex, zeroIndex) =>
+                gameVocabJson[zeroIndex]?.type === "front" ? (
+                  <CommonButton
+                    key={oneIndex - 1}
+                    label={computeLabel(oneIndex - 1)} //get the label from the json object which starts at 0
+                    additionalclasses={computeSelectStyle(oneIndex) ?? ""} //plus one to target the term
+                    isTempDisabled={computeIsDisabled()}
+                    onClick={() => handleSelection(oneIndex)} //plus one to target the term
+                  />
+                ) : (
+                  ""
+                ),
+              )}
+            </div>
+            {/* col 2 */}
+            <div>
+              {Array.from(
+                {
+                  length: gameVocabJson.length,
+                },
+                (_, id) => id + 1,
+              ).map((oneIndex, zeroIndex) =>
+                gameVocabJson[zeroIndex]?.type === "back" ? (
+                  <CommonButton
+                    key={oneIndex - 1}
+                    label={computeLabel(oneIndex - 1)} //get the label from the json object which starts at 0
+                    additionalclasses={computeSelectStyle(oneIndex) ?? ""} //plus one to target the term
+                    isTempDisabled={computeIsDisabled()}
+                    onClick={() => handleSelection(oneIndex)} //plus one to target the term
+                  />
+                ) : (
+                  ""
+                ),
+              )}
+            </div>
           </div>
         </div>
       ) : (

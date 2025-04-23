@@ -4,7 +4,7 @@ import { twMerge } from "tailwind-merge";
 interface Props extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   label?: string | number | undefined;
   additionalclasses?: string;
-  isDisabled?: boolean;
+  isTempDisabled?: boolean;
 }
 
 const CommonButton: React.FC<Props> = ({ label, ...props }) => {
@@ -14,7 +14,7 @@ const CommonButton: React.FC<Props> = ({ label, ...props }) => {
   let styleString: string = twMerge(baseStyles, props.additionalclasses);
 
   //if isDisabled is true, add disabled styles
-  if (props.isDisabled) {
+  if (props.isTempDisabled) {
     styleString = twMerge(
       styleString,
       " cursor-not-allowed opacity-50 hover:bg-blue-500/50 hover:text-black",
