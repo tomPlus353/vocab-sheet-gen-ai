@@ -164,6 +164,10 @@ export default function Match() {
     return label;
   }
 
+  function computeIsDisabled(): boolean {
+    return latestCorrectAnw.length !== 0;
+  }
+
   useEffect(() => {
     console.log("use effect triggered for selected card");
     if (selected1 && selected2) {
@@ -181,7 +185,7 @@ export default function Match() {
           duration: 2000,
           variant: "success",
         });
-        sleep(10000)
+        sleep(2000)
           .then(() => {
             setSelected1(0);
             setSelected2(0);
@@ -241,6 +245,7 @@ export default function Match() {
                 key={zeroIndex}
                 label={computeLabel(zeroIndex)} //get the label from the json object which starts at 0
                 additionalclasses={computeSelectStyle(oneIndex) ?? ""} //plus one to target the term
+                isDisabled={computeIsDisabled()}
                 onClick={() => handleSelection(oneIndex)} //plus one to target the term
               />
             ))}
