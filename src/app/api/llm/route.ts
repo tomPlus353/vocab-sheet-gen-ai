@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     console.log("markdownResponse: ", markdownResponse);
 
     //convert response to markdown
-    if (["vocab", "grammar"].includes(mode)) {
+    if (["vocab", "grammar"].includes(mode) && markdownResponse) {
       const htmlMarkdownString =
         await getHtmlStringFromMarkdown(markdownResponse);
       return Response.json({ htmlMarkdownString: htmlMarkdownString });
