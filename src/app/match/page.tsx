@@ -40,77 +40,83 @@ export default function Match() {
   const [gameVocabJson, setGameVocabJson] = useState<vocabObj[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+
+  //start or restart the game
   async function startGame() {
     setIsLoading(true);
     setScore(0);
     setSelected1(0);
     setSelected2(0);
+    setAnswered([]);
+    setLatestCorrectAnw([]);
 
     const activeTextStr = localStorage.getItem("activeText");
-
-    //prompt the llm
-    const response: Response = await fetch("/api/llm", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      cache: "force-cache",
-      body: JSON.stringify({
-        text: activeTextStr,
-        mode: "vocabGame",
-      }),
-    });
-
-    //get the response
-    const jsonResponse = (await response.json()) as unknown as Record<
-      string,
-      string
-    >;
-    //console.log(JSON.stringify(jsonResponse));
-
-    //get response code
-    const responseCode: number = response.status;
-
-    //handle http errors
-    if (responseCode !== 200) {
-      const resText = await response.text();
-      console.log(resText);
+    if (!activeTextStr) {
+      alert("No active text found. Please select a text first.");
       setIsLoading(false);
       return;
     }
 
-    //handle empty reply
-    const reply: string | undefined | null = jsonResponse?.jsonMarkdownString;
-    if (!reply) {
-      setIsLoading(false);
-      alert("Server Error: LLM could not generate the game");
-      return;
+    if (gameVocabJson.length === 0) {
+      //prompt the llm
+      const response: Response = await fetch("/api/llm", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        cache: "force-cache",
+        body: JSON.stringify({
+          text: activeTextStr,
+          mode: "vocabGame",
+        }),
+      });
+
+      //get the response
+      const jsonResponse = (await response.json()) as unknown as Record<
+        string,
+        string
+      >;
+      //console.log(JSON.stringify(jsonResponse));
+
+      //get response code
+      const responseCode: number = response.status;
+
+      //handle empty reply
+      const reply: string | undefined | null = jsonResponse?.jsonMarkdownString;
+
+      //handle http errors
+      if (responseCode !== 200 || !reply) {
+        const resText = await response.text();
+        console.log(resText);
+        setIsLoading(false);
+        alert("Server Error: LLM could not generate the game");
+        return; 
+      }
+
+      //handle success
+      console.log("json string reply", reply);
+      const front: vocabObj[] = (JSON.parse(reply) as JsonArray).map((obj) => ({
+        ...(obj as vocabObj),
+        type: "front",
+      }));
+      const back: vocabObj[] = (JSON.parse(reply) as JsonArray).map((obj) => ({
+        ...(obj as vocabObj),
+        type: "back"
+      }));
+      const frontShuffled = shuffleArray(front);
+      const backShuffled = shuffleArray(back);
+      const joinedArray: vocabObj[] = [];
+      Array.from({ length: frontShuffled.length }, (_, id) => id).forEach(
+        (i: number) => {
+          joinedArray.push(frontShuffled[i]!);
+          joinedArray.push(backShuffled[i]!);
+        },
+      );
+      console.log("joined array: ", joinedArray);
+      //sort random
+      setGameVocabJson(joinedArray);
+      //[...frontShuffled, ...backShuffled]);
     }
-
-    //handle success
-    console.log("json string reply", reply);
-    const front: vocabObj[] = (JSON.parse(reply) as JsonArray).map((obj) => ({
-      ...(obj as vocabObj),
-      type: "front",
-    }));
-    const back: vocabObj[] = (JSON.parse(reply) as JsonArray).map((obj) => ({
-      ...(obj as vocabObj),
-      type: "back",
-    }));
-    const frontShuffled = shuffleArray(front);
-    const backShuffled = shuffleArray(back);
-    const joinedArray: vocabObj[] = [];
-    Array.from({ length: frontShuffled.length }, (_, id) => id).forEach(
-      (i: number) => {
-        joinedArray.push(frontShuffled[i]!);
-        joinedArray.push(backShuffled[i]!);
-      },
-    );
-    console.log("joined array: ", joinedArray);
-    //sort random
-    setGameVocabJson(joinedArray);
-    //[...frontShuffled, ...backShuffled]);
-
     setIsLoading(false);
   }
 
