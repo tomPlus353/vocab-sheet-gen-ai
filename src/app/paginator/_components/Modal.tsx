@@ -1,4 +1,6 @@
+'use client";	'
 import React from "react";
+import { useRouter } from "next/navigation";
 import {
   Dialog,
   DialogContent,
@@ -9,7 +11,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 //lucide sparkle
@@ -25,6 +26,17 @@ interface Props {
 }
 
 const Modal: React.FC<Props> = (props: Props) => {
+  const router = useRouter();
+
+  const handleGoMatch = () => {
+    
+    try {
+      router.push("/match", undefined);
+    } catch (e) {
+      console.log("Error pushing to match page: ", e);
+    }
+  }
+
   //modal
   return (
     <Dialog open={props.open} onOpenChange={props.setOpen}>
@@ -76,6 +88,7 @@ const Modal: React.FC<Props> = (props: Props) => {
             <CommonButton
               label=""
               additionalclasses="ml-auto h-10 w-10 flex flex-row items-center px-0 py-0"
+              onClick={handleGoMatch}
             >
               <Gamepad className="m-auto h-5 w-5" />
             </CommonButton>
