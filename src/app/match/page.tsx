@@ -39,6 +39,8 @@ export default function Match() {
   const [latestCorrectAnw, setLatestCorrectAnw] = useState<number[]>([]);
   const [gameVocabJson, setGameVocabJson] = useState<vocabObj[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [timer, setTimer] = useState(0);
+  const [isGameOver, setIsGameOver] = useState(false);
   const { toast } = useToast();
 
   //start or restart the game
@@ -49,6 +51,7 @@ export default function Match() {
     setSelected2(0);
     setAnswered([]);
     setLatestCorrectAnw([]);
+    setTimer(0);
 
     const activeTextStr = localStorage.getItem("activeText");
     if (!activeTextStr) {
@@ -162,7 +165,10 @@ export default function Match() {
       const termObj = gameVocabJson[id];
       //check if the termObj is defined and has a type property
       if (termObj?.type === "front") {
-        label = termObj?.japanese ?? "undefined";
+        label = `${termObj?.japanese}(${termObj?.romanization})`;
+        if (!label.includes("(")) {
+         label = `${label}(${termObj?.romanization})`;
+        }
       } else if (termObj?.type === "back") {
         // const label: string = termObj?.english ?? "undefined";
         label = termObj?.english_definition ?? "undefined";
@@ -175,6 +181,8 @@ export default function Match() {
     return latestCorrectAnw.length !== 0;
   }
 
+  //called when user selects a card
+  //check if both cards are the same
   useEffect(() => {
     console.log("use effect triggered for selected card");
     if (selected1 && selected2) {
@@ -182,17 +190,19 @@ export default function Match() {
       const selectedObj2 = gameVocabJson[selected2 - 1];
       //check if the selected objects are the same
       if (selectedObj1?.japanese === selectedObj2?.japanese) {
-        setAnswered([...answered, selected1, selected2]);
-        setScore(score + 1);
+        setAnswered((prevAnswered) => [...prevAnswered, selected1, selected2]);
+        setScore((prevScore) => prevScore + 1);
         setLatestCorrectAnw([selected1, selected2]);
         //show succcess to the user
+        console.log("answered1: ", answered.length);
+        console.log("gameVocabJson1: ", gameVocabJson.length);
         toast({
           title: "Correct Match!",
           description: `You matched ${selectedObj1?.japanese} with ${selectedObj2?.english_definition}`,
           duration: 1500,
           variant: "success",
         });
-        sleep(1000)
+        sleep(10)
           .then(() => {
             setSelected1(0);
             setSelected2(0);
@@ -213,6 +223,35 @@ export default function Match() {
       }
     }
   }, [selected1, selected2]);
+
+  //track answered with use effect 
+  useEffect(() => {
+      //check if game is over
+      console.log("answered2: ", answered.length);
+      console.log("gameVocabJson2: ", gameVocabJson.length);
+      if (answered.length === gameVocabJson.length) {
+        const finalTime = timer; //cache final time
+        setIsGameOver(true);
+        toast({
+          title: "Game Over!",
+          description: `You finished the game with a score of ${score}/${gameVocabJson.length / 2} in ${finalTime} seconds`,
+          duration: 5000,
+          variant: "default",
+        });
+      }
+    },
+       [answered]);
+
+  //timer
+  useEffect(() => {
+    //increment timer every second
+    if (isGameOver === false) {
+    const interval = setInterval(() => {
+      setTimer((prev) => prev + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+    }
+  }, [timer, isGameOver]);
 
   const router = useRouter();
   return (
@@ -237,7 +276,7 @@ export default function Match() {
         </p>
         <p className="ml-auto text-lg font-semibold text-blue-300">
           {" "}
-          {`Time: ${score}`}
+          {`Time: ${timer}`}
         </p>
       </div>
       {!isLoading ? (

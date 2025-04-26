@@ -5,7 +5,8 @@ const config = {
     "project": true
   },
   "plugins": [
-    "@typescript-eslint"
+    "@typescript-eslint",
+    "react-hooks",
   ],
   "extends": [
     "next/core-web-vitals",
@@ -16,6 +17,7 @@ const config = {
     "@typescript-eslint/no-unsafe-assignment": "warn",
     "@typescript-eslint/array-type": "off",
     "@typescript-eslint/consistent-type-definitions": "off",
+    "react-hooks/exhaustive-deps": 'off', // <--- THIS IS THE NEW RULE
     "@typescript-eslint/consistent-type-imports": [
       "warn",
       {
