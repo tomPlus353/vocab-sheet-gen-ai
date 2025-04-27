@@ -129,6 +129,10 @@ export default function Match() {
     }
 
     function handleSelection(id: number) {
+        //if the button is already selected, do nothing
+        if (selected1 === id || selected2 === id) {
+            return;
+        }
         console.log("clicked id: ", id);
         if (!selected1 && !selected2) {
             setSelected1(id);
@@ -150,10 +154,10 @@ export default function Match() {
 
         //todo: mark red if wrong answer
 
-        //hide if already answered
+        //hide if already answered but keep the space
         if (answered.includes(id)) {
-            //hide the button
-            selectedStyle = "hidden";
+            //make the button invisible but keep its space
+            selectedStyle = "invisible";
             return selectedStyle;
         }
         //mark amber if button is selected
@@ -188,6 +192,11 @@ export default function Match() {
         return latestCorrectAnw.length !== 0;
     }
 
+    //start the game when the page loads
+    useEffect(() => {
+        startGame();
+    }, []);
+
     //called when user selects a card
     //check if both cards are the same
     useEffect(() => {
@@ -207,9 +216,11 @@ export default function Match() {
                 //show succcess to the user
                 console.log("answered1: ", answered.length);
                 console.log("gameVocabJson1: ", gameVocabJson.length);
+                const label1 = computeLabel(selected1 - 1);
+                const label2 = computeLabel(selected2 - 1);
                 toast({
                     title: "Correct Match!",
-                    description: `You matched ${selectedObj1?.japanese} with ${selectedObj2?.english_definition}`,
+                    description: `You matched ${label1} with ${label2}`,
                     duration: 1500,
                     variant: "success",
                 });
@@ -223,9 +234,11 @@ export default function Match() {
                         console.error("Error in sleep: ", err);
                     });
             } else {
+                const label1 = computeLabel(selected1 - 1);
+                const label2 = computeLabel(selected2 - 1);
                 toast({
                     title: "Incorrect Match!",
-                    description: `You matched ${selectedObj1?.japanese} with ${selectedObj2?.english_definition}`,
+                    description: `You matched ${label1} with ${label2}`,
                     duration: 1500,
                     variant: "destructive",
                 });

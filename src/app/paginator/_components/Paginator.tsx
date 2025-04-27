@@ -4,6 +4,7 @@ import React from "react";
 import Modal from "./Modal";
 import SectionHeader from "../../../components/common/SectionHeader";
 import CommonButton from "@/components/common/CommonButton";
+import { Gamepad } from "lucide-react";
 
 interface Props {
     allText?: string[];
@@ -12,6 +13,7 @@ interface Props {
 const Paginator = ({ allText = [] }: Props) => {
     console.log("Paginator rendered!");
 
+    //state for the current page
     const NUM_PER_PAGE = 3; //Warning, cannot be 0 or lower!
     const cannotPaginate = allText.length === 0;
     const totalPages = cannotPaginate
@@ -29,12 +31,20 @@ const Paginator = ({ allText = [] }: Props) => {
         handleSetActiveText(page, allText);
     };
 
+    //handler functions
     const handleSetActiveText = (page: number, allText: string[]) => {
         const startIndex = (page - 1) * NUM_PER_PAGE;
         const endIndex = startIndex + NUM_PER_PAGE;
         setActiveText(allText.slice(startIndex, endIndex));
 
         localStorage.setItem("activeText", activeText.join("\n"));
+    };
+    const handleGoMatch = () => {
+        try {
+            router.push("/match", undefined);
+        } catch (e) {
+            console.log("Error pushing to match page: ", e);
+        }
     };
 
     //set update active text when allText is changed
@@ -120,11 +130,22 @@ const Paginator = ({ allText = [] }: Props) => {
                                 </p>
                             ))}
                         {activeText.length > 0 && (
-                            <Modal
-                                activeText={activeText}
-                                open={open}
-                                setOpen={setOpen}
-                            ></Modal>
+                            <div className="ml-auto flex flex-row gap-2">
+                                <button
+                                    className="ml-auto w-auto rounded-xl border-2 border-solid border-blue-100/20 bg-blue-500/20 px-3 py-2 hover:bg-blue-500"
+                                    onClick={handleGoMatch}
+                                >
+                                    <div className="flex flex-row">
+                                        <Gamepad className="mr-2 h-5 w-5" />
+                                        <span>Review</span>
+                                    </div>
+                                </button>
+                                <Modal
+                                    activeText={activeText}
+                                    open={open}
+                                    setOpen={setOpen}
+                                ></Modal>
+                            </div>
                         )}
                     </div>
                     {currentPage + 1 <= totalPages && (
