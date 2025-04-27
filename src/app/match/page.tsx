@@ -224,12 +224,12 @@ export default function Match() {
     }
   }, [selected1, selected2]);
 
-  //track answered with use effect 
+  //track answered with use effect to check if game is over
   useEffect(() => {
       //check if game is over
       console.log("answered2: ", answered.length);
       console.log("gameVocabJson2: ", gameVocabJson.length);
-      if (answered.length === gameVocabJson.length) {
+      if (answered.length === gameVocabJson.length && gameVocabJson.length > 0 && !isGameOver) {
         const finalTime = timer; //cache final time
         setIsGameOver(true);
         toast({
