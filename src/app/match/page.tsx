@@ -194,7 +194,9 @@ export default function Match() {
 
     //start the game when the page loads
     useEffect(() => {
-        startGame();
+        startGame().catch((err) => {
+            console.error("Error starting game: ", err);
+        });
     }, []);
 
     //called when user selects a card
