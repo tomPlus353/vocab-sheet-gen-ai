@@ -16,7 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 //lucide sparkle
 import { BookType, Sparkles, RefreshCcw, Gamepad } from "lucide-react";
 
-import CheatSheet from "./Cheatsheet";
+import { CheatSheet } from "./Cheatsheet";
 import CommonButton from "@/components/common/CommonButton";
 
 interface Props {
@@ -27,6 +27,7 @@ interface Props {
 
 const Modal: React.FC<Props> = (props: Props) => {
     const router = useRouter();
+    const [refreshSignal, setRefreshSignal] = React.useState<number>(0);
 
     const handleGoMatch = () => {
         try {
@@ -34,6 +35,10 @@ const Modal: React.FC<Props> = (props: Props) => {
         } catch (e) {
             console.log("Error pushing to match page: ", e);
         }
+    };
+
+    const handleRefreshSignal = () => {
+        setRefreshSignal((prev) => prev + 1);
     };
 
     //modal
@@ -75,12 +80,14 @@ const Modal: React.FC<Props> = (props: Props) => {
                         <CheatSheet
                             activeText={props.activeText.join("\n")}
                             mode={"vocab"}
+                            signal={refreshSignal}
                         />
                     </TabsContent>
                     <TabsContent value="grammar">
                         <CheatSheet
                             activeText={props.activeText.join("\n")}
                             mode={"grammar"}
+                            signal={refreshSignal}
                         />
                     </TabsContent>
                     <div className="ml-auto flex flex-row items-end">
@@ -94,6 +101,7 @@ const Modal: React.FC<Props> = (props: Props) => {
                         <CommonButton
                             label=""
                             additionalclasses="ml-auto h-10 w-10 flex flex-row items-center px-0 py-0"
+                            onClick={handleRefreshSignal}
                         >
                             <RefreshCcw className="m-auto h-5 w-5" />
                         </CommonButton>

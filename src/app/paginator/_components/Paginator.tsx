@@ -104,7 +104,7 @@ const Paginator = ({ allText = [] }: Props) => {
                 <CommonButton
                     additionalclasses="align-start mr-auto"
                     //emoji for going back
-                    label={"↩ Start Again"}
+                    label={"← Start Again"}
                     onClick={() => router.push("/", undefined)}
                 />
                 <div className="flex flex-row">
