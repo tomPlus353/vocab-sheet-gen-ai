@@ -5,6 +5,7 @@ import Modal from "./Modal";
 import SectionHeader from "../../../components/common/SectionHeader";
 import CommonButton from "@/components/common/CommonButton";
 import { Gamepad } from "lucide-react";
+import { paginate } from "../_methods/paginationArray";
 
 interface Props {
     allText?: string[];
@@ -15,6 +16,7 @@ const Paginator = ({ allText = [] }: Props) => {
 
     //state for the current page
     const NUM_PER_PAGE = 3; //Warning, cannot be 0 or lower!
+    const MAX_SHOWN_PAGES = 5;
     const cannotPaginate = allText.length === 0;
     const totalPages = cannotPaginate
         ? 0
@@ -24,11 +26,15 @@ const Paginator = ({ allText = [] }: Props) => {
     const router = useRouter();
     const focusTarget = useRef<HTMLDivElement>(null);
     const [open, setOpen] = useState(false);
+    const [pageNumberArray, setPageNumberArray] = useState(
+        paginate({ current: 1, max: totalPages })?.items,
+    );
 
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
         router.push(`?page=${page}`, undefined);
         handleSetActiveText(page, allText);
+        setPageNumberArray(paginate({ current: page, max: totalPages })?.items);
     };
 
     //handler functions
@@ -156,15 +162,41 @@ const Paginator = ({ allText = [] }: Props) => {
                     )}
                 </div>
                 {/* pagination buttons sections */}
-                <div className="flex justify-between gap-3 px-4 py-2">
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                        (page) => (
-                            <CommonButton
-                                key={page}
-                                label={page}
-                                onClick={() => handlePageChange(page)}
-                            />
-                        ),
+                <div className="flex justify-between">
+                    {Array.from({ length: pageNumberArray?.length ?? 1 }).map(
+                        (_, i) => {
+                            const pageNumber = pageNumberArray?.[i];
+                            const isNumber = typeof pageNumber === "number";
+                            const isEllipsis = pageNumber === "...";
+                            const isCurrent = pageNumber === currentPage;
+                            if (isEllipsis) {
+                                return (
+                                    <div
+                                        key={i}
+                                        className="flex h-5 w-5 items-center justify-center rounded-lg bg-gray-800 text-gray-300"
+                                    >
+                                        {pageNumber}
+                                    </div>
+                                );
+                            }
+
+                            return (
+                                <CommonButton
+                                    key={i}
+                                    label={pageNumberArray?.[i]}
+                                    additionalclasses={`${
+                                        isCurrent
+                                            ? "bg-blue-500 text-white"
+                                            : "bg-gray-800 text-gray-300 hover:bg-blue-500"
+                                    }`}
+                                    onClick={() =>
+                                        isNumber
+                                            ? handlePageChange(pageNumber)
+                                            : null
+                                    }
+                                />
+                            );
+                        },
                     )}
                 </div>
             </div>
