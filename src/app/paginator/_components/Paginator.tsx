@@ -8,15 +8,14 @@ import { Gamepad } from "lucide-react";
 import { paginate } from "../_methods/paginationArray";
 
 interface Props {
-    allText?: string[];
+    allText: string[];
 }
 
 const Paginator = ({ allText = [] }: Props) => {
     console.log("Paginator rendered!");
 
     //state for the current page
-    const NUM_PER_PAGE = 3; //Warning, cannot be 0 or lower!
-    const MAX_SHOWN_PAGES = 5;
+    const NUM_PER_PAGE = 5; //Warning, cannot be 0 or lower!
     const cannotPaginate = allText.length === 0;
     const totalPages = cannotPaginate
         ? 0
@@ -29,6 +28,7 @@ const Paginator = ({ allText = [] }: Props) => {
     const [pageNumberArray, setPageNumberArray] = useState(
         paginate({ current: 1, max: totalPages })?.items,
     );
+    console.log("pageNumberArray:", pageNumberArray);
 
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
@@ -55,10 +55,25 @@ const Paginator = ({ allText = [] }: Props) => {
 
     //set update active text when allText is changed
     useEffect(() => {
-        setCurrentPage(1);
-        router.push(`?page=${1}`, undefined);
-        handleSetActiveText(currentPage, allText);
+        const urlParams = new URLSearchParams(window.location.search);
+        const pageParam = urlParams.get("page");
+        const page = pageParam ? parseInt(pageParam, 10) : 1;
 
+        if (page >= 1 && page <= totalPages) {
+            setCurrentPage(page);
+            setPageNumberArray(
+                paginate({ current: page, max: totalPages })?.items,
+            ); // reset pagination
+            handleSetActiveText(page, allText); // set active text to current page
+            return;
+        } else {
+            setCurrentPage(1); // reset to first page when no page param is set in URL
+            setPageNumberArray(
+                paginate({ current: 1, max: totalPages })?.items,
+            ); // sset pagination
+            // router.push(`?page=${1}`, undefined); // set page number in URL
+            handleSetActiveText(currentPage, allText); // set active text to first page
+        }
         //set focus on the paginator
         console.log("focusTarget.current:", focusTarget.current);
         if (focusTarget.current) {
@@ -71,7 +86,7 @@ const Paginator = ({ allText = [] }: Props) => {
     return !cannotPaginate ? (
         <div className="pagination">
             <div
-                className="flex h-full flex-col items-center focus-within:outline-none"
+                className="flex h-full w-full flex-col items-center focus-within:outline-none"
                 onKeyDown={(e) => {
                     console.log("e.key:", e.key);
                     if (e.key === "ArrowLeft") {
@@ -163,32 +178,30 @@ const Paginator = ({ allText = [] }: Props) => {
                 </div>
                 {/* pagination buttons sections */}
                 <div className="flex justify-between">
-                    {Array.from({ length: pageNumberArray?.length ?? 1 }).map(
+                    {Array.from({ length: pageNumberArray?.length ?? 0 }).map(
                         (_, i) => {
                             const pageNumber = pageNumberArray?.[i];
                             const isNumber = typeof pageNumber === "number";
-                            const isEllipsis = pageNumber === "...";
-                            const isCurrent = pageNumber === currentPage;
+                            const isEllipsis = pageNumber === "…";
+                            const isCurrent = pageNumber == currentPage;
+                            // set the style for the button
+                            // regular button style
+                            let styleString =
+                                "mx-1 px-2 bg-gray-800 text-gray-300 hover:bg-blue-500 hover:text-white";
                             if (isEllipsis) {
-                                return (
-                                    <div
-                                        key={i}
-                                        className="flex h-5 w-5 items-center justify-center rounded-lg bg-gray-800 text-gray-300"
-                                    >
-                                        {pageNumber}
-                                    </div>
-                                );
+                                // ellipsis button style
+                                styleString =
+                                    "mx-1 px-2 bg-gray-800 text-gray-300";
+                            } else if (isCurrent) {
+                                // current page button style
+                                styleString =
+                                    "mx-1 px-2 bg-blue-500 text-white";
                             }
-
                             return (
                                 <CommonButton
                                     key={i}
                                     label={pageNumberArray?.[i]}
-                                    additionalclasses={`${
-                                        isCurrent
-                                            ? "bg-blue-500 text-white"
-                                            : "bg-gray-800 text-gray-300 hover:bg-blue-500"
-                                    }`}
+                                    additionalclasses={styleString}
                                     onClick={() =>
                                         isNumber
                                             ? handlePageChange(pageNumber)
