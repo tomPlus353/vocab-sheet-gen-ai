@@ -128,7 +128,7 @@ const Paginator = ({ allText = [] }: Props) => {
                     label={"← Start Again"}
                     onClick={() => router.push("/", undefined)}
                 />
-                <div className="flex flex-row">
+                <div className="flex w-full flex-row justify-between">
                     {/* ereader with next/prev buttons */}
                     {currentPage - 1 > 0 && (
                         <CommonButton
@@ -191,7 +191,7 @@ const Paginator = ({ allText = [] }: Props) => {
                             if (isEllipsis) {
                                 // ellipsis button style
                                 styleString =
-                                    "mx-1 px-2 bg-gray-800 text-gray-300";
+                                    "mx-1 px-2 bg-gray-800 text-gray-300 no-hover";
                             } else if (isCurrent) {
                                 // current page button style
                                 styleString =

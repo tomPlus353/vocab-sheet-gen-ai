@@ -52,6 +52,7 @@ export default function Match() {
         setAnswered([]);
         setLatestCorrectAnw([]);
         setTimer(0);
+        setIsGameOver(false);
 
         const activeTextStr = localStorage.getItem("activeText");
         if (!activeTextStr) {
@@ -273,14 +274,14 @@ export default function Match() {
 
     //timer
     useEffect(() => {
-        //increment timer every second
-        if (isGameOver === false) {
+        //increment timer every second after game starts until game is over
+        if (!isLoading && !isGameOver) {
             const interval = setInterval(() => {
                 setTimer((prev) => prev + 1);
             }, 1000);
             return () => clearInterval(interval);
         }
-    }, [timer, isGameOver]);
+    }, [timer, isGameOver, isLoading]);
 
     const router = useRouter();
     return (
