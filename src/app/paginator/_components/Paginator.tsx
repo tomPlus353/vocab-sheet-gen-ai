@@ -47,6 +47,7 @@ const Paginator = ({ allText = [] }: Props) => {
     };
     const handleGoMatch = () => {
         try {
+            localStorage.setItem("activeText", activeText.join("\n"));
             router.push("/match", undefined);
         } catch (e) {
             console.log("Error pushing to match page: ", e);
