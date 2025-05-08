@@ -124,7 +124,9 @@ export default function Match() {
             console.log("joined array: ", joinedArray);
             //sort random
             setGameVocabJson(joinedArray);
-            //[...frontShuffled, ...backShuffled]);
+        } else {
+            //if gameVocabJson is already set, shuffle it again
+            setGameVocabJson(shuffleArray(gameVocabJson));
         }
         setIsLoading(false);
     }
