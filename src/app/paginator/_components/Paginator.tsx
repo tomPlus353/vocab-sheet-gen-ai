@@ -129,15 +129,19 @@ const Paginator = ({ allText = [] }: Props) => {
                     label={"← Start Again"}
                     onClick={() => router.push("/", undefined)}
                 />
-                <div className="flex w-full flex-row justify-between">
+                {/* the reader and buttons to each side of it */}
+                <div className="flex w-full flex-row justify-center">
                     {/* ereader with next/prev buttons */}
-                    {currentPage - 1 > 0 && (
-                        <CommonButton
-                            label={"<"}
-                            onClick={() => handlePageChange(currentPage - 1)}
-                        />
-                    )}
-                    <div className="mx-2 flex flex-col rounded-xl border border-blue-400/30 bg-gray-800 px-4 py-2 shadow-md">
+
+                    <CommonButton
+                        label={"<"}
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        additionalclasses={
+                            currentPage - 1 > 0 ? "" : "invisible"
+                        }
+                    />
+
+                    <div className="mx-2 flex w-[80%] flex-col rounded-xl border border-blue-400/30 bg-gray-800 px-4 py-2 shadow-md">
                         <h2 className="px-2 text-lg font-semibold text-blue-300">
                             {" "}
                             {`Page ${currentPage} of ${totalPages}`}
@@ -170,12 +174,13 @@ const Paginator = ({ allText = [] }: Props) => {
                             </div>
                         )}
                     </div>
-                    {currentPage + 1 <= totalPages && (
-                        <CommonButton
-                            label={">"}
-                            onClick={() => handlePageChange(currentPage + 1)}
-                        />
-                    )}
+                    <CommonButton
+                        label={">"}
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        additionalclasses={
+                            currentPage + 1 <= totalPages ? "" : "invisible"
+                        }
+                    />
                 </div>
                 {/* pagination buttons sections */}
                 <div className="flex justify-between">
