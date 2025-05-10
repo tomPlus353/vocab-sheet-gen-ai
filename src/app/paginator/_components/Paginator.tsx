@@ -71,7 +71,7 @@ const Paginator = ({ allText = [] }: Props) => {
             setCurrentPage(1); // reset to first page when no page param is set in URL
             setPageNumberArray(
                 paginate({ current: 1, max: totalPages })?.items,
-            ); // sset pagination
+            ); // set pagination
             // router.push(`?page=${1}`, undefined); // set page number in URL
             handleSetActiveText(currentPage, allText); // set active text to first page
         }

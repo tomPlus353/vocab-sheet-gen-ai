@@ -18,7 +18,7 @@ function TextInputPage() {
         //split user text into an array
         //for any of these sentence endings: .?!\n。！？
         const textArray = userText
-            .split(/[\.\?!\n。！？]/)
+            .split(/(.*?[\.\?!\n。！？])/g)
             .filter((x) => x !== "");
         //save textArray to local storage
         console.log("setting text array to local storage: ", textArray);
