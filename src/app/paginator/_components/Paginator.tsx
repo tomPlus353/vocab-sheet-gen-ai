@@ -141,7 +141,7 @@ const Paginator = ({ allText = [] }: Props) => {
                         }
                     />
 
-                    <div className="mx-2 flex w-[80%] flex-col rounded-xl border border-blue-400/30 bg-gray-800 px-4 py-2 shadow-md">
+                    <div className="mx-2 flex w-[60%] md:w-[80%] flex-col rounded-xl border border-blue-400/30 bg-gray-800 px-4 py-2 shadow-md">
                         <h2 className="px-2 text-lg font-semibold text-blue-300">
                             {" "}
                             {`Page ${currentPage} of ${totalPages}`}
