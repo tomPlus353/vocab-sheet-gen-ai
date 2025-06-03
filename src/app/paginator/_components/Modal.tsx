@@ -44,7 +44,7 @@ const Modal: React.FC<Props> = (props: Props) => {
     //modal
     return (
         <Dialog open={props.open} onOpenChange={props.setOpen}>
-            <DialogTrigger className="ml-auto w-auto rounded-xl border-2 border-solid border-blue-100/20 bg-blue-500/20 px-3 py-2 hover:bg-blue-500 shrink">
+            <DialogTrigger className="ml-auto w-full md:w-auto rounded-xl border-2 border-solid border-blue-100/20 bg-blue-500/20 px-3 py-2 hover:bg-blue-500 shrink">
                 <div className="flex flex-row">
                     <Sparkles className="mr-2 h-3 w-3" />
                     <span className="text-sm md:text-md shrink" >Cheatsheet</span>
