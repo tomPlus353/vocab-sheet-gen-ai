@@ -156,7 +156,7 @@ const Paginator = ({ allText = [] }: Props) => {
                                 </p>
                             ))}
                         {activeText.length > 0 && (
-                            <div className="ml-auto flex flex-row gap-2">
+                            <div className="ml-auto flex flex-row">
                                 <button
                                     className="ml-auto w-auto rounded-xl border-2 border-solid border-blue-100/20 bg-blue-500/20 px-3 py-2 hover:bg-blue-500"
                                     onClick={handleGoMatch}
