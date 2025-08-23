@@ -162,8 +162,8 @@ const Paginator = ({ allText = [] }: Props) => {
                                     onClick={handleGoMatch}
                                 >
                                     <div className="flex flex-row">
-                                        <Gamepad className="mr-2 h-5 w-5" />
-                                        <span>Review</span>
+                                        <Gamepad className="mx-auto md:mr-2 h-5 w-5" />
+                                        <span className="hidden md:inline">Review</span>
                                     </div>
                                 </button>
                                 <Modal
