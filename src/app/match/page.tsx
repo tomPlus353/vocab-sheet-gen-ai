@@ -10,6 +10,8 @@ import PageContainer from "@/components/common/PageContainer";
 import { Toaster } from "@/components/ui/toaster";
 import type { JsonArray } from "@prisma/client/runtime/library";
 import { sleep } from "@trpc/server/unstable-core-do-not-import";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 
 type vocabObj = Record<string, string>;
 
@@ -42,6 +44,9 @@ export default function Match() {
     const [timer, setTimer] = useState(0);
     const [isGameOver, setIsGameOver] = useState(false);
     const { toast } = useToast();
+
+    //Settings
+    const [isHideReading, setIsHideReading] = useState<boolean>(false);
 
     //start or restart the game
     async function startGame() {
@@ -179,9 +184,10 @@ export default function Match() {
             const termObj = gameVocabJson[id];
             //check if the termObj is defined and has a type property
             if (termObj?.type === "front") {
-                label = `${termObj?.japanese}(${termObj?.romanization})`;
-                if (!label.includes("(")) {
-                    label = `${label}(${termObj?.romanization})`;
+                if (isHideReading) {
+                    label = `${termObj?.japanese}`;
+                } else {
+                    label = `${termObj?.japanese}(${termObj?.romanization})`;
                 }
             } else if (termObj?.type === "back") {
                 // const label: string = termObj?.english ?? "undefined";
@@ -225,7 +231,7 @@ export default function Match() {
                 const label2 = computeLabel(selected2 - 1);
                 toast({
                     title: "Correct Match!",
-                    description: `You matched ${label1} with ${label2}`,
+                    description: `${label1} == ${label2}`,
                     duration: 1500,
                     variant: "success",
                 });
@@ -268,7 +274,7 @@ export default function Match() {
             toast({
                 title: "Game Over!",
                 description: `You finished the game with a score of ${score}/${gameVocabJson.length / 2} in ${finalTime} seconds`,
-                duration: 5000,
+                duration: 2000,
                 variant: "default",
             });
         }
@@ -289,18 +295,29 @@ export default function Match() {
     return (
         <PageContainer>
             <SectionHeader title={"Matching Game"} />
-            <CommonButton
-                additionalclasses="align-start mr-auto"
-                //emoji for going back
-                label={"↩ Back to Ereader"}
-                onClick={() => router.back()}
-            />
-            <CommonButton
-                additionalclasses="align-start mr-auto"
-                //emoji for going back
-                label={"↩ Play Again"}
-                onClick={() => startGame()}
-            />
+            <div className="flex flex-row justify-start">
+                <CommonButton
+                    //emoji for going back
+                    label={"↩ Back to Ereader"}
+                    onClick={() => router.back()}
+                />
+                <CommonButton
+                    //emoji for going back
+                    label={"↩ Play Again"}
+                    onClick={() => startGame()}
+                />
+                <div className="flex items-center ml-auto gap-1">
+                    <Checkbox className="bg-gray-200 border-indigo-800 data-[state=checked]:bg-indigo-900"
+                        id="hide-reading"
+                        checked={isHideReading}
+                        onCheckedChange={() => setIsHideReading(isHideReading ? false : true)}
+                    >
+                    </Checkbox>
+                    <Label htmlFor="hide-reading">
+                        <p>Hide reading</p>
+                    </Label>
+                </div>
+            </div>
             <div className="flex flex-row md:w-[80%]">
                 <p className="text-lg font-semibold text-blue-300">
                     {" "}
