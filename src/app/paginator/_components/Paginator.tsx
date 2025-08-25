@@ -158,11 +158,13 @@ const Paginator = ({ allText = [] }: Props) => {
                         {activeText.length > 0 && (
                             <div className="ml-auto flex flex-row">
                                 <button
-                                    className="ml-auto w-auto rounded-xl border-2 border-solid border-blue-100/20 bg-blue-500/20 px-3 py-2 hover:bg-blue-500 shrink"
+                                    className="has-tooltip relative ml-auto w-auto rounded-xl border-2 border-solid border-blue-100/20 bg-blue-500/20 px-3 py-2 hover:bg-blue-500 shrink"
                                     onClick={handleGoMatch}
                                 >
+                                    <span className='tooltip absolute right-0 bottom-full rounded shadow-lg p-1 bg-black text-white text-sm -mt-8'>Generate game to study vocab</span>
                                     <div className="flex flex-row">
-                                        <Gamepad className="mx-auto md:mr-2 h-5 w-5" />
+                                        <Gamepad className="mx-auto md:mr-2 h-5 w-5" >
+                                        </Gamepad>
                                         <span className="hidden md:inline">Review</span>
                                     </div>
                                 </button>
