@@ -4,9 +4,11 @@ import { useState, useEffect } from "react";
 import Paginator from "./_components/Paginator";
 import { useRouter } from "next/navigation";
 import PageContainer from "@/components/common/PageContainer";
+import { set } from "zod";
 
 function PaginatePage() {
   const [textArray, setTextArray] = useState<string[]>([]);
+  const [numSentences, setNumSentences] = useState<string>("5");
   const router = useRouter();
 
   useEffect(() => {
@@ -19,13 +21,15 @@ function PaginatePage() {
     }
     try {
       setTextArray(JSON.parse(textArrayString) as unknown as string[]);
+      setNumSentences(localStorage.getItem("numSentences") || "5");
     } catch (error) {
-      console.error("error when parsing textArray from local storage", error);
+      console.error("Error when parsing data from local storage", error);
     }
   }, []);
 
   const paginatorProps = {
     allText: textArray,
+    numSentences: numSentences,
   };
 
   return (

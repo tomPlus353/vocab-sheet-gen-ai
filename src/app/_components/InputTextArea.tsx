@@ -3,6 +3,8 @@ import React from "react";
 import { useEffect, useState } from "react";
 import SectionHeader from "@/components/common/SectionHeader";
 import CommonButton from "@/components/common/CommonButton";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Label } from "@/components/ui/label"
 import { Send, AlignLeft, FileText } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getTokenizer } from "kuromojin";
@@ -19,14 +21,14 @@ const InputTextArea = ({
   userText,
 }: Props) => {
   const [japaneseWordCount, setJapaneseWordCount] = useState(0);
-  // async function tokenizePromise(userText: string) {
-  //   await tokenize(userText)
-  //     .then((tokens) => {
-  //       console.log(tokens);
-  //       setJapaneseWordCount(tokens.length);
-  //     })
-  //     .catch((e) => console.error(e));
-  // }
+  const [numSentences, setNumSentences] = useState(localStorage.getItem("numSentences") || "5");
+
+  const handleSetSentencesPerPage = (requestedNumPages: string) => {
+    // function to set number of pages in paginator based on user input
+    setNumSentences(requestedNumPages);
+    localStorage.setItem("numSentences", requestedNumPages.toString());
+    console.log("numSentences set to: ", requestedNumPages);
+  };
 
   useEffect(() => {
     try {
@@ -63,6 +65,7 @@ const InputTextArea = ({
     <div>
       <SectionHeader title="Input Text" />
       <Card className="mx-auto flex max-w-md flex-col items-center justify-center rounded-xl border border-blue-400/30 bg-gray-800 px-4 py-2 text-gray-100 shadow-xl">
+
         <CardHeader className="border-b border-gray-700/50 pb-2">
           <CardTitle className="text-center text-lg font-bold text-white">
             {"Insert text you want to analyze below"}
@@ -78,6 +81,7 @@ const InputTextArea = ({
               <Send className="h-5 w-5" /> Submit
             </div>
           </CommonButton>
+
           {/* stats section */}
           <div className="flex flex-row items-center gap-4">
             {/* sentence count */}
@@ -102,6 +106,24 @@ const InputTextArea = ({
             </div>
           </div>
           {/* stats section stop*/}
+
+          <Select value={numSentences} onValueChange={handleSetSentencesPerPage}>
+            <Label className="w-[150px] mt-2 mb-1 mr-auto">Sentences per page</Label>
+            <SelectTrigger className="w-[150px] bg-black shadow-md focus-within:outline-none text-white mr-auto mb-2">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-gray-900 text-white">
+              {["5", "10", "25", "50", "100", "all"].map((value) => (
+                <SelectItem
+                  key={value}
+                  value={value}
+                  className={`hover:font-bold hover:bg-grey-100 focus:font-bold ${numSentences === value ? "font-bold" : ""}`}
+                >
+                  {value === "all" ? "All" : value}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </CardContent>
       </Card>
     </div>

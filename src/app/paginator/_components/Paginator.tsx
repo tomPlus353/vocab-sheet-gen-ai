@@ -9,17 +9,31 @@ import { paginate } from "../_methods/paginationArray";
 
 interface Props {
     allText: string[];
+    numSentences: string;
 }
 
-const Paginator = ({ allText = [] }: Props) => {
+const Paginator = ({ allText = [], numSentences = "5" }: Props) => {
     console.log("Paginator rendered!");
 
-    //state for the current page
-    const NUM_PER_PAGE = 5; //Warning, cannot be 0 or lower!
+    //convert numSentences string from localstorage into a number
+    let numPerPage = 5; //Warning, cannot be 0 or lower!
+    if (numSentences.toLowerCase() === "all") {
+        numPerPage = allText.length;
+    } else {
+        const parsed = parseInt(numSentences, 10);
+        if (!isNaN(parsed) && parsed > 0) {
+            numPerPage = parsed;
+        } else {
+            console.warn(
+                `numSentences prop is not a valid number: ${numSentences}. Defaulting to 5.`,
+            );
+        }
+    }
+    //other state variables
     const cannotPaginate = allText.length === 0;
     const totalPages = cannotPaginate
         ? 0
-        : Math.ceil(allText.length / NUM_PER_PAGE);
+        : Math.ceil(allText.length / numPerPage);
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [activeText, setActiveText] = useState<string[]>([]);
     const router = useRouter();
@@ -39,8 +53,8 @@ const Paginator = ({ allText = [] }: Props) => {
 
     //handler functions
     const handleSetActiveText = (page: number, allText: string[]) => {
-        const startIndex = (page - 1) * NUM_PER_PAGE;
-        const endIndex = startIndex + NUM_PER_PAGE;
+        const startIndex = (page - 1) * numPerPage;
+        const endIndex = startIndex + numPerPage;
         setActiveText(allText.slice(startIndex, endIndex));
 
         localStorage.setItem("activeText", activeText.join("\n"));

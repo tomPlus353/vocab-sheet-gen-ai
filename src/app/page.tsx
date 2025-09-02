@@ -27,6 +27,8 @@ function TextInputPage() {
         router.push("/paginator", undefined);
     };
 
+
+
     const textAreaProps = {
         handleTextEntry,
         handleTextSubmit,
