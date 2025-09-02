@@ -306,24 +306,24 @@ export default function Match() {
                     label={"↩ Play Again"}
                     onClick={() => startGame()}
                 />
-                <div className="flex items-center ml-auto gap-1">
+                <div className="flex items-center mr-auto gap-1 text-xl">
                     <Checkbox className="bg-gray-200 border-indigo-800 data-[state=checked]:bg-indigo-900"
                         id="hide-reading"
                         checked={isHideReading}
                         onCheckedChange={() => setIsHideReading(isHideReading ? false : true)}
                     >
                     </Checkbox>
-                    <Label htmlFor="hide-reading">
+                    <Label htmlFor="hide-reading" className="cursor-pointer text-lg">
                         <p>Hide reading</p>
                     </Label>
                 </div>
             </div>
-            <div className="flex flex-row md:w-[80%]">
+            <div className="flex flex-row mx-12 justify-between">
                 <p className="text-lg font-semibold text-blue-300">
                     {" "}
                     {`Score: ${score}/${gameVocabJson.length / 2}`}
                 </p>
-                <p className="ml-auto text-lg font-semibold text-blue-300">
+                <p className="text-lg font-semibold text-blue-300">
                     {" "}
                     {`Time: ${timer}`}
                 </p>
