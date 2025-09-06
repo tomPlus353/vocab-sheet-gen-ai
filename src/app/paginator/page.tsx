@@ -21,7 +21,7 @@ function PaginatePage() {
     }
     try {
       setTextArray(JSON.parse(textArrayString) as unknown as string[]);
-      setNumSentences(localStorage.getItem("numSentences") || "5");
+      setNumSentences(localStorage.getItem("numSentences") ?? "5");
     } catch (error) {
       console.error("Error when parsing data from local storage", error);
     }

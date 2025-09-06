@@ -21,7 +21,7 @@ const InputTextArea = ({
   userText,
 }: Props) => {
   const [japaneseWordCount, setJapaneseWordCount] = useState(0);
-  const [numSentences, setNumSentences] = useState(localStorage.getItem("numSentences") || "5");
+  const [numSentences, setNumSentences] = useState(localStorage.getItem("numSentences") ?? "5");
 
   const handleSetSentencesPerPage = (requestedNumPages: string) => {
     // function to set number of pages in paginator based on user input
