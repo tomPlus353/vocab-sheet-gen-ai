@@ -13,7 +13,7 @@ interface Props {
 }
 
 const Paginator = ({ allText = [], numSentences = "5" }: Props) => {
-    console.log("Paginator rendered!");
+    console.log("Paginator component start rendering!");
 
     //convert numSentences string from localstorage into a number
     let numPerPage = 5; //Warning, cannot be 0 or lower!
@@ -52,16 +52,20 @@ const Paginator = ({ allText = [], numSentences = "5" }: Props) => {
     };
 
     //handler functions
-    const handleSetActiveText = (page: number, allText: string[]) => {
+    const handleSetActiveText = (page = 1, allText: string[]) => {
+        console.log("handleSetActiveText called with page:", page, "and allText:", allText);
+        if (allText.length == 0) {
+            return;
+        }
         const startIndex = (page - 1) * numPerPage;
         const endIndex = startIndex + numPerPage;
-        setActiveText(allText.slice(startIndex, endIndex));
-
-        localStorage.setItem("activeText", activeText.join("\n"));
+        const textToSet = allText.slice(startIndex, endIndex);
+        console.log("Updating active text, textToSet:", textToSet);
+        setActiveText(textToSet);
+        localStorage.setItem("activeText", JSON.stringify(textToSet));
     };
     const handleGoMatch = () => {
         try {
-            localStorage.setItem("activeText", activeText.join("\n"));
             router.push("/match", undefined);
         } catch (e) {
             console.log("Error pushing to match page: ", e);

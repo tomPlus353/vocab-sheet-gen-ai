@@ -12,6 +12,7 @@ function PaginatePage() {
   const router = useRouter();
 
   useEffect(() => {
+    console.log("Paginator page use effect ran on mount");
     // Retrieve textArray from local storage during mounting
     const textArrayString = localStorage.getItem("textArray") ?? "[]";
     if (!textArrayString) {
