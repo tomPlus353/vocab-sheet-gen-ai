@@ -47,6 +47,7 @@ export default function Match() {
 
     //Settings
     const [isHideReading, setIsHideReading] = useState<boolean>(false);
+    const [isTestReading, setIsTestReading] = useState<boolean>(false);
 
     //start or restart the game
     async function startGame() {
@@ -181,8 +182,9 @@ export default function Match() {
     function computeLabel(id: number): string {
         let label = "";
         if (gameVocabJson.length > 0) {
+            //get the term object
             const termObj = gameVocabJson[id];
-            //check if the termObj is defined and has a type property
+            //check if the termObj is defined and has a type property, then check if it is front or back
             if (termObj?.type === "front") {
                 if (isHideReading) {
                     label = `${termObj?.japanese}`;
@@ -190,8 +192,11 @@ export default function Match() {
                     label = `${termObj?.japanese}(${termObj?.romanization})`;
                 }
             } else if (termObj?.type === "back") {
-                // const label: string = termObj?.english ?? "undefined";
-                label = termObj?.english_definition ?? "undefined";
+                if (isTestReading) {
+                    label = `${termObj?.romanization}`;
+                } else {
+                    label = termObj?.english_definition ?? "undefined";
+                }
             }
         }
         return label;
@@ -314,7 +319,19 @@ export default function Match() {
                     >
                     </Checkbox>
                     <Label htmlFor="hide-reading" className="cursor-pointer text-lg">
-                        <p>Hide reading</p>
+                        <p>Hide Reading</p>
+                    </Label>
+                </div>
+                <div className="flex items-center mr-auto gap-1 text-xl">
+                    <Checkbox className="bg-gray-200 border-indigo-800 data-[state=checked]:bg-indigo-900"
+                        id="test-reading"
+                        checked={isTestReading}
+                        onCheckedChange={() => setIsTestReading(isTestReading ? false : true)}
+                        disabled={isHideReading ? false : true} // only enable when reading is hidden
+                    >
+                    </Checkbox>
+                    <Label htmlFor="test-reading" className="cursor-pointer text-lg">
+                        <p>Test Reading</p>
                     </Label>
                 </div>
             </div>
