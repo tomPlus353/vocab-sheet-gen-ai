@@ -4,7 +4,7 @@ import React from "react";
 import Modal from "./Modal";
 import SectionHeader from "../../../components/common/SectionHeader";
 import CommonButton from "@/components/common/CommonButton";
-import { Gamepad } from "lucide-react";
+import { Gamepad, Grid2x2Check } from "lucide-react";
 import { paginate } from "../_methods/paginationArray";
 
 interface Props {
@@ -60,7 +60,7 @@ const Paginator = ({ allText = [], numSentences = "5" }: Props) => {
         const startIndex = (page - 1) * numPerPage;
         const endIndex = startIndex + numPerPage;
         const textToSet = allText.slice(startIndex, endIndex);
-        console.log("Updating active text, textToSet:", textToSet);
+        //console.log("Updating active text, textToSet:", textToSet);
         setActiveText(textToSet);
         localStorage.setItem("activeText", JSON.stringify(textToSet));
     };
@@ -181,9 +181,9 @@ const Paginator = ({ allText = [], numSentences = "5" }: Props) => {
                                 >
                                     <span className='tooltip absolute right-0 bottom-full rounded shadow-lg p-1 bg-black text-white text-sm -mt-8'>Generate game to study vocab</span>
                                     <div className="flex flex-row">
-                                        <Gamepad className="mx-auto md:mr-2 h-5 w-5" >
-                                        </Gamepad>
-                                        <span className="hidden md:inline">Review</span>
+                                        <Grid2x2Check className="mx-auto md:mr-2 h-5 w-5" >
+                                        </Grid2x2Check>
+                                        <span className="hidden md:inline">Match</span>
                                     </div>
                                 </button>
                                 <Modal

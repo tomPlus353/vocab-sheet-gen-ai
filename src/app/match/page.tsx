@@ -97,10 +97,12 @@ export default function Match() {
 
             //handle http errors
             if (responseCode !== 200 || !reply) {
-                const resText = await response.text();
-                console.log(resText);
+                console.log(reply);
                 setIsLoading(false);
-                alert("Server Error: LLM could not generate the game");
+                alert("Server Error: LLM could not generate the game."
+                    + "\nStatus code: " + responseCode
+                    + "\nResponse: " + (reply ?? "Empty response")
+                );
                 return;
             }
 
@@ -186,7 +188,7 @@ export default function Match() {
             const termObj = gameVocabJson[id];
             //check if the termObj is defined and has a type property, then check if it is front or back
             if (termObj?.type === "front") {
-                if (isHideReading) {
+                if (isHideReading || isTestReading) {
                     label = `${termObj?.japanese}`;
                 } else {
                     label = `${termObj?.japanese}(${termObj?.romanization})`;
@@ -327,7 +329,6 @@ export default function Match() {
                         id="test-reading"
                         checked={isTestReading}
                         onCheckedChange={() => setIsTestReading(isTestReading ? false : true)}
-                        disabled={isHideReading ? false : true} // only enable when reading is hidden
                     >
                     </Checkbox>
                     <Label htmlFor="test-reading" className="cursor-pointer text-lg">

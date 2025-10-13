@@ -21,16 +21,19 @@ export async function POST(request: Request) {
     const mode = requestBody.mode;
 
     //get raw gemini response
-    const markdownResponse = await handleGeminiPrompt(prompt, mode);
-    console.log("markdownResponse: ", markdownResponse);
+    const llmResponse = await handleGeminiPrompt(prompt, mode);
+    if (!llmResponse) {
+      return Response.json({ error: "No response from LLM" }, { status: 500 });
+    }
+    console.log("markdownResponse: ", llmResponse);
 
     //convert response to markdown
-    if (["vocab", "grammar"].includes(mode) && markdownResponse) {
+    if (["vocab", "grammar"].includes(mode)) {
       const htmlMarkdownString =
-        await getHtmlStringFromMarkdown(markdownResponse);
+        await getHtmlStringFromMarkdown(llmResponse);
       return Response.json({ htmlMarkdownString: htmlMarkdownString });
     } else {
-      return Response.json({ jsonMarkdownString: markdownResponse });
+      return Response.json({ jsonMarkdownString: llmResponse });
     }
   } catch (error) {
     console.error("error: ", error);
@@ -71,71 +74,76 @@ async function handleGeminiPrompt(
     prompt = "Create json data for this japanese text: \n\n" + prompt;
 
     //generate response
-    const response: GenerateContentResponse = await ai.models.generateContent({
-      model: "gemini-2.0-flash",
-      contents: prompt,
-      config: {
-        systemInstruction: sys_prompt,
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.ARRAY,
-          items: {
-            type: Type.OBJECT,
-            properties: {
-              japanese: {
-                type: Type.STRING,
-                description: "The Japanese term",
-                nullable: false,
-              },
-              romanization: {
-                type: Type.STRING,
-                description: "The romanization of the Japanese term",
-                nullable: false,
-              },
-              english_definition: {
-                type: Type.STRING,
-                description: "The English definition of the term",
-                nullable: false,
-              },
-              example_sentences: {
-                type: Type.ARRAY,
-                description:
-                  "Example sentences in Japanese and their romanization",
-                items: {
-                  type: Type.OBJECT,
-                  properties: {
-                    japanese: {
-                      type: Type.STRING,
-                      description: "Example sentence in Japanese",
-                      nullable: false,
-                    },
-                    romanization: {
-                      type: Type.STRING,
-                      description: "Romanization of the example sentence",
-                      nullable: false,
-                    },
-                  },
-                  required: ["japanese", "romanization"],
+    try {
+      const response: GenerateContentResponse = await ai.models.generateContent({
+        model: "gemini-2.0-flash",
+        contents: prompt,
+        config: {
+          systemInstruction: sys_prompt,
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                japanese: {
+                  type: Type.STRING,
+                  description: "The Japanese term",
+                  nullable: false,
                 },
-                nullable: false,
+                romanization: {
+                  type: Type.STRING,
+                  description: "The romanization of the Japanese term",
+                  nullable: false,
+                },
+                english_definition: {
+                  type: Type.STRING,
+                  description: "The English definition of the term",
+                  nullable: false,
+                },
+                example_sentences: {
+                  type: Type.ARRAY,
+                  description:
+                    "Example sentences in Japanese and their romanization",
+                  items: {
+                    type: Type.OBJECT,
+                    properties: {
+                      japanese: {
+                        type: Type.STRING,
+                        description: "Example sentence in Japanese",
+                        nullable: false,
+                      },
+                      romanization: {
+                        type: Type.STRING,
+                        description: "Romanization of the example sentence",
+                        nullable: false,
+                      },
+                    },
+                    required: ["japanese", "romanization"],
+                  },
+                  nullable: false,
+                },
               },
+              required: [
+                "japanese",
+                "romanization",
+                "english_definition",
+                "example_sentences",
+              ],
             },
-            required: [
-              "japanese",
-              "romanization",
-              "english_definition",
-              "example_sentences",
-            ],
           },
         },
-      },
-    });
-    if (response) {
-      if (response.text) {
-        return response.text;
-      } else {
-        return "";
+      });
+      if (response) {
+        if (response.text) {
+          return response.text;
+        } else {
+          return "";
+        }
       }
+    } catch (error) {
+      console.log("Error when fetching response from llm: ", error);
+      return "";
     }
   } else {
     //text output
