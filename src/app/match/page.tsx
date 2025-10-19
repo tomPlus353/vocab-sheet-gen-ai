@@ -61,7 +61,7 @@ export default function Match() {
     const termsPerRound = 5;
 
     //start or restart the game
-    async function startGame(currentRound?: string = round) {
+    async function startGame(currentRound: string = round) {
         // set/reset game state
         setIsLoading(true);
         setScore(0);
@@ -181,8 +181,10 @@ export default function Match() {
         setRound(value);
         //restart the game with new round, while catching any errors and indicating to the user
         startGame(value).catch((err) => {
-            console.error("Error starting game: ", err);
-            alert("Error starting game: " + err.message);
+            const errorMessage = err instanceof Error ? err.message : String(err);
+
+            console.error("Error starting game: ", errorMessage);
+            alert("Error starting game: " + errorMessage);
         });
     }
 
