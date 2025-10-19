@@ -351,7 +351,7 @@ export default function Match() {
     return (
         <PageContainer>
             <SectionHeader title={"Matching Game"} />
-            <div className="flex flex-row justify-start">
+            <div className="flex flex-wrap justify-start">
                 <CommonButton
                     //emoji for going back
                     label={"↩ Back to Ereader"}
