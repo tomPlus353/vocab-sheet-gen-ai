@@ -6,6 +6,7 @@ import React, {
     //  Key
 } from "react";
 import { createHash } from "crypto";
+import { getHashedCache, setHashedCache } from "@/lib/utils";
 
 interface CheatSheetProps {
     activeText: string;
@@ -24,10 +25,9 @@ export function loadCheatSheet(
         setIsLoading(true);
 
         //check if the request has been cached
-        const hashToCheck = createHash("sha256")
-            .update(props.mode + props.activeText)
-            .digest("hex");
-        const cachedResponse = localStorage.getItem(hashToCheck);
+        const cachedResponse = getHashedCache(props.mode + props.activeText);
+
+        //if cached content exists and not an explicit refresh, use the cache
         if (cachedResponse && !isRefresh) {
             setSheetContent(cachedResponse);
             setIsLoading(false);
@@ -78,10 +78,8 @@ export function loadCheatSheet(
         setIsLoading(false);
 
         //cache the request using hash of activeText
-        const hashToSet = createHash("sha256")
-            .update(props.mode + props.activeText)
-            .digest("hex");
-        localStorage.setItem(hashToSet, reply);
+        setHashedCache(props.mode + props.activeText, reply);
+
     }
 
     //fetch data if rendering on the client only

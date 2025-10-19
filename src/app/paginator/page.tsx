@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import Paginator from "./_components/Paginator";
 import { useRouter } from "next/navigation";
 import PageContainer from "@/components/common/PageContainer";
-import { set } from "zod";
 
 function PaginatePage() {
   const [textArray, setTextArray] = useState<string[]>([]);

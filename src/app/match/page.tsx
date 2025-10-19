@@ -1,10 +1,13 @@
 "use client";
+import * as React from "react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
-import CommonButton from "@/components/common/CommonButton";
 
-import * as React from "react";
+import CommonButton from "@/components/common/CommonButton";
+import { getHashedCache, setHashedCache } from "@/lib/utils";
+
+
 import SectionHeader from "@/components/common/SectionHeader";
 import PageContainer from "@/components/common/PageContainer";
 import { Toaster } from "@/components/ui/toaster";
@@ -12,6 +15,8 @@ import type { JsonArray } from "@prisma/client/runtime/library";
 import { sleep } from "@trpc/server/unstable-core-do-not-import";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+
 
 type vocabObj = Record<string, string>;
 
@@ -34,6 +39,7 @@ function shuffleArray(vocabArray: vocabObj[]) {
 }
 
 export default function Match() {
+    //game state
     const [selected1, setSelected1] = useState(0);
     const [selected2, setSelected2] = useState(0);
     const [score, setScore] = useState(0);
@@ -44,13 +50,19 @@ export default function Match() {
     const [timer, setTimer] = useState(0);
     const [isGameOver, setIsGameOver] = useState(false);
     const { toast } = useToast();
+    const [roundsArray, setRoundsArray] = useState<string[]>([]);
 
-    //Settings
+    //User Settings
     const [isHideReading, setIsHideReading] = useState<boolean>(false);
     const [isTestReading, setIsTestReading] = useState<boolean>(false);
+    const [round, setRound] = useState<string>("1");
+
+    // constant settings
+    const termsPerRound = 5;
 
     //start or restart the game
-    async function startGame() {
+    async function startGame(currentRound?: string = round) {
+        // set/reset game state
         setIsLoading(true);
         setScore(0);
         setSelected1(0);
@@ -67,7 +79,14 @@ export default function Match() {
             return;
         }
 
-        if (gameVocabJson.length === 0) {
+        //initialize empty reply from cache or llm
+        let reply: string | undefined = "";
+
+        const cachedJsonString = getHashedCache("vocabGame" + activeTextStr);
+        if (cachedJsonString) {
+            reply = cachedJsonString;
+        }
+        else {
             //prompt the llm
             const response: Response = await fetch("/api/llm", {
                 method: "POST",
@@ -91,9 +110,8 @@ export default function Match() {
             //get response code
             const responseCode: number = response.status;
 
-            //handle empty reply
-            const reply: string | undefined | null =
-                jsonResponse?.jsonMarkdownString;
+            //get the reply
+            reply = jsonResponse?.jsonMarkdownString;
 
             //handle http errors
             if (responseCode !== 200 || !reply) {
@@ -105,38 +123,67 @@ export default function Match() {
                 );
                 return;
             }
-
-            //handle success
-            console.log("json string reply", reply);
-            const front: vocabObj[] = (JSON.parse(reply) as JsonArray).map(
-                (obj) => ({
-                    ...(obj as vocabObj),
-                    type: "front",
-                }),
-            );
-            const back: vocabObj[] = (JSON.parse(reply) as JsonArray).map(
-                (obj) => ({
-                    ...(obj as vocabObj),
-                    type: "back",
-                }),
-            );
-            const frontShuffled = shuffleArray(front);
-            const backShuffled = shuffleArray(back);
-            const joinedArray: vocabObj[] = [];
-            Array.from({ length: frontShuffled.length }, (_, id) => id).forEach(
-                (i: number) => {
-                    joinedArray.push(frontShuffled[i]!);
-                    joinedArray.push(backShuffled[i]!);
-                },
-            );
-            console.log("joined array: ", joinedArray);
-            //sort random
-            setGameVocabJson(joinedArray);
-        } else {
-            //if gameVocabJson is already set, shuffle it again
-            setGameVocabJson(shuffleArray(gameVocabJson));
+            //cache the request using hash of activeText
+            setHashedCache("vocabGame" + activeTextStr, reply);
         }
+
+        //handle success
+        console.log("json string reply", reply);
+
+        const replyJson = JSON.parse(reply) as JsonArray
+
+        // Calculate total number of rounds, array of rounds 
+        // and select terms for the current round
+        const roundIndex = Number(currentRound) - 1; // convert round index to zero based
+        console.log("roundIndex: ", roundIndex);
+        const totalRounds = Math.ceil(replyJson.length / termsPerRound);
+        console.log("totalRounds: ", totalRounds);
+        setRoundsArray(Array.from(
+            { length: totalRounds }, (_, i) => (i + 1)
+                .toString()
+        ));
+        const termsForGame = replyJson.slice(
+            roundIndex * termsPerRound,
+            (roundIndex + 1) * termsPerRound
+        );
+        console.log("termsForGame: ", termsForGame);
+
+        // generate two cards of each term, one for front and one for back
+        const front: vocabObj[] = termsForGame.map(
+            (obj) => ({
+                ...(obj as vocabObj),
+                type: "front",
+            }),
+        );
+        const back: vocabObj[] = termsForGame.map(
+            (obj) => ({
+                ...(obj as vocabObj),
+                type: "back",
+            }),
+        );
+        const frontShuffled = shuffleArray(front);
+        const backShuffled = shuffleArray(back);
+        const joinedArray: vocabObj[] = [];
+        Array.from({ length: frontShuffled.length }, (_, id) => id).forEach(
+            (i: number) => {
+                joinedArray.push(frontShuffled[i]!);
+                joinedArray.push(backShuffled[i]!);
+            },
+        );
+        console.log("joined array: ", joinedArray);
+        //sort random
+        setGameVocabJson(joinedArray);
+
         setIsLoading(false);
+    }
+
+    function handleRoundChange(value: string) {
+        setRound(value);
+        //restart the game with new round, while catching any errors and indicating to the user
+        startGame(value).catch((err) => {
+            console.error("Error starting game: ", err);
+            alert("Error starting game: " + err.message);
+        });
     }
 
     function handleSelection(id: number) {
@@ -324,6 +371,7 @@ export default function Match() {
                         <p>Hide Reading</p>
                     </Label>
                 </div>
+
                 <div className="flex items-center mr-auto gap-1 text-xl">
                     <Checkbox className="bg-gray-200 border-indigo-800 data-[state=checked]:bg-indigo-900"
                         id="test-reading"
@@ -334,6 +382,28 @@ export default function Match() {
                     <Label htmlFor="test-reading" className="cursor-pointer text-lg">
                         <p>Test Reading</p>
                     </Label>
+                </div>
+                <div className="flex flex-col items-start mr-auto gap-1 text-xl">
+                    <Label className="mb-1" htmlFor="round-select">Round</Label>
+                    <Select value={round} onValueChange={handleRoundChange}>
+                        <SelectTrigger
+                            id="round-select"
+                            className="bg-black shadow-md focus-within:outline-none text-white mb-2"
+                        >
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-gray-900 text-white">
+                            {roundsArray.map((value) => (
+                                <SelectItem
+                                    key={value}
+                                    value={value}
+                                    className={`hover:font-bold hover:bg-grey-100 focus:font-bold ${round === value ? "font-bold" : ""}`}
+                                >
+                                    {value}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                 </div>
             </div>
             <div className="flex flex-row mx-12 justify-between">
