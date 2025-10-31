@@ -232,6 +232,17 @@ export default function Match() {
         return selectedStyle;
     }
 
+    function computeRoundButtonStyle(direction: "prev" | "next") {
+        let buttonStyle = "mx-1 p-1";
+        if (direction === "prev" && Number(round) <= 1) {
+            buttonStyle += " invisible";
+        }
+        if (direction === "next" && Number(round) >= totalRounds) {
+            buttonStyle += " invisible";
+        }
+        return buttonStyle;
+    }
+
     function computeLabel(id: number): string {
         let label = "";
         if (gameVocabJson.length > 0) {
@@ -389,10 +400,13 @@ export default function Match() {
                 </div>
                 {/* row changing UI */}
                 <div className="flex flex-row">
-                    {Number(round) > 1 && <CommonButton
+                    <CommonButton
                         label={"<"}
+                        additionalclasses={
+                            computeRoundButtonStyle("prev") ?? "invisible"
+                        }
                         onClick={() => handleRoundChange((Math.max(1, Number(round) - 1)).toString())}
-                    />}
+                    />
                     <div className="flex flex-col items-start mr-auto gap-1 text-xl">
                         <Label className="mb-1" htmlFor="round-select">Round</Label>
                         <Select value={round} onValueChange={handleRoundChange}>
@@ -415,10 +429,13 @@ export default function Match() {
                             </SelectContent>
                         </Select>
                     </div>
-                    {Number(round) < totalRounds && <CommonButton
+                    <CommonButton
                         label={">"}
+                        additionalclasses={
+                            computeRoundButtonStyle("next") ?? "invisible"
+                        }
                         onClick={() => handleRoundChange((Math.max(1, Number(round) + 1)).toString())}
-                    />}
+                    />
                 </div>
             </div>
             <div className="flex flex-row mx-12 justify-between">
