@@ -233,7 +233,9 @@ export default function Match() {
     }
 
     function computeRoundButtonStyle(direction: "prev" | "next") {
-        let buttonStyle = "mx-1 p-1";
+        // base style
+        let buttonStyle = "mx-1 p-1 bg-indigo-600 shadow-md focus-within:outline-indigo-600 text-white";
+        // add invisible class if at first or last round
         if (direction === "prev" && Number(round) <= 1) {
             buttonStyle += " invisible";
         }
@@ -438,10 +440,15 @@ export default function Match() {
                     />
                 </div>
             </div>
+            {/* Stats row */}
             <div className="flex flex-row mx-12 justify-between">
                 <p className="text-lg font-semibold text-blue-300">
                     {" "}
                     {`Score: ${score}/${gameVocabJson.length / 2}`}
+                </p>
+                <p className="text-lg font-semibold text-blue-300">
+                    {" "}
+                    {`Round: ${round}/${totalRounds}`}
                 </p>
                 <p className="text-lg font-semibold text-blue-300">
                     {" "}
