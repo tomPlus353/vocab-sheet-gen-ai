@@ -51,6 +51,7 @@ export default function Match() {
     const [isGameOver, setIsGameOver] = useState(false);
     const { toast } = useToast();
     const [roundsArray, setRoundsArray] = useState<string[]>([]);
+    const [totalRounds, setTotalRounds] = useState<number>(1);
 
     //User Settings
     const [isHideReading, setIsHideReading] = useState<boolean>(false);
@@ -136,7 +137,7 @@ export default function Match() {
         // and select terms for the current round
         const roundIndex = Number(currentRound) - 1; // convert round index to zero based
         console.log("roundIndex: ", roundIndex);
-        const totalRounds = Math.ceil(replyJson.length / termsPerRound);
+        setTotalRounds(Math.ceil(replyJson.length / termsPerRound));
         console.log("totalRounds: ", totalRounds);
         setRoundsArray(Array.from(
             { length: totalRounds }, (_, i) => (i + 1)
@@ -178,6 +179,7 @@ export default function Match() {
     }
 
     function handleRoundChange(value: string) {
+        console.log("Round changing to ", value, "Total rounds: ", totalRounds);
         setRound(value);
         //restart the game with new round, while catching any errors and indicating to the user
         startGame(value).catch((err) => {
@@ -385,27 +387,38 @@ export default function Match() {
                         <p>Test Reading</p>
                     </Label>
                 </div>
-                <div className="flex flex-col items-start mr-auto gap-1 text-xl">
-                    <Label className="mb-1" htmlFor="round-select">Round</Label>
-                    <Select value={round} onValueChange={handleRoundChange}>
-                        <SelectTrigger
-                            id="round-select"
-                            className="bg-black shadow-md focus-within:outline-none text-white mb-2"
-                        >
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-gray-900 text-white">
-                            {roundsArray.map((value) => (
-                                <SelectItem
-                                    key={value}
-                                    value={value}
-                                    className={`hover:font-bold hover:bg-grey-100 focus:font-bold ${round === value ? "font-bold" : ""}`}
-                                >
-                                    {value}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                {/* row changing UI */}
+                <div className="flex flex-row">
+                    {Number(round) > 1 && <CommonButton
+                        label={"<"}
+                        onClick={() => handleRoundChange((Math.max(1, Number(round) - 1)).toString())}
+                    />}
+                    <div className="flex flex-col items-start mr-auto gap-1 text-xl">
+                        <Label className="mb-1" htmlFor="round-select">Round</Label>
+                        <Select value={round} onValueChange={handleRoundChange}>
+                            <SelectTrigger
+                                id="round-select"
+                                className="bg-black shadow-md focus-within:outline-none text-white mb-2"
+                            >
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-gray-900 text-white">
+                                {roundsArray.map((value) => (
+                                    <SelectItem
+                                        key={value}
+                                        value={value}
+                                        className={`hover:font-bold hover:bg-grey-100 focus:font-bold ${round === value ? "font-bold" : ""}`}
+                                    >
+                                        {value}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    {Number(round) < totalRounds && <CommonButton
+                        label={">"}
+                        onClick={() => handleRoundChange((Math.max(1, Number(round) + 1)).toString())}
+                    />}
                 </div>
             </div>
             <div className="flex flex-row mx-12 justify-between">
