@@ -511,7 +511,7 @@ export default function Match() {
                     </div>
                 </div>
             ) : (
-                <div className="h-20 w-20 animate-spin self-center rounded-full border-4 border-gray-200 border-t-blue-500 text-center"></div>
+                <div className="mt-12 h-40 w-40 md:h-80 md:w-80 border-8 md:border-[16px] rounded-full animate-spin border-gray-200 border-t-blue-500 text-center justify-self-center"></div>
             )}
             <Toaster />
         </PageContainer>
