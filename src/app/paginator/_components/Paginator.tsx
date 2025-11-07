@@ -6,34 +6,36 @@ import SectionHeader from "../../../components/common/SectionHeader";
 import CommonButton from "@/components/common/CommonButton";
 import { Gamepad, Grid2x2Check } from "lucide-react";
 import { paginate } from "../_methods/paginationArray";
+import { useSettings } from "@/app/SettingsProvider";
 
 interface Props {
     allText: string[];
     numSentences: string;
 }
 
-const Paginator = ({ allText = [], numSentences = "5" }: Props) => {
+const Paginator = ({ allText = [] }: Props) => {
     console.log("Paginator component start rendering!");
 
     //convert numSentences string from localstorage into a number
-    let numPerPage = 5; //Warning, cannot be 0 or lower!
-    if (numSentences.toLowerCase() === "all") {
-        numPerPage = allText.length;
-    } else {
-        const parsed = parseInt(numSentences, 10);
-        if (!isNaN(parsed) && parsed > 0) {
-            numPerPage = parsed;
-        } else {
-            console.warn(
-                `numSentences prop is not a valid number: ${numSentences}. Defaulting to 5.`,
-            );
-        }
-    }
+    const { perPage } = useSettings();
+
+    // if (numSentences.toLowerCase() === "all") {
+    //     numPerPage = allText.length;
+    // } else {
+    //     const parsed = parseInt(numSentences, 10);
+    //     if (!isNaN(parsed) && parsed > 0) {
+    //         numPerPage = parsed;
+    //     } else {
+    //         console.warn(
+    //             `numSentences prop is not a valid number: ${numSentences}. Defaulting to 5.`,
+    //         );
+    //     }
+    // }
     //other state variables
     const cannotPaginate = allText.length === 0;
     const totalPages = cannotPaginate
         ? 0
-        : Math.ceil(allText.length / numPerPage);
+        : Math.ceil(allText.length / perPage);
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [activeText, setActiveText] = useState<string[]>([]);
     const router = useRouter();
@@ -57,8 +59,8 @@ const Paginator = ({ allText = [], numSentences = "5" }: Props) => {
         if (allText.length == 0) {
             return;
         }
-        const startIndex = (page - 1) * numPerPage;
-        const endIndex = startIndex + numPerPage;
+        const startIndex = (page - 1) * perPage;
+        const endIndex = startIndex + perPage;
         const textToSet = allText.slice(startIndex, endIndex);
         //console.log("Updating active text, textToSet:", textToSet);
         setActiveText(textToSet);

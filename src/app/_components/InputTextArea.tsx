@@ -26,15 +26,11 @@ const InputTextArea = ({
 
   const handleSetSentencesPerPage = (requestedNumPages: string) => {
     // function to set number of pages in paginator based on user input
-    setPerPageContext(requestedNumPages);
-    localStorage.setItem("numSentences", requestedNumPages.toString());
+    setPerPageContext(requestedNumPages === "all" ? Number.MAX_SAFE_INTEGER : Number(requestedNumPages));
     console.log("numSentences set to: ", requestedNumPages);
   };
 
-  useEffect(() => {
-    // const savedNumSentences = localStorage.getItem("numSentences") ?? "5";
-    // setPerPageContext(perPage);
-  }, []);
+
 
   useEffect(() => {
     try {

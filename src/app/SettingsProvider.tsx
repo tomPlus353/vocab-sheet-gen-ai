@@ -1,5 +1,5 @@
 'use client';
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 type SettingsContextType = {
     perPage: number;
@@ -11,6 +11,17 @@ const SettingsContext = createContext<SettingsContextType | undefined>(undefined
 export const SettingsProvider = ({ children }: { children: React.ReactNode }) => {
     const [perPage, setPerPage] = useState(5);
     const setPerPageContext = (n: number) => setPerPage(n);
+
+    // on mount, load settings from localStorage
+    useEffect(() => {
+        const savedNumSentences = localStorage.getItem("numSentences") ?? "5";
+        setPerPageContext(Number(savedNumSentences));
+    }, []);
+
+    // whenever settings change, save to localStorage
+    useEffect(() => {
+        localStorage.setItem("numSentences", perPage.toString());
+    }, [perPage]);
 
     return <SettingsContext.Provider value={{ perPage: perPage, setPerPageContext }}>{children}</SettingsContext.Provider>;
 };
