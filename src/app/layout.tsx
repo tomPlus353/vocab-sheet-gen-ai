@@ -4,6 +4,7 @@ import { GeistSans } from "geist/font/sans";
 import { type Metadata } from "next";
 
 import { TRPCReactProvider } from "@/trpc/react";
+import { SettingsProvider } from "./SettingsProvider";
 
 export const metadata: Metadata = {
   title: "Japanese Ereader",
@@ -17,8 +18,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${GeistSans.variable}`}>
       <body>
-        <TRPCReactProvider>{children}</TRPCReactProvider>
-      </body>
-    </html>
+        <SettingsProvider>
+          <TRPCReactProvider>{children}</TRPCReactProvider>
+        </SettingsProvider>
+      </body >
+    </html >
   );
 }

@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Send, AlignLeft, FileText } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getTokenizer } from "kuromojin";
+import { useSettings } from "../SettingsProvider";
 
 interface Props {
   handleTextEntry: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
@@ -21,18 +22,18 @@ const InputTextArea = ({
   userText,
 }: Props) => {
   const [japaneseWordCount, setJapaneseWordCount] = useState(0);
-  const [numSentences, setNumSentences] = useState("5");
+  const { perPage, setPerPageContext } = useSettings();
 
   const handleSetSentencesPerPage = (requestedNumPages: string) => {
     // function to set number of pages in paginator based on user input
-    setNumSentences(requestedNumPages);
+    setPerPageContext(requestedNumPages);
     localStorage.setItem("numSentences", requestedNumPages.toString());
     console.log("numSentences set to: ", requestedNumPages);
   };
 
   useEffect(() => {
-    const savedNumSentences = localStorage.getItem("numSentences") ?? "5";
-    setNumSentences(savedNumSentences);
+    // const savedNumSentences = localStorage.getItem("numSentences") ?? "5";
+    // setPerPageContext(perPage);
   }, []);
 
   useEffect(() => {
@@ -112,7 +113,7 @@ const InputTextArea = ({
           </div>
           {/* stats section stop*/}
 
-          <Select value={numSentences} onValueChange={handleSetSentencesPerPage}>
+          <Select value={String(perPage)} onValueChange={handleSetSentencesPerPage}>
             <Label className="w-[150px] mt-2 mb-1 mr-auto">Sentences per page</Label>
             <SelectTrigger className="w-[150px] bg-black shadow-md focus-within:outline-none text-white mr-auto mb-2">
               <SelectValue />
@@ -122,7 +123,7 @@ const InputTextArea = ({
                 <SelectItem
                   key={value}
                   value={value}
-                  className={`hover:font-bold hover:bg-grey-100 focus:font-bold ${numSentences === value ? "font-bold" : ""}`}
+                  className={`hover:font-bold hover:bg-grey-100 focus:font-bold ${String(perPage) === value ? "font-bold" : ""}`}
                 >
                   {value === "all" ? "All" : value}
                 </SelectItem>
