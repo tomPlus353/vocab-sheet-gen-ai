@@ -374,10 +374,10 @@ export default function Match() {
                 />
                 <CommonButton
                     //emoji for going back
-                    label={"↩ Play Again"}
+                    label={"⟳ Play Again"}
                     onClick={() => startGame()}
                 />
-                <div className="flex items-center mr-auto gap-1 text-xl">
+                <div className="flex items-center mr-auto gap-1 text-lg">
                     <Checkbox className="bg-gray-200 border-indigo-800 data-[state=checked]:bg-indigo-900"
                         id="hide-reading"
                         checked={isHideReading}
@@ -389,7 +389,7 @@ export default function Match() {
                     </Label>
                 </div>
 
-                <div className="flex items-center mr-auto gap-1 text-xl">
+                <div className="flex items-center mr-auto gap-1 text-lg">
                     <Checkbox className="bg-gray-200 border-indigo-800 data-[state=checked]:bg-indigo-900"
                         id="test-reading"
                         checked={isTestReading}
@@ -409,7 +409,7 @@ export default function Match() {
                         }
                         onClick={() => handleRoundChange((Math.max(1, Number(round) - 1)).toString())}
                     />
-                    <div className="flex flex-col items-start mr-auto gap-1 text-xl">
+                    <div className="flex flex-col items-start mr-auto gap-1 text-lg">
                         <Label className="mb-1" htmlFor="round-select">Round</Label>
                         <Select value={round} onValueChange={handleRoundChange}>
                             <SelectTrigger
