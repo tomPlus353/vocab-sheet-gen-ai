@@ -220,7 +220,7 @@ export default function Match() {
         //hide if already answered but keep the space
         if (answered.includes(id)) {
             //hide the button and remove the space
-            selectedStyle = "hidden";
+            selectedStyle = "invisible";
             return selectedStyle;
         }
         //mark amber if button is selected
