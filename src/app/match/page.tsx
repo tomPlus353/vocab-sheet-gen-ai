@@ -16,6 +16,7 @@ import { sleep } from "@trpc/server/unstable-core-do-not-import";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Loader } from "./_components/Loader";
 
 
 type vocabObj = Record<string, string>;
@@ -511,7 +512,7 @@ export default function Match() {
                     </div>
                 </div>
             ) : (
-                <div className="mt-12 h-40 w-40 md:h-80 md:w-80 border-8 md:border-[16px] rounded-full animate-spin border-gray-200 border-t-blue-500 text-center justify-self-center"></div>
+                <Loader />
             )}
             <Toaster />
         </PageContainer>
