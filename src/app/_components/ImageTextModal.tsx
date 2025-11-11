@@ -90,7 +90,7 @@ export default function ImageTextModal({ open, onOpenChange, text, setTextboxFun
                     <DialogDescription className="text-gray-300">
                         Extracted text from the image is shown below. <br />
                         Do you wish to save this text for study? <br />
-                        * Note: By clicking "Save" below, this will replace any text you’ve entered previously. <br />
+                        * Note: By clicking &quot;Save&quot; below, this will replace any text you’ve entered previously. <br />
                         You can also copy the text to your clipboard. <br />
                     </DialogDescription>
                 </DialogHeader>
