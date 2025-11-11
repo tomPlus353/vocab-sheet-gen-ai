@@ -23,10 +23,11 @@ const InputTextArea = ({
 }: Props) => {
   const [japaneseWordCount, setJapaneseWordCount] = useState(0);
   const { perPage, setPerPageContext } = useSettings();
+  const perPageOptions = ["1", "3", "5", "10"];
 
   const handleSetSentencesPerPage = (requestedNumPages: string) => {
     // function to set number of pages in paginator based on user input
-    setPerPageContext(requestedNumPages === "all" ? Number.MAX_SAFE_INTEGER : Number(requestedNumPages));
+    setPerPageContext(Number(requestedNumPages));
     console.log("numSentences set to: ", requestedNumPages);
   };
 
@@ -115,13 +116,13 @@ const InputTextArea = ({
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-gray-900 text-white">
-              {["5", "10", "25", "50", "100", "all"].map((value) => (
+              {perPageOptions.map((value) => (
                 <SelectItem
                   key={value}
                   value={value}
                   className={`hover:font-bold hover:bg-grey-100 focus:font-bold ${String(perPage) === value ? "font-bold" : ""}`}
                 >
-                  {value === "all" ? "All" : value}
+                  {value}
                 </SelectItem>
               ))}
             </SelectContent>
