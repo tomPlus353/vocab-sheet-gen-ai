@@ -1,34 +1,47 @@
 "use client";
 import React from "react";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import SectionHeader from "@/components/common/SectionHeader";
 import CommonButton from "@/components/common/CommonButton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
-import { Send, AlignLeft, FileText } from "lucide-react";
+import { Send, AlignLeft, FileText, Camera } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getTokenizer } from "kuromojin";
 import { useSettings } from "../SettingsProvider";
+import ImageUploader from "./ImageUploader";
 
-interface Props {
-  handleTextEntry: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
-  handleTextSubmit: () => void;
-  userText: string;
-}
-
-const InputTextArea = ({
-  handleTextEntry,
-  handleTextSubmit,
-  userText,
-}: Props) => {
+const InputTextArea = () => {
+  const [userText, setUserText] = useState<string>("");
   const [japaneseWordCount, setJapaneseWordCount] = useState(0);
   const { perPage, setPerPageContext } = useSettings();
   const perPageOptions = ["1", "3", "5", "10"];
+
+  const router = useRouter();
 
   const handleSetSentencesPerPage = (requestedNumPages: string) => {
     // function to set number of pages in paginator based on user input
     setPerPageContext(Number(requestedNumPages));
     console.log("numSentences set to: ", requestedNumPages);
+  };
+
+  const handleTextEntry = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    console.log("event.target.value: ", event.target.value);
+    setUserText(event.target.value);
+    console.log("userText: ", userText);
+  };
+  const handleTextSubmit = () => {
+    //split user text into an array
+    //for any of these sentence endings: .?!\n。！？
+    const textArray = userText
+      .split(/(.*?[\.\?!\n。！？])/g)
+      .filter((x) => x !== "");
+    //save textArray to local storage
+    console.log("setting text array to local storage: ", textArray);
+    localStorage.setItem("textArray", JSON.stringify(textArray));
+    console.log("about to push to paginator");
+    router.push("/paginator", undefined);
   };
 
 
@@ -79,11 +92,16 @@ const InputTextArea = ({
             onChange={handleTextEntry}
             className="h-auto min-h-64 w-[80%] rounded-md bg-black p-4 caret-white outline-none focus-within:outline-indigo-600"
           />
-          <CommonButton additionalclasses="w-[80%]" onClick={handleTextSubmit}>
-            <div className="flex items-center justify-center gap-2">
-              <Send className="h-5 w-5" /> Submit
+          <div className="flex flex-row w-[80%]">
+            <div className="w-[50%]">
+              <ImageUploader setTextboxFunction={setUserText} />
             </div>
-          </CommonButton>
+            <CommonButton additionalclasses="w-[50%]" onClick={handleTextSubmit}>
+              <div className="flex items-center justify-center gap-2">
+                <Send className="h-5 w-5" /> Submit
+              </div>
+            </CommonButton>
+          </div>
 
           {/* stats section */}
           <div className="flex flex-row items-center gap-4">
