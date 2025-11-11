@@ -90,6 +90,7 @@ const InputTextArea = () => {
         <CardContent className="flex flex-col items-center pt-4">
           <textarea
             onChange={handleTextEntry}
+            value={userText}
             className="h-auto min-h-64 w-[80%] rounded-md bg-black p-4 caret-white outline-none focus-within:outline-indigo-600"
           />
           <div className="flex flex-row w-[80%]">

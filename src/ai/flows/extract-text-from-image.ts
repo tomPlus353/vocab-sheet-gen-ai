@@ -27,7 +27,11 @@ export type ExtractTextFromImageInput = z.infer<typeof ExtractTextFromImageInput
 const ExtractTextFromImageOutputSchema = z.object({
     extractedText: z.string().describe('The extracted text from the image.'),
 });
-export type ExtractTextFromImageOutput = z.infer<typeof ExtractTextFromImageOutputSchema>;
+
+export type ExtractTextFromImageOutput = z.infer<typeof ExtractTextFromImageOutputSchema> & {
+    // Optional error message when extraction fails
+    error?: boolean;
+};
 
 export async function extractTextFromImage(input: ExtractTextFromImageInput): Promise<ExtractTextFromImageOutput> {
     return extractTextFromImageFlow(input);
@@ -51,13 +55,13 @@ const extractTextFromImageFlow = ai.defineFlow(
     async input => {
         try {
             const { output } = await prompt(input);
-            return output ?? { extractedText: 'LLM failed to parse data from image' };
+            return output ?? { extractedText: 'LLM failed to parse data from image', error: true };
         } catch (error) {
             console.error("Error in extractTextFromImageFlow:", error);
             return {
                 extractedText: 'Error extracting text from image: '
-                    +
-                    (error instanceof Error ? error.message : String(error))
+                    + (error instanceof Error ? error.message : String(error))
+                , error: true
             };
         }
     }

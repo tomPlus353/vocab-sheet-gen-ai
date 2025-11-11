@@ -6,6 +6,7 @@ import { extractTextFromImage } from "@/ai/flows/extract-text-from-image";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Camera } from "lucide-react";
 import ImageTextModal from "./ImageTextModal";
+import { Toaster } from "@/components/ui/toaster";
 
 interface Props {
     setTextboxFunction?: (text: string) => void;
@@ -29,8 +30,13 @@ export default function ImageUploader(props: Props) {
         reader.onloadend = async () => {
             const base64data = reader.result as string;
             try {
+                // Call the AI service on the server to extract text
                 const result = await extractTextFromImage({ photoDataUri: base64data });
-                if (result?.extractedText.trim()) {
+
+                //mock result for testing without calling the AI service
+                // const result = { extractedText: "Mock extracted text from image", error: false };
+
+                if (result?.extractedText.trim() && !result.error) {
                     setExtractedText(result.extractedText);
                     setIsModalOpen(true);
                 } else {
@@ -96,6 +102,7 @@ export default function ImageUploader(props: Props) {
                 text={extractedText}
                 setTextboxFunction={setTextboxFunction}
             />
+            <Toaster />
         </div >
 
     );
