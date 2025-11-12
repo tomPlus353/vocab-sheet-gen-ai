@@ -38,31 +38,3 @@ export function paginate({ current, max }: { current: number; max: number }) {
 
     return { current, prev, next, items };
 }
-
-// export function paginate({ current, max }: { current: number; max: number }) {
-//     let items: Array<number | string> = [];
-
-//     if (max <= 5) {
-//         items = Array.from({ length: max }, (_, i) => i + 1);
-//         return { items };
-//     }
-
-//     let lastWasEllipsis = false;
-//     for (let i = 1; i < max; i++) {
-//         if (i <= 1 || i >= max || Math.abs(current - i) <= 1) {
-//             console.log("number i:", i);
-//             // Non-ellipsis numbers
-//             items.push(i);
-//             lastWasEllipsis = false;
-//         } else {
-//             //ellipsis
-//             if (!lastWasEllipsis) {
-//                 console.log("ellipsis and print i:", i);
-//                 items.push("…");
-//             }
-//             console.log("ellipsis i:", i);
-//             lastWasEllipsis = true;
-//         }
-//     }
-//     return { items };
-// }

@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import React from "react";
 import Modal from "./Modal";
 import SectionHeader from "../../../components/common/SectionHeader";
 import CommonButton from "@/components/common/CommonButton";
-import { Gamepad, Grid2x2Check } from "lucide-react";
+import { Grid2x2Check } from "lucide-react";
 import { paginate } from "../_methods/paginationArray";
 import { useSettings } from "@/app/SettingsProvider";
 
