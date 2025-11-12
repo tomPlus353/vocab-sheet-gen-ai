@@ -219,7 +219,7 @@ const Paginator = ({ allText = [] }: Props) => {
                             if (isEllipsis) {
                                 // ellipsis button style
                                 styleString =
-                                    "mx-1 px-2 bg-gray-800 text-gray-300 no-hover";
+                                    "mx-1 px-1 bg-gray-800 text-gray-300 hover:bg-gray-800 hover:text-gray-300";
                             } else if (isCurrent) {
                                 // current page button style
                                 styleString =
@@ -230,6 +230,7 @@ const Paginator = ({ allText = [] }: Props) => {
                                     key={i}
                                     label={pageNumberArray?.[i]}
                                     additionalclasses={styleString}
+                                    disabled={isEllipsis}
                                     onClick={() =>
                                         isNumber
                                             ? handlePageChange(pageNumber)
