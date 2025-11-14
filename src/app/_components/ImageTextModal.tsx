@@ -21,7 +21,12 @@ interface ImageTextModalProps {
     setTextboxFunction?: (text: string) => void;
 }
 
-export default function ImageTextModal({ open, onOpenChange, text, setTextboxFunction }: ImageTextModalProps) {
+export default function ImageTextModal({
+    open,
+    onOpenChange,
+    text,
+    setTextboxFunction,
+}: ImageTextModalProps) {
     const [isCopied, setIsCopied] = useState(false);
     const [isSaved, setIsSaved] = useState(false);
     const { toast } = useToast();
@@ -64,7 +69,7 @@ export default function ImageTextModal({ open, onOpenChange, text, setTextboxFun
 
     const handleSave = async () => {
         try {
-            if (setTextboxFunction) setTextboxFunction(text)
+            if (setTextboxFunction) setTextboxFunction(text);
             setIsCopied(true);
             toast({
                 variant: "success",
@@ -76,26 +81,29 @@ export default function ImageTextModal({ open, onOpenChange, text, setTextboxFun
             toast({
                 variant: "destructive",
                 title: "Save Failed",
-                description: "Could not paste the extracted text. Try again or copy to clipboard first instead.",
+                description:
+                    "Could not paste the extracted text. Try again or copy to clipboard first instead.",
             });
         }
     };
 
-
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-xl max-h-[80svh] flex flex-col bg-slate-900 text-white">
+            <DialogContent className="flex max-h-[80svh] flex-col bg-slate-900 text-white sm:max-w-xl">
                 <DialogHeader>
-                    <DialogTitle className="text-2xl font-headline">Use extracted text?</DialogTitle>
+                    <DialogTitle className="font-headline text-2xl">
+                        Use extracted text?
+                    </DialogTitle>
                     <DialogDescription className="text-gray-300">
                         Extracted text from the image is shown below. <br />
                         Do you wish to save this text for study? <br />
-                        * Note: By clicking &quot;Save&quot; below, this will replace any text you’ve entered previously. <br />
+                        * Note: By clicking &quot;Save&quot; below, this will
+                        replace any text you’ve entered previously. <br />
                         You can also copy the text to your clipboard. <br />
                     </DialogDescription>
                 </DialogHeader>
-                <ScrollArea className="flex-1 my-4 rounded-md border overflow-y-auto">
-                    <pre className="p-4 whitespace-pre-wrap text-sm text-foreground font-body text-white ">
+                <ScrollArea className="my-4 flex-1 overflow-y-auto rounded-md border">
+                    <pre className="font-body whitespace-pre-wrap p-4 text-sm text-foreground text-white">
                         {text || "No text was extracted from the image."}
                     </pre>
                 </ScrollArea>

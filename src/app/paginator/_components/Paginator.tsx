@@ -32,9 +32,7 @@ const Paginator = ({ allText = [] }: Props) => {
     // }
     //other state variables
     const cannotPaginate = allText.length === 0;
-    const totalPages = cannotPaginate
-        ? 0
-        : Math.ceil(allText.length / perPage);
+    const totalPages = cannotPaginate ? 0 : Math.ceil(allText.length / perPage);
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [activeText, setActiveText] = useState<string[]>([]);
     const router = useRouter();
@@ -54,7 +52,12 @@ const Paginator = ({ allText = [] }: Props) => {
 
     //handler functions
     const handleSetActiveText = (page = 1, allText: string[]) => {
-        console.log("handleSetActiveText called with page:", page, "and allText:", allText);
+        console.log(
+            "handleSetActiveText called with page:",
+            page,
+            "and allText:",
+            allText,
+        );
         if (allText.length == 0) {
             return;
         }
@@ -160,7 +163,7 @@ const Paginator = ({ allText = [] }: Props) => {
                         }
                     />
 
-                    <div className="mx-2 flex w-[60%] md:w-[80%] flex-col rounded-xl border border-blue-400/30 bg-gray-800 px-4 py-2 shadow-md">
+                    <div className="mx-2 flex min-w-[60%] max-w-fit flex-col rounded-xl border border-blue-400/30 bg-gray-800 px-4 py-2 shadow-md">
                         <h2 className="px-2 text-lg font-semibold text-blue-300">
                             {" "}
                             {`Page ${currentPage} of ${totalPages}`}
@@ -177,14 +180,17 @@ const Paginator = ({ allText = [] }: Props) => {
                         {activeText.length > 0 && (
                             <div className="ml-auto flex flex-row">
                                 <button
-                                    className="has-tooltip relative ml-auto w-auto rounded-xl border-2 border-solid border-blue-100/20 bg-blue-500/20 px-3 py-2 hover:bg-blue-500 shrink"
+                                    className="has-tooltip relative ml-auto w-auto shrink rounded-xl border-2 border-solid border-blue-100/20 bg-blue-500/20 px-3 py-2 hover:bg-blue-500"
                                     onClick={handleGoMatch}
                                 >
-                                    <span className='tooltip absolute right-0 bottom-full rounded shadow-lg p-1 bg-black text-white text-sm -mt-8'>Generate game to study vocab</span>
+                                    <span className="tooltip absolute bottom-full right-0 -mt-8 rounded bg-black p-1 text-sm text-white shadow-lg">
+                                        Generate game to study vocab
+                                    </span>
                                     <div className="flex flex-row">
-                                        <Grid2x2Check className="mx-auto md:mr-2 h-5 w-5" >
-                                        </Grid2x2Check>
-                                        <span className="hidden md:inline">Match</span>
+                                        <Grid2x2Check className="mx-auto h-5 w-5 md:mr-2"></Grid2x2Check>
+                                        <span className="hidden md:inline">
+                                            Match
+                                        </span>
                                     </div>
                                 </button>
                                 <Modal
