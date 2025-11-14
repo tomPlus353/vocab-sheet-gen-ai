@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import CommonButton from "@/components/common/CommonButton";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Copy, Check, Save } from "lucide-react";
+import { Copy, Check, ClipboardPaste } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface ImageTextModalProps {
@@ -68,7 +68,7 @@ export default function ImageTextModal({ open, onOpenChange, text, setTextboxFun
             setIsCopied(true);
             toast({
                 variant: "success",
-                description: "Extracted image text inserted.",
+                description: "Extracted image text pasted.",
             });
             setTimeout(() => onOpenChange(false), 1000);
         } catch (err) {
@@ -76,7 +76,7 @@ export default function ImageTextModal({ open, onOpenChange, text, setTextboxFun
             toast({
                 variant: "destructive",
                 title: "Save Failed",
-                description: "Could not reflect the extracted text. Try again or copy to clipboard instead.",
+                description: "Could not paste the extracted text. Try again or copy to clipboard first instead.",
             });
         }
     };
@@ -94,8 +94,8 @@ export default function ImageTextModal({ open, onOpenChange, text, setTextboxFun
                         You can also copy the text to your clipboard. <br />
                     </DialogDescription>
                 </DialogHeader>
-                <ScrollArea className="flex-1 my-4 rounded-md border">
-                    <pre className="p-4 whitespace-pre-wrap text-sm text-foreground font-body text-white">
+                <ScrollArea className="flex-1 my-4 rounded-md border overflow-y-auto">
+                    <pre className="p-4 whitespace-pre-wrap text-sm text-foreground font-body text-white ">
                         {text || "No text was extracted from the image."}
                     </pre>
                 </ScrollArea>
@@ -118,9 +118,9 @@ export default function ImageTextModal({ open, onOpenChange, text, setTextboxFun
                         {isSaved ? (
                             <Check className="mr-2" />
                         ) : (
-                            <Save className="mr-2" />
+                            <ClipboardPaste className="mr-2" />
                         )}
-                        {isSaved ? "Updated!" : "Save"}
+                        {isSaved ? "Pasted!" : "Paste to Textbox"}
                     </CommonButton>
                 </DialogFooter>
             </DialogContent>
