@@ -79,7 +79,6 @@ export default function ImageUploader(props: Props) {
             <input
                 type="file"
                 accept="image/*"
-                capture="environment"
                 ref={fileInputRef}
                 onChange={handleFileChange}
                 className="hidden"
