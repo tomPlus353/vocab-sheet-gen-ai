@@ -2,7 +2,7 @@
 
 import { useState, useRef, type ChangeEvent } from "react";
 import CommonButton from "@/components/common/CommonButton";
-import { extractTextFromImage } from "@/ai/flows/extract-text-from-image";
+import { extractTextFromImage } from "@/ai/flows/extractTextFromImage";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Camera } from "lucide-react";
 import ImageTextModal from "./ImageTextModal";
@@ -31,7 +31,9 @@ export default function ImageUploader(props: Props) {
             const base64data = reader.result as string;
             try {
                 // Call the AI service on the server to extract text
-                const result = await extractTextFromImage({ photoDataUri: base64data });
+                const result = await extractTextFromImage({
+                    photoDataUri: base64data,
+                });
 
                 //mock result for testing without calling the AI service
                 // const result = { extractedText: "Mock extracted text from image", error: false };
@@ -43,7 +45,8 @@ export default function ImageUploader(props: Props) {
                     toast({
                         variant: "destructive",
                         title: "Extraction Failed",
-                        description: "Could not extract any text from the image. Please try another image.",
+                        description:
+                            "Could not extract any text from the image. Please try another image.",
                     });
                 }
             } catch (error) {
@@ -51,7 +54,8 @@ export default function ImageUploader(props: Props) {
                 toast({
                     variant: "destructive",
                     title: "An Error Occurred",
-                    description: "Something went wrong while processing the image. Please try again.",
+                    description:
+                        "Something went wrong while processing the image. Please try again.",
                 });
             } finally {
                 setIsLoading(false);
@@ -71,7 +75,6 @@ export default function ImageUploader(props: Props) {
     };
 
     return (
-
         <div>
             <input
                 type="file"
@@ -83,19 +86,16 @@ export default function ImageUploader(props: Props) {
                 id="image-upload"
             />
             <CommonButton
-                onClick={() => fileInputRef.current?.click()
-                }
+                onClick={() => fileInputRef.current?.click()}
                 disabled={isLoading}
             >
-                {
-                    isLoading ? (
-                        <Loader2 className="h-5 w-5 animate-spin" />
-                    ) : (
-                        <Camera className="h-5 w-5" />
-                    )
-                }
+                {isLoading ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                    <Camera className="h-5 w-5" />
+                )}
                 {isLoading ? "Extracting Text..." : "Upload Image"}
-            </CommonButton >
+            </CommonButton>
             <ImageTextModal
                 open={isModalOpen}
                 onOpenChange={setIsModalOpen}
@@ -103,7 +103,6 @@ export default function ImageUploader(props: Props) {
                 setTextboxFunction={setTextboxFunction}
             />
             <Toaster />
-        </div >
-
+        </div>
     );
 }

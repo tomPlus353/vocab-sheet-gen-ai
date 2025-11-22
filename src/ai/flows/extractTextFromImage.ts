@@ -41,7 +41,11 @@ const prompt = ai.definePrompt({
     name: 'extractTextFromImagePrompt',
     input: { schema: ExtractTextFromImageInputSchema },
     output: { schema: ExtractTextFromImageOutputSchema },
-    prompt: `Extract all the text from the following image. Return only the text in the output. Do not add any additional information. Format the text as it appears in the image, preserving line breaks and spacing where possible.
+    prompt: `Extract all the text from the following image. 
+    Return only the text in the output. 
+    Do not add any additional information. 
+    
+    Format the text as it appears in the image, preserving paragraphs and spacing where possible. However, if a new line is in the middle of a sentence, do not create a new line in the output. New line should be for new paragraphs only.
 
 Image: {{media url=photoDataUri}}`,
 });
