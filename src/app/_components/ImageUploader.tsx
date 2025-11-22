@@ -78,7 +78,8 @@ export default function ImageUploader(props: Props) {
         <div>
             <input
                 type="file"
-                accept="image/*"
+                accept="image/*,android/allowCamera"
+                capture="environment"
                 ref={fileInputRef}
                 onChange={handleFileChange}
                 className="hidden"
