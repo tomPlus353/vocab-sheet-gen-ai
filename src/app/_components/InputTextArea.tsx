@@ -40,7 +40,7 @@ const InputTextArea = () => {
     const handleTextSubmit = () => {
         //split user text into an array
         const textArray = userText
-            .split(/(?<=[。！？.!?])|\n\s*\n/g) //split by sentence endings: .?!。！？ OR two new lines
+            .split(/(?<=[。！？.!?])|\n/g) //split by sentence endings: .?!。！？ or new line
             .map((s) => s.trim()) // trim whitespace
             .map((s) => s.replace(/\n/g, "")) // remove any remaining new lines from each sentence
             .filter((x) => x !== ""); //filter out empty strings
