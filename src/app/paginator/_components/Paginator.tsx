@@ -144,7 +144,7 @@ const Paginator = ({ allText = [] }: Props) => {
                 tabIndex={0}
             >
                 {/* header */}
-                <SectionHeader title="Paginator" />
+                <SectionHeader title="Ereader" />
                 <CommonButton
                     additionalclasses="align-start mr-auto"
                     //emoji for going back

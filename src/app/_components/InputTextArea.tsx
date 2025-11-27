@@ -95,7 +95,7 @@ const InputTextArea = () => {
     }, [userText]);
     return (
         <div>
-            <SectionHeader title="Input Text" />
+            <SectionHeader title="Text to Study" />
             <Card className="mx-auto flex max-w-md flex-col items-center justify-center rounded-xl border border-blue-400/30 bg-gray-800 px-4 py-2 text-gray-100 shadow-xl">
                 <CardHeader className="border-b border-gray-700/50 pb-2">
                     <CardTitle className="text-center text-lg font-bold text-white">
