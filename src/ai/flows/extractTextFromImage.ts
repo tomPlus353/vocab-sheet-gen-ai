@@ -1,16 +1,5 @@
 'use server';
 
-/**
- * @fileOverview Extracts text from an image using an AI model.
- *
- * - extractTextFromImage - A function that handles the text extraction process.
- * - ExtractTextFromImageInput - The input type for the extractTextFromImage function.
- * - ExtractTextFromImageOutput - The return type for the extractTextFromImage function.
- */
-
-
-// pnpm install genkit @genkit-ai/google-genai
-// pnpm install -D genkit-cli
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
@@ -29,7 +18,6 @@ const ExtractTextFromImageOutputSchema = z.object({
 });
 
 export type ExtractTextFromImageOutput = z.infer<typeof ExtractTextFromImageOutputSchema> & {
-    // Optional error message when extraction fails
     error?: boolean;
 };
 

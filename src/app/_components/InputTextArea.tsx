@@ -19,7 +19,14 @@ import { useSettings } from "../SettingsProvider";
 import ImageUploader from "./ImageUploader";
 
 const InputTextArea = () => {
-    const [userText, setUserText] = useState<string>("");
+    let parsedPreviousText = "";
+    const previousTextArrayString = localStorage.getItem("textArray");
+    if (previousTextArrayString) {
+        const previousTextArray = JSON.parse(previousTextArrayString);
+        if (Array.isArray(previousTextArray))
+            parsedPreviousText = previousTextArray.join("\n");
+    }
+    const [userText, setUserText] = useState<string>(parsedPreviousText ?? "");
     const [japaneseWordCount, setJapaneseWordCount] = useState(0);
     const { perPage, setPerPageContext } = useSettings();
     const perPageOptions = ["1", "3", "5", "10"];
