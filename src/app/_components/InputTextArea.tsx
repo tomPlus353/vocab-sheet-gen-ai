@@ -19,14 +19,7 @@ import { useSettings } from "../SettingsProvider";
 import ImageUploader from "./ImageUploader";
 
 const InputTextArea = () => {
-    let parsedPreviousText = "";
-    const previousTextArrayString = localStorage.getItem("textArray");
-    if (previousTextArrayString) {
-        const previousTextArray = JSON.parse(previousTextArrayString);
-        if (Array.isArray(previousTextArray))
-            parsedPreviousText = previousTextArray.join("\n");
-    }
-    const [userText, setUserText] = useState<string>(parsedPreviousText ?? "");
+    const [userText, setUserText] = useState<string>("");
     const [japaneseWordCount, setJapaneseWordCount] = useState(0);
     const { perPage, setPerPageContext } = useSettings();
     const perPageOptions = ["1", "3", "5", "10"];
@@ -61,6 +54,16 @@ const InputTextArea = () => {
         console.log("about to push to paginator");
         router.push("/paginator", undefined);
     };
+
+    useEffect(() => {
+        // Retrieve textArray from local storage on component mount
+        const previousTextArrayString = localStorage.getItem("textArray");
+        if (previousTextArrayString) {
+            const previousTextArray = JSON.parse(previousTextArrayString);
+            if (Array.isArray(previousTextArray))
+                setUserText(previousTextArray.join("\n"));
+        }
+    }, []);
 
     useEffect(() => {
         try {
