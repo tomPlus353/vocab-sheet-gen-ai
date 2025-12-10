@@ -76,7 +76,7 @@ async function handleGeminiPrompt(
     //generate response
     try {
       const response: GenerateContentResponse = await ai.models.generateContent({
-        model: "gemini-2.0-flash-lite",
+        model: "gemini-2.5-flash-lite",
         contents: prompt,
         config: {
           systemInstruction: sys_prompt,
@@ -153,7 +153,7 @@ async function handleGeminiPrompt(
 
     //generate response
     const response = await ai.models.generateContent({
-      model: "gemini-2.0-lite",
+      model: "gemini-2.5-flash-lite",
       contents: prompt,
       config: {
         systemInstruction: sys_prompt,
