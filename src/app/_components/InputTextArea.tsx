@@ -59,7 +59,7 @@ const InputTextArea = () => {
         router.push("/paginator", undefined);
     };
 
-    const alertCopy = async () => {
+    const alertCopy = (content: string) => {
         try {
             toast({
                 variant: "success",
