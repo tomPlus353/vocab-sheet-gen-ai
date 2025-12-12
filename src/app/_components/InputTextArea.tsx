@@ -11,18 +11,22 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { CopyButton } from "@/components/ui/shadcn-io/copy-button";
 import { Label } from "@/components/ui/label";
 import { Send, AlignLeft, FileText } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getTokenizer } from "kuromojin";
 import { useSettings } from "../SettingsProvider";
 import ImageUploader from "./ImageUploader";
+import { useToast } from "@/hooks/use-toast";
 
 const InputTextArea = () => {
     const [userText, setUserText] = useState<string>("");
     const [japaneseWordCount, setJapaneseWordCount] = useState(0);
     const { perPage, setPerPageContext } = useSettings();
     const perPageOptions = ["1", "3", "5", "10"];
+
+    const { toast } = useToast();
 
     const router = useRouter();
 
@@ -53,6 +57,24 @@ const InputTextArea = () => {
         localStorage.setItem("textArray", JSON.stringify(textArray));
         console.log("about to push to paginator");
         router.push("/paginator", undefined);
+    };
+
+    const alertCopy = async () => {
+        try {
+            toast({
+                variant: "success",
+                description: "Extracted text copied to clipboard.",
+                duration: 2000,
+            });
+        } catch (err) {
+            console.error("Failed to copy text: ", err);
+            toast({
+                variant: "destructive",
+                title: "Copy Failed",
+                description: "Could not copy text to clipboard.",
+                duration: 2000,
+            });
+        }
     };
 
     useEffect(() => {
@@ -105,11 +127,16 @@ const InputTextArea = () => {
                         {"Insert text you want to analyze below"}
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="flex flex-col items-center pt-4">
+                <CardContent className="group relative flex flex-col items-center pt-4">
                     <textarea
                         onChange={handleTextEntry}
                         value={userText}
-                        className="h-auto min-h-64 w-[80%] rounded-md bg-black p-4 caret-white outline-none focus-within:outline-indigo-600"
+                        className="h-auto min-h-64 w-full rounded-md bg-black p-4 caret-white outline-none focus-within:outline-indigo-600"
+                    />
+                    <CopyButton
+                        content={userText}
+                        className="absolute right-8 top-5 bg-black text-black group-hover:text-white"
+                        onCopy={alertCopy}
                     />
                     <div className="flex w-[80%] flex-row">
                         <div className="w-[50%]">
