@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { CopyButton } from "@/components/ui/shadcn-io/copy-button";
 import { Label } from "@/components/ui/label";
-import { Send, AlignLeft, FileText } from "lucide-react";
+import { Send, AlignLeft, FileText, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getTokenizer } from "kuromojin";
 import { useSettings } from "../SettingsProvider";
@@ -40,6 +40,11 @@ const InputTextArea = () => {
         console.log("event.target.value: ", event.target.value);
         setUserText(event.target.value);
         console.log("userText: ", userText);
+    };
+
+    const handleClearText = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+        setUserText("");
+        console.log("cleared user text");
     };
     const handleTextSubmit = () => {
         //split user text into an array
@@ -135,9 +140,15 @@ const InputTextArea = () => {
                     />
                     <CopyButton
                         content={userText}
-                        className="absolute right-8 top-5 bg-black text-black group-hover:text-white"
+                        className="hover:bg-grey-400 absolute right-16 top-5 bg-black text-black opacity-100 group-hover:text-white"
                         onCopy={alertCopy}
                     />
+                    <button
+                        className="group absolute right-12 top-7 bg-black text-black hover:bg-gray-900 group-hover:text-white"
+                        onClick={handleClearText}
+                    >
+                        <X className="h-5 w-5 group-hover:font-bold" />
+                    </button>
                     <div className="flex w-[80%] flex-row">
                         <div className="w-[50%]">
                             <ImageUploader setTextboxFunction={setUserText} />
