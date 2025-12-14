@@ -42,7 +42,7 @@ const InputTextArea = () => {
         console.log("userText: ", userText);
     };
 
-    const handleClearText = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const handleClearText = (_event: React.MouseEvent<HTMLButtonElement>) => {
         setUserText("");
         console.log("cleared user text");
     };
@@ -64,7 +64,7 @@ const InputTextArea = () => {
         router.push("/paginator", undefined);
     };
 
-    const alertCopy = (content: string) => {
+    const alertCopy = (_content: string) => {
         try {
             toast({
                 variant: "success",
@@ -144,10 +144,10 @@ const InputTextArea = () => {
                         onCopy={alertCopy}
                     />
                     <button
-                        className="group absolute right-12 top-7 bg-black text-black hover:bg-gray-900 group-hover:text-white"
+                        className="group absolute right-12 top-7 bg-black text-black transition duration-200 ease-in-out hover:scale-110 hover:bg-gray-900 group-hover:text-white"
                         onClick={handleClearText}
                     >
-                        <X className="h-5 w-5 group-hover:font-bold" />
+                        <X className="h-5 w-5" />
                     </button>
                     <div className="flex w-[80%] flex-row">
                         <div className="w-[50%]">
