@@ -147,7 +147,7 @@ const InputTextArea = () => {
                         className="group absolute right-12 top-7 bg-black text-black transition duration-200 ease-in-out hover:scale-110 hover:bg-gray-900 group-hover:text-white"
                         onClick={handleClearText}
                     >
-                        <X className="h-5 w-5" />
+                        <X className="h-5 w-5 hover:text-red-500" />
                     </button>
                     <div className="flex w-[80%] flex-row">
                         <div className="w-[50%]">
