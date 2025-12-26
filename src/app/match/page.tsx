@@ -7,17 +7,21 @@ import { useToast } from "@/hooks/use-toast";
 import CommonButton from "@/components/common/CommonButton";
 import { getHashedCache, setHashedCache } from "@/lib/utils";
 
-
 import SectionHeader from "@/components/common/SectionHeader";
-import PageContainer from "@/components/common/PageContainer";
+
 import { Toaster } from "@/components/ui/toaster";
 import type { JsonArray } from "@prisma/client/runtime/library";
 import { sleep } from "@trpc/server/unstable-core-do-not-import";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { Loader } from "./_components/Loader";
-
 
 type vocabObj = Record<string, string>;
 
@@ -87,8 +91,7 @@ export default function Match() {
         const cachedJsonString = getHashedCache("vocabGame" + activeTextStr);
         if (cachedJsonString) {
             reply = cachedJsonString;
-        }
-        else {
+        } else {
             //prompt the llm
             const response: Response = await fetch("/api/llm", {
                 method: "POST",
@@ -119,9 +122,12 @@ export default function Match() {
             if (responseCode !== 200 || !reply) {
                 console.log(reply);
                 setIsLoading(false);
-                alert("Server Error: LLM could not generate the game."
-                    + "\nStatus code: " + responseCode
-                    + "\nResponse: " + (reply ?? "Empty response")
+                alert(
+                    "Server Error: LLM could not generate the game." +
+                        "\nStatus code: " +
+                        responseCode +
+                        "\nResponse: " +
+                        (reply ?? "Empty response"),
                 );
                 return;
             }
@@ -132,37 +138,32 @@ export default function Match() {
         //handle success
         console.log("json string reply", reply);
 
-        const replyJson = JSON.parse(reply) as JsonArray
+        const replyJson = JSON.parse(reply) as JsonArray;
 
-        // Calculate total number of rounds, array of rounds 
+        // Calculate total number of rounds, array of rounds
         // and select terms for the current round
         const roundIndex = Number(currentRound) - 1; // convert round index to zero based
         console.log("roundIndex: ", roundIndex);
         setTotalRounds(Math.ceil(replyJson.length / termsPerRound));
         console.log("totalRounds: ", totalRounds);
-        setRoundsArray(Array.from(
-            { length: totalRounds }, (_, i) => (i + 1)
-                .toString()
-        ));
+        setRoundsArray(
+            Array.from({ length: totalRounds }, (_, i) => (i + 1).toString()),
+        );
         const termsForGame = replyJson.slice(
             roundIndex * termsPerRound,
-            (roundIndex + 1) * termsPerRound
+            (roundIndex + 1) * termsPerRound,
         );
         console.log("termsForGame: ", termsForGame);
 
         // generate two cards of each term, one for front and one for back
-        const front: vocabObj[] = termsForGame.map(
-            (obj) => ({
-                ...(obj as vocabObj),
-                type: "front",
-            }),
-        );
-        const back: vocabObj[] = termsForGame.map(
-            (obj) => ({
-                ...(obj as vocabObj),
-                type: "back",
-            }),
-        );
+        const front: vocabObj[] = termsForGame.map((obj) => ({
+            ...(obj as vocabObj),
+            type: "front",
+        }));
+        const back: vocabObj[] = termsForGame.map((obj) => ({
+            ...(obj as vocabObj),
+            type: "back",
+        }));
         const frontShuffled = shuffleArray(front);
         const backShuffled = shuffleArray(back);
         const joinedArray: vocabObj[] = [];
@@ -184,7 +185,8 @@ export default function Match() {
         setRound(value);
         //restart the game with new round, while catching any errors and indicating to the user
         startGame(value).catch((err) => {
-            const errorMessage = err instanceof Error ? err.message : String(err);
+            const errorMessage =
+                err instanceof Error ? err.message : String(err);
 
             console.error("Error starting game: ", errorMessage);
             alert("Error starting game: " + errorMessage);
@@ -235,7 +237,8 @@ export default function Match() {
 
     function computeRoundButtonStyle(direction: "prev" | "next") {
         // base style
-        let buttonStyle = "mx-1 p-1 bg-indigo-600 shadow-md focus-within:outline-indigo-600 text-white";
+        let buttonStyle =
+            "mx-1 p-1 bg-indigo-600 shadow-md focus-within:outline-indigo-600 text-white";
         // add invisible class if at first or last round
         if (direction === "prev" && Number(round) <= 1) {
             buttonStyle += " invisible";
@@ -365,7 +368,7 @@ export default function Match() {
 
     const router = useRouter();
     return (
-        <PageContainer>
+        <div>
             <SectionHeader title={"Matching Game"} />
             <div className="flex flex-wrap justify-start">
                 <CommonButton
@@ -378,26 +381,36 @@ export default function Match() {
                     label={"⟳ Play Again"}
                     onClick={() => startGame()}
                 />
-                <div className="flex items-center mr-auto gap-1 text-lg">
-                    <Checkbox className="bg-gray-200 border-indigo-800 data-[state=checked]:bg-indigo-900"
+                <div className="mr-auto flex items-center gap-1 text-lg">
+                    <Checkbox
+                        className="border-indigo-800 bg-gray-200 data-[state=checked]:bg-indigo-900"
                         id="hide-reading"
                         checked={isHideReading}
-                        onCheckedChange={() => setIsHideReading(isHideReading ? false : true)}
+                        onCheckedChange={() =>
+                            setIsHideReading(isHideReading ? false : true)
+                        }
+                    ></Checkbox>
+                    <Label
+                        htmlFor="hide-reading"
+                        className="cursor-pointer text-lg"
                     >
-                    </Checkbox>
-                    <Label htmlFor="hide-reading" className="cursor-pointer text-lg">
                         <p>Hide Reading</p>
                     </Label>
                 </div>
 
-                <div className="flex items-center mr-auto gap-1 text-lg">
-                    <Checkbox className="bg-gray-200 border-indigo-800 data-[state=checked]:bg-indigo-900"
+                <div className="mr-auto flex items-center gap-1 text-lg">
+                    <Checkbox
+                        className="border-indigo-800 bg-gray-200 data-[state=checked]:bg-indigo-900"
                         id="test-reading"
                         checked={isTestReading}
-                        onCheckedChange={() => setIsTestReading(isTestReading ? false : true)}
+                        onCheckedChange={() =>
+                            setIsTestReading(isTestReading ? false : true)
+                        }
+                    ></Checkbox>
+                    <Label
+                        htmlFor="test-reading"
+                        className="cursor-pointer text-lg"
                     >
-                    </Checkbox>
-                    <Label htmlFor="test-reading" className="cursor-pointer text-lg">
                         <p>Test Reading</p>
                     </Label>
                 </div>
@@ -408,14 +421,20 @@ export default function Match() {
                         additionalclasses={
                             computeRoundButtonStyle("prev") ?? "invisible"
                         }
-                        onClick={() => handleRoundChange((Math.max(1, Number(round) - 1)).toString())}
+                        onClick={() =>
+                            handleRoundChange(
+                                Math.max(1, Number(round) - 1).toString(),
+                            )
+                        }
                     />
-                    <div className="flex flex-col items-start mr-auto gap-1 text-lg">
-                        <Label className="mb-1" htmlFor="round-select">Round</Label>
+                    <div className="mr-auto flex flex-col items-start gap-1 text-lg">
+                        <Label className="mb-1" htmlFor="round-select">
+                            Round
+                        </Label>
                         <Select value={round} onValueChange={handleRoundChange}>
                             <SelectTrigger
                                 id="round-select"
-                                className="bg-black shadow-md focus-within:outline-none text-white mb-2"
+                                className="mb-2 bg-black text-white shadow-md focus-within:outline-none"
                             >
                                 <SelectValue />
                             </SelectTrigger>
@@ -424,7 +443,7 @@ export default function Match() {
                                     <SelectItem
                                         key={value}
                                         value={value}
-                                        className={`hover:font-bold hover:bg-grey-100 focus:font-bold ${round === value ? "font-bold" : ""}`}
+                                        className={`hover:bg-grey-100 hover:font-bold focus:font-bold ${round === value ? "font-bold" : ""}`}
                                     >
                                         {value}
                                     </SelectItem>
@@ -437,12 +456,16 @@ export default function Match() {
                         additionalclasses={
                             computeRoundButtonStyle("next") ?? "invisible"
                         }
-                        onClick={() => handleRoundChange((Math.max(1, Number(round) + 1)).toString())}
+                        onClick={() =>
+                            handleRoundChange(
+                                Math.max(1, Number(round) + 1).toString(),
+                            )
+                        }
                     />
                 </div>
             </div>
             {/* Stats row */}
-            <div className="flex flex-row mx-12 justify-between">
+            <div className="mx-12 flex flex-row justify-between">
                 <p className="text-lg font-semibold text-blue-300">
                     {" "}
                     {`Score: ${score}/${gameVocabJson.length / 2}`}
@@ -515,6 +538,6 @@ export default function Match() {
                 <Loader />
             )}
             <Toaster />
-        </PageContainer>
+        </div>
     );
 }
