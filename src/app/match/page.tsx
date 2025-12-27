@@ -194,17 +194,26 @@ export default function Match() {
     }
 
     function handleSelection(id: number) {
-        //if the button is already selected, do nothing
-        if (selected1 === id || selected2 === id) {
+        //if the button is already selected, deselect it
+        if (selected1 === id) {
+            setSelected1(0);
             return;
         }
-        console.log("clicked id: ", id);
+        if (selected2 === id) {
+            setSelected2(0);
+            return;
+        }
+        // console.log("clicked id: ", id);
+
+        //if no selection yet, set selected1
         if (!selected1 && !selected2) {
             setSelected1(id);
         }
+
+        //if selected1 is set, set selected2
         if (selected1) {
             setSelected2(id);
-            console.log("selected1: ", selected1, " selected2: ", selected2);
+            // console.log("selected1: ", selected1, " selected2: ", selected2);
         }
     }
 
