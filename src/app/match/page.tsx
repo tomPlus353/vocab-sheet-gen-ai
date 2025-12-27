@@ -62,6 +62,7 @@ export default function Match() {
     const [isHideReading, setIsHideReading] = useState<boolean>(false);
     const [isTestReading, setIsTestReading] = useState<boolean>(false);
     const [round, setRound] = useState<string>("1");
+    const MIN_LAST_ROUND_TERMS = 5; //minimum terms in last round, does not affect games with a single round
 
     // constant settings
     const termsPerRound = 5;
@@ -144,16 +145,53 @@ export default function Match() {
         // and select terms for the current round
         const roundIndex = Number(currentRound) - 1; // convert round index to zero based
         console.log("roundIndex: ", roundIndex);
-        setTotalRounds(Math.ceil(replyJson.length / termsPerRound));
-        console.log("totalRounds: ", totalRounds);
-        setRoundsArray(
-            Array.from({ length: totalRounds }, (_, i) => (i + 1).toString()),
-        );
-        const termsForGame = replyJson.slice(
-            roundIndex * termsPerRound,
-            (roundIndex + 1) * termsPerRound,
-        );
-        console.log("termsForGame: ", termsForGame);
+
+        const lastRoundTerms = replyJson.length % termsPerRound;
+        let termsForGame: JsonArray = [];
+        if (lastRoundTerms > 0 && lastRoundTerms < MIN_LAST_ROUND_TERMS) {
+            const offsetTotalRounds =
+                Math.ceil(replyJson.length / termsPerRound) - 1;
+            setTotalRounds(offsetTotalRounds);
+            console.log("totalRounds: ", totalRounds);
+
+            // create rounds array for the select dropdown
+            setRoundsArray(
+                Array.from({ length: totalRounds }, (_, i) =>
+                    (i + 1).toString(),
+                ),
+            );
+
+            if (roundIndex + 1 === totalRounds) {
+                //set terms if last round is selected
+                termsForGame = replyJson.slice(
+                    roundIndex * termsPerRound,
+                    undefined,
+                );
+                //note: includes all remaining terms, even if over the term limit
+                //this is to avoid rounds with too few terms
+                //e.g. if termsPerRound is 5, and there are 12 terms remaining, the last round will have 7 terms, not 5
+            } else {
+                //set terms for other rounds
+                termsForGame = replyJson.slice(
+                    roundIndex * termsPerRound,
+                    (roundIndex + 1) * termsPerRound,
+                );
+            }
+            console.log("termsForGame: ", termsForGame);
+        } else {
+            setTotalRounds(Math.ceil(replyJson.length / termsPerRound));
+            console.log("totalRounds: ", totalRounds);
+            setRoundsArray(
+                Array.from({ length: totalRounds }, (_, i) =>
+                    (i + 1).toString(),
+                ),
+            );
+            termsForGame = replyJson.slice(
+                roundIndex * termsPerRound,
+                (roundIndex + 1) * termsPerRound,
+            );
+            console.log("termsForGame: ", termsForGame);
+        }
 
         // generate two cards of each term, one for front and one for back
         const front: vocabObj[] = termsForGame.map((obj) => ({
