@@ -22,6 +22,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Loader } from "./_components/Loader";
+import { useKeyboardShortcut } from "@/hooks/use-key-shortcut";
 
 type vocabObj = Record<string, string>;
 
@@ -62,10 +63,71 @@ export default function Match() {
     const [isHideReading, setIsHideReading] = useState<boolean>(false);
     const [isTestReading, setIsTestReading] = useState<boolean>(false);
     const [round, setRound] = useState<string>("1");
-    const MIN_LAST_ROUND_TERMS = 5; //minimum terms in last round, does not affect games with a single round
+    const MIN_LAST_ROUND_TERMS = 3; //minimum terms in last round, does not affect games with a single round
 
     // constant settings
     const termsPerRound = 5;
+
+    /* 
+    HANDLE KEYBOARD SHORTCUTS
+    */
+    // useKeyboardShortcut({
+    //     key: "r",
+    //     onKeyPressed: () => {
+    //         console.log("Restarting game... round is: ", round);
+    //         startGame().catch((err) => {
+    //             console.error("Error restarting game: ", err);
+    //         });
+    //     },
+    //     dependencies: [round],
+    // });
+
+    useKeyboardShortcut({
+        key: "ArrowLeft",
+        onKeyPressed: () => {
+            console.log("Changing round with left arrow... round is: ", round);
+            if (Number(round) > 1) {
+                handleRoundChange(Math.max(1, Number(round) - 1).toString());
+            }
+        },
+        dependencies: [round],
+    });
+
+    useKeyboardShortcut({
+        key: "ArrowRight",
+        onKeyPressed: () => {
+            if (Number(round) < totalRounds) {
+                console.log(
+                    "Changing round with right arrow... round is: ",
+                    round,
+                );
+                handleRoundChange(Math.max(1, Number(round) + 1).toString());
+            } else {
+                console.log("At last round, cannot go further.");
+            }
+        },
+        dependencies: [round],
+    });
+
+    //shortcuts for selecting cards a-z (1-26)
+    for (let i = 1; i <= 26; i++) {
+        //convert to letter key
+        const letter = String.fromCharCode(97 + i - 1);
+
+        // eslint-disable-next-line react-hooks/rules-of-hooks
+        useKeyboardShortcut({
+            key: letter,
+            onKeyPressed: () => {
+                console.log("Selecting ", i);
+                handleSelection(i); //plus one to target the term
+            },
+            dependencies: [selected1, selected2],
+        });
+    }
+
+    /* 
+    END KEYBOARD SHORTCUTS
+    */
 
     //start or restart the game
     async function startGame(currentRound: string = round) {
@@ -221,6 +283,7 @@ export default function Match() {
     function handleRoundChange(value: string) {
         console.log("Round changing to ", value, "Total rounds: ", totalRounds);
         setRound(value);
+        console.log("Changing round, round is: ", round);
         //restart the game with new round, while catching any errors and indicating to the user
         startGame(value).catch((err) => {
             const errorMessage =
@@ -298,21 +361,24 @@ export default function Match() {
 
     function computeLabel(id: number): string {
         let label = "";
+        const idAsLetter = String.fromCharCode(97 + id); //convert to letter a-z
         if (gameVocabJson.length > 0) {
             //get the term object
             const termObj = gameVocabJson[id];
             //check if the termObj is defined and has a type property, then check if it is front or back
             if (termObj?.type === "front") {
                 if (isHideReading || isTestReading) {
-                    label = `${termObj?.japanese}`;
+                    label = `${idAsLetter}. ${termObj?.japanese}`;
                 } else {
-                    label = `${termObj?.japanese}(${termObj?.romanization})`;
+                    label = `${idAsLetter}. ${termObj?.japanese}(${termObj?.romanization})`;
                 }
             } else if (termObj?.type === "back") {
                 if (isTestReading) {
-                    label = `${termObj?.romanization}`;
+                    label = `${idAsLetter}. ${termObj?.romanization}`;
                 } else {
-                    label = termObj?.english_definition ?? "undefined";
+                    label = termObj?.english_definition
+                        ? `${idAsLetter}. ${termObj.english_definition}`
+                        : "undefined";
                 }
             }
         }
@@ -349,8 +415,8 @@ export default function Match() {
                 //show succcess to the user
                 console.log("answered1: ", answered.length);
                 console.log("gameVocabJson1: ", gameVocabJson.length);
-                const label1 = computeLabel(selected1 - 1);
-                const label2 = computeLabel(selected2 - 1);
+                const label1 = computeLabel(selected1);
+                const label2 = computeLabel(selected2);
                 toast({
                     title: "Correct Match!",
                     description: `${label1} == ${label2}`,
@@ -367,8 +433,8 @@ export default function Match() {
                         console.error("Error in sleep: ", err);
                     });
             } else {
-                const label1 = computeLabel(selected1 - 1);
-                const label2 = computeLabel(selected2 - 1);
+                const label1 = computeLabel(selected1);
+                const label2 = computeLabel(selected2);
                 toast({
                     title: "Incorrect Match!",
                     description: `You matched ${label1} with ${label2}`,
@@ -539,8 +605,8 @@ export default function Match() {
                             ).map((oneIndex, zeroIndex) =>
                                 gameVocabJson[zeroIndex]?.type === "front" ? (
                                     <CommonButton
-                                        key={oneIndex - 1}
-                                        label={computeLabel(oneIndex - 1)} //get the label from the json object which starts at 0
+                                        key={zeroIndex}
+                                        label={computeLabel(zeroIndex)} //get the label from the json object which starts at 0
                                         additionalclasses={
                                             computeSelectStyle(oneIndex) ?? ""
                                         } //plus one to target the term
@@ -564,8 +630,8 @@ export default function Match() {
                             ).map((oneIndex, zeroIndex) =>
                                 gameVocabJson[zeroIndex]?.type === "back" ? (
                                     <CommonButton
-                                        key={oneIndex - 1}
-                                        label={computeLabel(oneIndex - 1)} //get the label from the json object which starts at 0
+                                        key={zeroIndex}
+                                        label={computeLabel(zeroIndex)} //get the label from the json object which starts at 0
                                         additionalclasses={
                                             computeSelectStyle(oneIndex) ?? ""
                                         } //plus one to target the term
