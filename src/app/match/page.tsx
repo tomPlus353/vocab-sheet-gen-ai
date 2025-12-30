@@ -71,16 +71,16 @@ export default function Match() {
     /* 
     HANDLE KEYBOARD SHORTCUTS
     */
-    // useKeyboardShortcut({
-    //     key: "r",
-    //     onKeyPressed: () => {
-    //         console.log("Restarting game... round is: ", round);
-    //         startGame().catch((err) => {
-    //             console.error("Error restarting game: ", err);
-    //         });
-    //     },
-    //     dependencies: [round],
-    // });
+    useKeyboardShortcut({
+        key: "Enter",
+        onKeyPressed: () => {
+            console.log("Restarting game... round is: ", round);
+            startGame().catch((err) => {
+                console.error("Error restarting game: ", err);
+            });
+        },
+        dependencies: [round],
+    });
 
     useKeyboardShortcut({
         key: "ArrowLeft",
