@@ -124,7 +124,7 @@ const InputTextArea = () => {
     }, [userText]);
     return (
         <div>
-            <Card className="mx-auto flex max-w-md flex-col items-center justify-center rounded-xl border border-blue-400/30 bg-gray-800 px-4 py-2 text-gray-100 shadow-xl">
+            <Card className="mx-auto flex max-w-xl flex-col items-center justify-center rounded-xl border border-blue-400/30 bg-gray-800 px-4 py-2 text-gray-100 shadow-xl">
                 <CardHeader className="mb-0 mr-auto pb-0">
                     <CardTitle className="text-md pb-2 font-bold text-gray-200">
                         {"Text to Study: "}
