@@ -130,7 +130,7 @@ const InputTextArea = () => {
                         {"Text to Study: "}
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="group relative flex flex-col items-stretch">
+                <CardContent className="group relative flex w-full flex-col items-stretch">
                     <textarea
                         placeholder={`Paste Japanese text here…
 
@@ -142,6 +142,7 @@ const InputTextArea = () => {
                         value={userText}
                         className="h-auto min-h-64 w-full rounded-md bg-black p-4 placeholder-slate-500 caret-white outline-none focus-within:outline-indigo-600"
                     />
+                    {/* hover buttons section */}
                     <CopyButton
                         content={userText}
                         className="hover:bg-grey-400 opacity-1 invisible absolute right-16 top-5 text-black group-hover:visible group-hover:text-white"
@@ -153,12 +154,15 @@ const InputTextArea = () => {
                     >
                         <X className="h-5 w-5 hover:text-red-500" />
                     </button>
-                    <div className="flex w-[80%] flex-row">
-                        <div className="w-[50%]">
-                            <ImageUploader setTextboxFunction={setUserText} />
-                        </div>
+                    {/* action buttons section */}
+                    <div className="mb-4 grid w-full grid-cols-1 sm:grid-cols-2 sm:gap-2">
+                        <ImageUploader
+                            setTextboxFunction={setUserText}
+                            className="w-full text-sm"
+                        />
+
                         <CommonButton
-                            additionalclasses="w-[50%]"
+                            additionalclasses="w-full  text-sm"
                             onClick={handleTextSubmit}
                         >
                             <div className="flex items-center justify-center gap-2">
@@ -166,9 +170,34 @@ const InputTextArea = () => {
                             </div>
                         </CommonButton>
                     </div>
+                    {/* select per page section */}
+                    <div className="mx-auto mb-4">
+                        <Select
+                            value={String(perPage)}
+                            onValueChange={handleSetSentencesPerPage}
+                        >
+                            <Label className="] mx-auto mb-1 mt-2">
+                                Study pace
+                            </Label>
+                            <SelectTrigger className="mx-auto mb-2 w-[150px] bg-black text-white shadow-md focus-within:outline-none">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-gray-900 text-white">
+                                {perPageOptions.map((value) => (
+                                    <SelectItem
+                                        key={value}
+                                        value={value}
+                                        className={`hover:bg-grey-100 hover:font-bold focus:font-bold ${String(perPage) === value ? "font-bold" : ""}`}
+                                    >
+                                        {value}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
 
                     {/* stats section */}
-                    <div className="flex flex-row items-center gap-4">
+                    <div className="mb-4 flex flex-row items-center gap-4">
                         {/* sentence count */}
                         <div className="flex items-center gap-3 rounded-lg border border-slate-700/50 bg-slate-900/60 p-4">
                             <div className="rounded-full bg-amber-600/20 p-2">
@@ -199,29 +228,6 @@ const InputTextArea = () => {
                         </div>
                     </div>
                     {/* stats section stop*/}
-
-                    <Select
-                        value={String(perPage)}
-                        onValueChange={handleSetSentencesPerPage}
-                    >
-                        <Label className="mb-1 mr-auto mt-2 w-[150px]">
-                            Study pace
-                        </Label>
-                        <SelectTrigger className="mb-2 mr-auto w-[150px] bg-black text-white shadow-md focus-within:outline-none">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-gray-900 text-white">
-                            {perPageOptions.map((value) => (
-                                <SelectItem
-                                    key={value}
-                                    value={value}
-                                    className={`hover:bg-grey-100 hover:font-bold focus:font-bold ${String(perPage) === value ? "font-bold" : ""}`}
-                                >
-                                    {value}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
                 </CardContent>
             </Card>
         </div>

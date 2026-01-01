@@ -9,6 +9,7 @@ import ImageTextModal from "./ImageTextModal";
 import { Toaster } from "@/components/ui/toaster";
 
 interface Props {
+    className?: string;
     setTextboxFunction?: (text: string) => void;
 }
 export default function ImageUploader(props: Props) {
@@ -75,7 +76,7 @@ export default function ImageUploader(props: Props) {
     };
 
     return (
-        <div>
+        <div className={props.className}>
             <input
                 type="file"
                 accept="image/*,android/allowCamera"
@@ -88,13 +89,16 @@ export default function ImageUploader(props: Props) {
             <CommonButton
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isLoading}
+                additionalclasses="w-full"
             >
-                {isLoading ? (
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                ) : (
-                    <Camera className="h-5 w-5" />
-                )}
-                {isLoading ? "Extracting Text..." : "Upload Image"}
+                <div className="flex flex-row items-center justify-center gap-2 whitespace-nowrap">
+                    {isLoading ? (
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : (
+                        <Camera className="h-5 w-5" />
+                    )}
+                    {isLoading ? "Extracting Text..." : "Upload Image"}
+                </div>
             </CommonButton>
             <ImageTextModal
                 open={isModalOpen}
