@@ -2,7 +2,6 @@
 import React from "react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import SectionHeader from "@/components/common/SectionHeader";
 import CommonButton from "@/components/common/CommonButton";
 import {
     Select,
@@ -125,26 +124,31 @@ const InputTextArea = () => {
     }, [userText]);
     return (
         <div>
-            <SectionHeader title="Text to Study" />
             <Card className="mx-auto flex max-w-md flex-col items-center justify-center rounded-xl border border-blue-400/30 bg-gray-800 px-4 py-2 text-gray-100 shadow-xl">
-                <CardHeader className="border-b border-gray-700/50 pb-2">
-                    <CardTitle className="text-center text-lg font-bold text-white">
-                        {"Insert text you want to analyze below"}
+                <CardHeader className="mb-0 mr-auto pb-0">
+                    <CardTitle className="text-md pb-2 font-bold text-gray-200">
+                        {"Text to Study: "}
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="group relative flex flex-col items-center pt-4">
+                <CardContent className="group relative flex flex-col items-stretch">
                     <textarea
+                        placeholder={`Paste Japanese text here…
+
+• JLPT reading passages
+• Interview answers
+• Articles or reports
+• Work documents`}
                         onChange={handleTextEntry}
                         value={userText}
-                        className="h-auto min-h-64 w-full rounded-md bg-black p-4 caret-white outline-none focus-within:outline-indigo-600"
+                        className="h-auto min-h-64 w-full rounded-md bg-black p-4 placeholder-slate-500 caret-white outline-none focus-within:outline-indigo-600"
                     />
                     <CopyButton
                         content={userText}
-                        className="hover:bg-grey-400 absolute right-16 top-5 bg-black text-black opacity-100 group-hover:text-white"
+                        className="hover:bg-grey-400 opacity-1 invisible absolute right-16 top-5 text-black group-hover:visible group-hover:text-white"
                         onCopy={alertCopy}
                     />
                     <button
-                        className="group absolute right-12 top-7 bg-black text-black transition duration-200 ease-in-out hover:scale-110 hover:bg-gray-900 group-hover:text-white"
+                        className="group invisible absolute right-12 top-7 bg-black text-black transition duration-200 ease-in-out hover:scale-110 hover:bg-gray-900 group-hover:visible group-hover:text-white"
                         onClick={handleClearText}
                     >
                         <X className="h-5 w-5 hover:text-red-500" />
@@ -201,7 +205,7 @@ const InputTextArea = () => {
                         onValueChange={handleSetSentencesPerPage}
                     >
                         <Label className="mb-1 mr-auto mt-2 w-[150px]">
-                            Sentences per page
+                            Study pace
                         </Label>
                         <SelectTrigger className="mb-2 mr-auto w-[150px] bg-black text-white shadow-md focus-within:outline-none">
                             <SelectValue />
