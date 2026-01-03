@@ -1,7 +1,7 @@
-"use client";
 import SectionHeader from "@/components/common/SectionHeader";
 
 import InputTextArea from "./_components/InputTextArea";
+import HistoryAndFavorites from "./_components/HistoryAndFavorites";
 
 function TextInputPage() {
     return (
@@ -18,6 +18,8 @@ function TextInputPage() {
             </div>
 
             <InputTextArea />
+
+            <HistoryAndFavorites />
         </div>
     );
 }

@@ -19,7 +19,7 @@ import { useSettings } from "../SettingsProvider";
 import ImageUploader from "./ImageUploader";
 import { useToast } from "@/hooks/use-toast";
 
-const InputTextArea = () => {
+const InputTextArea = function () {
     const [userText, setUserText] = useState<string>("");
     const [japaneseWordCount, setJapaneseWordCount] = useState(0);
     const { perPage, setPerPageContext } = useSettings();
