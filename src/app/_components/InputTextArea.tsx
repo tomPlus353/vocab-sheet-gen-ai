@@ -12,7 +12,15 @@ import {
 } from "@/components/ui/select";
 import { CopyButton } from "@/components/ui/shadcn-io/copy-button";
 import { Label } from "@/components/ui/label";
-import { Send, AlignLeft, FileText, X } from "lucide-react";
+import {
+    Send,
+    AlignLeft,
+    FileText,
+    X,
+    LayoutList,
+    CaseSensitive,
+    BookA,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getTokenizer } from "kuromojin";
 import { useSettings } from "../SettingsProvider";
@@ -24,6 +32,7 @@ const InputTextArea = function () {
     const [japaneseWordCount, setJapaneseWordCount] = useState(0);
     const { perPage, setPerPageContext } = useSettings();
     const perPageOptions = ["1", "3", "5", "10"];
+    const [textArray, setTextArray] = useState<string[]>([]);
 
     const { toast } = useToast();
 
@@ -46,16 +55,6 @@ const InputTextArea = function () {
         console.log("cleared user text");
     };
     const handleTextSubmit = () => {
-        //split user text into an array
-        const textArray = userText
-            .split(/(?<=[。！？.!?])|\n/g) //split by sentence endings: .?!。！？ or new line
-            .map((s) => s.trim()) // trim whitespace
-            .map((s) => s.replace(/\n/g, "")) // remove any remaining new lines from each sentence
-            .filter((x) => x !== ""); //filter out empty strings
-
-        // const textArray = userText
-        //     .split(/(.*[\.\?!。！？\n])/g)
-        //     .filter((x) => x !== "");
         //save textArray to local storage
         console.log("setting text array to local storage: ", textArray);
         localStorage.setItem("textArray", JSON.stringify(textArray));
@@ -112,16 +111,21 @@ const InputTextArea = function () {
                     console.error("error when running getTokenizer", error);
                 });
 
-            // tokenizePromise(userText).catch((error) => {
-            //   console.error("error when running tokenizePromise", error);
-            // });
+            //split user text into an array
+            const tmpTextArray = userText
+                .split(/(?<=[。！？.!?])|\n/g) //split by sentence endings: .?!。！？ or new line
+                .map((s) => s.trim()) // trim whitespace
+                .map((s) => s.replace(/\n/g, "")) // remove any remaining new lines from each sentence
+                .filter((x) => x !== ""); //filter out empty strings
 
+            setTextArray(tmpTextArray);
             console.log("userText:", userText);
             console.log("typeof userText:", typeof userText);
         } catch (error) {
             console.error("error when running useEffect", error);
         }
     }, [userText]);
+
     return (
         <div>
             <Card className="mx-auto flex max-w-xl flex-col items-center justify-center rounded-xl border border-blue-400/30 bg-gray-800 px-4 py-2 text-gray-100 shadow-xl">
@@ -201,11 +205,11 @@ const InputTextArea = function () {
                         {/* sentence count */}
                         <div className="flex items-center gap-3 rounded-lg border border-slate-700/50 bg-slate-900/60 p-4">
                             <div className="rounded-full bg-amber-600/20 p-2">
-                                <AlignLeft className="h-5 w-5 text-amber-300" />
+                                <CaseSensitive className="h-5 w-5 text-amber-300" />
                             </div>
                             <div>
                                 <p className="text-xs text-slate-400">
-                                    Sentences
+                                    Characters
                                 </p>
                                 <p className="font-medium">
                                     {userText?.length}
@@ -215,7 +219,7 @@ const InputTextArea = function () {
                         {/* word count */}
                         <div className="col-span-2 flex items-center gap-3 rounded-lg border border-slate-700/50 bg-slate-900/60 p-4">
                             <div className="rounded-full bg-pink-600/20 p-2">
-                                <FileText className="h-5 w-5 text-red-300" />
+                                <BookA className="h-5 w-5 text-red-300" />
                             </div>
                             <div>
                                 <p className="text-xs text-slate-400">
@@ -223,6 +227,20 @@ const InputTextArea = function () {
                                 </p>
                                 <p className="font-medium">
                                     {japaneseWordCount}
+                                </p>
+                            </div>
+                        </div>
+                        {/* Sentence count */}
+                        <div className="col-span-2 flex items-center gap-3 rounded-lg border border-slate-700/50 bg-slate-900/60 p-4">
+                            <div className="rounded-full bg-pink-600/20 p-2">
+                                <LayoutList className="h-5 w-5 text-violet-300" />
+                            </div>
+                            <div>
+                                <p className="text-xs text-slate-400">
+                                    Sentences
+                                </p>
+                                <p className="font-medium">
+                                    {textArray.length}
                                 </p>
                             </div>
                         </div>

@@ -106,7 +106,7 @@ export default function Match() {
                 console.log("At last round, cannot go further.");
             }
         },
-        dependencies: [round],
+        dependencies: [round, totalRounds],
     });
 
     //shortcuts for selecting cards a-z (1-26)
@@ -210,20 +210,23 @@ export default function Match() {
 
         const lastRoundTerms = replyJson.length % termsPerRound;
         let termsForGame: JsonArray = [];
+
         if (lastRoundTerms > 0 && lastRoundTerms < MIN_LAST_ROUND_TERMS) {
+            //case 1 last round has too few terms
+            console.log("setting rounds: case 1");
             const offsetTotalRounds =
                 Math.ceil(replyJson.length / termsPerRound) - 1;
             setTotalRounds(offsetTotalRounds);
-            console.log("totalRounds: ", totalRounds);
+            console.log("offsetTotalRounds: ", offsetTotalRounds);
 
             // create rounds array for the select dropdown
             setRoundsArray(
-                Array.from({ length: totalRounds }, (_, i) =>
+                Array.from({ length: offsetTotalRounds }, (_, i) =>
                     (i + 1).toString(),
                 ),
             );
 
-            if (roundIndex + 1 === totalRounds) {
+            if (roundIndex + 1 === offsetTotalRounds) {
                 //set terms if last round is selected
                 termsForGame = replyJson.slice(
                     roundIndex * termsPerRound,
@@ -241,10 +244,15 @@ export default function Match() {
             }
             console.log("termsForGame: ", termsForGame);
         } else {
-            setTotalRounds(Math.ceil(replyJson.length / termsPerRound));
-            console.log("totalRounds: ", totalRounds);
+            //case 2 last round ok number of terms
+            console.log("setting rounds: case 2");
+            const localTotalRounds = Math.ceil(
+                replyJson.length / termsPerRound,
+            );
+            setTotalRounds(localTotalRounds);
+            console.log("localTotalRounds: ", localTotalRounds);
             setRoundsArray(
-                Array.from({ length: totalRounds }, (_, i) =>
+                Array.from({ length: localTotalRounds }, (_, i) =>
                     (i + 1).toString(),
                 ),
             );
