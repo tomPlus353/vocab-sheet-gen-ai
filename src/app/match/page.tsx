@@ -3,17 +3,19 @@ import * as React from "react";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 
+// import common components and utils
 import CommonButton from "@/components/common/CommonButton";
 import { getHashedCache, setHashedCache } from "@/lib/utils";
-
 import SectionHeader from "@/components/common/SectionHeader";
 
 import { Toaster } from "@/components/ui/toaster";
 import type { JsonArray } from "@prisma/client/runtime/library";
-import { sleep } from "@trpc/server/unstable-core-do-not-import";
 
+// import local components
 import { Loader } from "./_components/Loader";
 import { GameControls } from "./_components/GameControls";
+import { GameStats } from "./_components/GameStats";
+
 import { useKeyboardShortcut } from "@/hooks/use-key-shortcut";
 
 type vocabObj = Record<string, string>;
@@ -59,6 +61,10 @@ export default function Match() {
 
     // constant settings
     const termsPerRound = 5;
+
+    //sleep function
+    const sleep = (ms: number) =>
+        new Promise((resolve) => setTimeout(resolve, ms));
 
     /* 
     HANDLE KEYBOARD SHORTCUTS
@@ -481,20 +487,13 @@ export default function Match() {
                 setIsTestReading={setIsTestReading}
             />
             {/* Stats row */}
-            <div className="mx-12 flex flex-row justify-between">
-                <p className="text-lg font-semibold text-blue-300">
-                    {" "}
-                    {`Score: ${score}/${gameVocabJson.length / 2}`}
-                </p>
-                <p className="text-lg font-semibold text-blue-300">
-                    {" "}
-                    {`Round: ${round}/${totalRounds}`}
-                </p>
-                <p className="text-lg font-semibold text-blue-300">
-                    {" "}
-                    {`Time: ${timer}`}
-                </p>
-            </div>
+            <GameStats
+                score={score}
+                round={round}
+                totalRounds={totalRounds}
+                timer={timer}
+                gameVocabJson={gameVocabJson}
+            />
             {!isLoading ? (
                 <div>
                     <div className="m-auto grid grid-cols-2 lg:w-[80%]">
