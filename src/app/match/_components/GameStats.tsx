@@ -5,7 +5,7 @@ type Props = {
     score: number;
     round: string;
     totalRounds: number;
-    timer: string;
+    timer: number;
     gameVocabJson: Array<Record<string, string>>;
 };
 
