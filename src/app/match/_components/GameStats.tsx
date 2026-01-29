@@ -6,7 +6,7 @@ type Props = {
     round: string;
     totalRounds: number;
     timer: number;
-    gameVocabJson: Array<Record<string, string>>;
+    gameVocabJson: Array<Record<string, string | boolean>>;
 };
 
 export function GameStats(props: Props) {

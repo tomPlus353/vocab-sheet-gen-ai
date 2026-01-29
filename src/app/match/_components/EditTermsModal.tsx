@@ -6,12 +6,11 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
-    DialogFooter,
+    // DialogFooter,
     DialogDescription,
 } from "@/components/ui/dialog";
-import CommonButton from "@/components/common/CommonButton";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Copy, Check, ClipboardPaste, Heart } from "lucide-react";
+import { Heart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getHashedCache, setHashedCache } from "@/lib/utils";
 
@@ -28,26 +27,6 @@ export function EditTermsModal({ open, onOpenChange }: ImageTextModalProps) {
     const GLOBAL_FAV_LIST_KEY = "favoriteTerms";
 
     const [gameVocabJson, setGameVocabJson] = useState<vocabObj[]>([]);
-
-    // const handleSelectFavorite = async () => {
-    //     try {
-    //         if (setTextboxFunction) setTextboxFunction(text);
-    //         setIsCopied(true);
-    //         toast({
-    //             variant: "success",
-    //             description: "Extracted image text pasted.",
-    //         });
-    //         setTimeout(() => onOpenChange(false), 1000);
-    //     } catch (err) {
-    //         console.error("Error saving extracted text: ", err);
-    //         toast({
-    //             variant: "destructive",
-    //             title: "Save Failed",
-    //             description:
-    //                 "Could not paste the extracted text. Try again or copy to clipboard first instead.",
-    //         });
-    //     }
-    // };
 
     useEffect(() => {
         // Extract gameVocabJson data from localStorage when the modal opens
