@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 
 import CommonButton from "@/components/common/CommonButton";
@@ -12,6 +12,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+
+import { EditTermsModal } from "./EditTermsModal";
 
 type Props = {
     startGame: () => void;
@@ -37,12 +39,16 @@ export function GameControls(props: Props) {
         isTestReading,
         setIsTestReading,
     } = props;
+
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const router = useRouter();
+
+    const CONTROL_BUTTON_STYLE =
+        "mx-1 p-1 bg-indigo-600 shadow-md focus-within:outline-indigo-600 text-white";
 
     function computeRoundButtonStyle(direction: "prev" | "next") {
         // base style
-        let buttonStyle =
-            "mx-1 p-1 bg-indigo-600 shadow-md focus-within:outline-indigo-600 text-white";
+        let buttonStyle = CONTROL_BUTTON_STYLE;
         // add invisible class if at first or last round
         if (direction === "prev" && Number(round) <= 1) {
             buttonStyle += " invisible";
@@ -58,12 +64,20 @@ export function GameControls(props: Props) {
             <CommonButton
                 //emoji for going back
                 label={"↩ Back to Ereader"}
+                additionalclasses={CONTROL_BUTTON_STYLE}
                 onClick={() => router.back()}
             />
             <CommonButton
                 //emoji for going back
                 label={"⟳ Play Again"}
+                additionalclasses={CONTROL_BUTTON_STYLE}
                 onClick={() => startGame()}
+            />
+            <CommonButton
+                //emoji editing terms
+                label={"✎ Edit Terms"}
+                additionalclasses={CONTROL_BUTTON_STYLE}
+                onClick={() => setIsModalOpen(true)}
             />
             <div className="mr-auto flex items-center gap-1 text-lg">
                 <Checkbox
@@ -147,6 +161,7 @@ export function GameControls(props: Props) {
                     }
                 />
             </div>
+            <EditTermsModal open={isModalOpen} onOpenChange={setIsModalOpen} />
         </div>
     );
 }
