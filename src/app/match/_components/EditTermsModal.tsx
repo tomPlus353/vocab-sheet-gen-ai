@@ -159,7 +159,7 @@ export function EditTermsModal({ open, onOpenChange }: ImageTextModalProps) {
                                 {gameVocabJson.map((termObj, index) => (
                                     <li
                                         key={index}
-                                        className="flex justify-between"
+                                        className="flex justify-between border-2 border-blue-600/50"
                                     >
                                         <span>{termObj.japanese}</span>
                                         {/* Favorite button */}

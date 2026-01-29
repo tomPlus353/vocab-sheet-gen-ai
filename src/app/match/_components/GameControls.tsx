@@ -25,6 +25,8 @@ type Props = {
     setIsHideReading: (value: boolean) => void;
     isTestReading: boolean;
     setIsTestReading: (value: boolean) => void;
+    isFavoritesMode: boolean;
+    setIsFavoritesMode: (value: boolean) => void;
 };
 
 export function GameControls(props: Props) {
@@ -38,6 +40,8 @@ export function GameControls(props: Props) {
         setIsHideReading,
         isTestReading,
         setIsTestReading,
+        isFavoritesMode,
+        setIsFavoritesMode,
     } = props;
 
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -110,6 +114,23 @@ export function GameControls(props: Props) {
                     className="cursor-pointer text-lg"
                 >
                     <p>Test Reading</p>
+                </Label>
+            </div>
+
+            <div className="mr-auto flex items-center gap-1 text-lg">
+                <Checkbox
+                    className="border-indigo-800 bg-gray-200 data-[state=checked]:bg-indigo-900"
+                    id="favorites-only"
+                    checked={isFavoritesMode}
+                    onCheckedChange={() =>
+                        setIsFavoritesMode(isFavoritesMode ? false : true)
+                    }
+                ></Checkbox>
+                <Label
+                    htmlFor="favorites-only"
+                    className="cursor-pointer text-lg"
+                >
+                    <p>Favorites only</p>
                 </Label>
             </div>
             {/* row changing UI */}

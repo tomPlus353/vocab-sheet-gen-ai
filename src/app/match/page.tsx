@@ -18,7 +18,7 @@ import { GameStats } from "./_components/GameStats";
 
 import { useKeyboardShortcut } from "@/hooks/use-key-shortcut";
 
-type vocabObj = Record<string, string>;
+type vocabObj = Record<string, string | boolean>;
 
 //fischer y-yates shuffle
 function shuffleArray(vocabArray: vocabObj[]) {
@@ -56,6 +56,7 @@ export default function Match() {
     //User Settings
     const [isHideReading, setIsHideReading] = useState<boolean>(false);
     const [isTestReading, setIsTestReading] = useState<boolean>(false);
+    const [isFavoritesMode, setIsFavoritesMode] = useState<boolean>(false);
     const [round, setRound] = useState<string>("1");
     const MIN_LAST_ROUND_TERMS = 3; //minimum terms in last round, does not affect games with a single round
 
@@ -199,7 +200,16 @@ export default function Match() {
         //handle success
         console.log("json string reply", reply);
 
-        const replyJson = JSON.parse(reply) as JsonArray;
+        let replyJson = JSON.parse(reply) as JsonArray;
+
+        replyJson = replyJson.filter((item) => {
+            if (isFavoritesMode) {
+                //only include items with is_favorite true
+                return (item as vocabObj).isFavorite === true;
+            } else {
+                return true;
+            }
+        });
 
         // Calculate total number of rounds, array of rounds
         // and select terms for the current round
@@ -484,6 +494,8 @@ export default function Match() {
                 isHideReading={isHideReading}
                 setIsHideReading={setIsHideReading}
                 isTestReading={isTestReading}
+                isFavoritesMode={isFavoritesMode}
+                setIsFavoritesMode={setIsFavoritesMode}
                 setIsTestReading={setIsTestReading}
             />
             {/* Stats row */}
