@@ -438,7 +438,7 @@ export default function Match() {
                 toast({
                     title: "Correct Match!",
                     description: `${label1} == ${label2}`,
-                    duration: 1500,
+                    duration: 1000,
                     variant: "success",
                 });
                 sleep(10)
@@ -456,7 +456,7 @@ export default function Match() {
                 toast({
                     title: "Incorrect Match!",
                     description: `You matched ${label1} with ${label2}`,
-                    duration: 1500,
+                    duration: 1000,
                     variant: "destructive",
                 });
                 setSelected1(0);

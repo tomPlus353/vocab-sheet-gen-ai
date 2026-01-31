@@ -14,8 +14,10 @@ export function useKeyboardShortcut({
 }: UseKeyboardShortcutArgs) {
   useEffect(() => {
     function keyDownHandler(e: globalThis.KeyboardEvent) {
+      // If any modifier key is pressed, ignore — allow combinations like Cmd+F, Ctrl+C to work
+      if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
+
       if (e.key === key) {
-        e.preventDefault();
         onKeyPressed();
       }
     }
