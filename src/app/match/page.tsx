@@ -150,7 +150,23 @@ export default function Match() {
         //initialize empty reply from cache or llm
         let reply: string | undefined = "";
 
-        const cachedJsonString = getHashedCache("vocabGame" + activeTextStr);
+        //check favorites parameter from url
+        const urlParams = new URLSearchParams(window.location.search);
+        const isReviewFavorites =
+            urlParams.get("favorites") === "1" ? true : false;
+
+        let cachedJsonString: string | null = null;
+
+        if (isReviewFavorites) {
+            cachedJsonString = localStorage.getItem("favoriteTerms");
+            if (!cachedJsonString) {
+                alert("No favorite terms found.");
+                setIsLoading(false);
+                return;
+            }
+        } else {
+            cachedJsonString = getHashedCache("vocabGame" + activeTextStr);
+        }
         if (cachedJsonString) {
             reply = cachedJsonString;
         } else {
