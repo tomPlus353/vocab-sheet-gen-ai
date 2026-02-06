@@ -1,7 +1,7 @@
 "use client";
 
 import { Heart } from "lucide-react";
-import { getHashedCache, setHashedCache } from "@/lib/utils";
+import { appendGameHistory, getGameHistory } from "@/lib/utils";
 
 type vocabObj = Record<string, string | boolean>;
 
@@ -76,12 +76,11 @@ export function FavoritesList({ mode, terms, setTerms }: Props) {
 
         if (!terms) return;
 
-        const updatedTerms = [...terms];
-        //toggle is_favorite property of term at index
-        const term = updatedTerms[index];
+        const term = terms[index];
 
         if (!term) return;
 
+        // Toggle is_favorite property of term at index
         if (term.isFavorite === undefined) {
             //initialize to true if clicked for the first time
             term.isFavorite = true;
@@ -90,22 +89,36 @@ export function FavoritesList({ mode, terms, setTerms }: Props) {
             term.isFavorite = !term.isFavorite;
         }
 
+        // Create a copy of the terms array to update
+        const updatedTerms = [...terms];
+
+        // reflect change in the copied array
+        updatedTerms[index] = term;
+
         // 1. update the list of terms in local storage
-        const activeTextStr = localStorage.getItem("activeText");
-        const currentTermListString = getHashedCache(
-            "vocabGame" + activeTextStr,
-        );
-        let currentTermsList: vocabObj[] = [];
-        if (currentTermListString) {
-            currentTermsList = JSON.parse(currentTermListString);
+        const urlParams = new URLSearchParams(window.location.search);
+        const isReviewHistory = urlParams.get("history") === "1" ? true : false;
+
+        // Update the history cache
+        let historyTermsKey: string | null = null;
+        if (isReviewHistory) {
+            historyTermsKey = urlParams.get("historyTerms");
+        } else {
+            // If reviewing history, use a fixed key for history terms
+            const activeText = localStorage.getItem("activeText");
+            historyTermsKey = activeText;
         }
-        // Update the term in the current terms list
-        currentTermsList[index] = term;
-        // Cache the updated terms list
-        setHashedCache(
-            "vocabGame" + activeTextStr,
-            JSON.stringify(currentTermsList),
-        );
+
+        if (historyTermsKey) {
+            // Cache the updated terms list
+            appendGameHistory(
+                historyTermsKey,
+                JSON.stringify(updatedTerms),
+                true,
+            );
+        } else {
+            console.warn("No valid key found for updating game history terms.");
+        }
 
         //2. update state
         setTerms(updatedTerms);
@@ -115,7 +128,7 @@ export function FavoritesList({ mode, terms, setTerms }: Props) {
             localStorage.getItem(GLOBAL_FAV_LIST_KEY);
         let currentFavorites: vocabObj[] = [];
         if (currentFavoritesString) {
-            currentFavorites = JSON.parse(currentFavoritesString);
+            currentFavorites = JSON.parse(currentFavoritesString) as vocabObj[];
         }
         // If term is now favorite, add to favorites list
         if (term.isFavorite) {
@@ -147,7 +160,7 @@ export function FavoritesList({ mode, terms, setTerms }: Props) {
 
     return (
         <ul className="rounded-xl border border-slate-800 bg-slate-900/70 p-3">
-            {terms.map((termObj, index) => (
+            {terms?.map((termObj, index) => (
                 <li
                     key={index}
                     className="flex justify-between border-2 border-blue-600/50"

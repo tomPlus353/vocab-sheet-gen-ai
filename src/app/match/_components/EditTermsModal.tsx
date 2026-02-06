@@ -13,37 +13,26 @@ import { FavoritesList } from "@/components/common/FavoritesList";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 import { useToast } from "@/hooks/use-toast";
-import { getHashedCache, setHashedCache } from "@/lib/utils";
+import { getGameHistory, getHashedCache } from "@/lib/utils";
 
 interface ImageTextModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
+    terms: Record<string, string | boolean>[];
+    setTerms: React.Dispatch<
+        React.SetStateAction<Record<string, string | boolean>[]>
+    >;
 }
 
 type vocabObj = Record<string, string | boolean>;
 
-export function EditTermsModal({ open, onOpenChange }: ImageTextModalProps) {
+export function EditTermsModal({
+    open,
+    onOpenChange,
+    terms,
+    setTerms,
+}: ImageTextModalProps) {
     const { toast } = useToast();
-
-    const [gameVocabJson, setGameVocabJson] = useState<vocabObj[]>([]);
-
-    useEffect(() => {
-        // Extract gameVocabJson data from localStorage when the modal opens
-        if (open) {
-            //extract raw text from localStorage
-            const activeTextStr = localStorage.getItem("activeText");
-            //get cached vocab game data
-            const cachedJsonString = getHashedCache(
-                "vocabGame" + activeTextStr,
-            );
-            // parse json string into array
-            const termsAsJson: vocabObj[] = JSON.parse(
-                cachedJsonString ?? "[]",
-            );
-            // set terms to state
-            setGameVocabJson(termsAsJson);
-        }
-    }, [open]);
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -59,7 +48,7 @@ export function EditTermsModal({ open, onOpenChange }: ImageTextModalProps) {
                     </DialogDescription>
                 </DialogHeader>
                 <ScrollArea className="my-2 flex-1 overflow-y-auto rounded-md border">
-                    {!gameVocabJson ? (
+                    {!terms ? (
                         <pre className="font-body whitespace-pre-wrap p-4 text-sm text-foreground text-white">
                             No terms available.
                         </pre>
@@ -67,8 +56,8 @@ export function EditTermsModal({ open, onOpenChange }: ImageTextModalProps) {
                         <div>
                             <FavoritesList
                                 mode="current"
-                                terms={gameVocabJson}
-                                setTerms={setGameVocabJson}
+                                terms={terms}
+                                setTerms={setTerms}
                             />
                         </div>
                     )}

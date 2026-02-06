@@ -27,6 +27,10 @@ type Props = {
     setIsTestReading: (value: boolean) => void;
     isFavoritesMode: boolean;
     setIsFavoritesMode: (value: boolean) => void;
+    allRoundsVocabJson: Record<string, string | boolean>[];
+    setAllRoundsVocabJson: React.Dispatch<
+        React.SetStateAction<Record<string, string | boolean>[]>
+    >;
 };
 
 export function GameControls(props: Props) {
@@ -42,6 +46,8 @@ export function GameControls(props: Props) {
         setIsTestReading,
         isFavoritesMode,
         setIsFavoritesMode,
+        allRoundsVocabJson,
+        setAllRoundsVocabJson,
     } = props;
 
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -196,7 +202,12 @@ export function GameControls(props: Props) {
                     }
                 />
             </div>
-            <EditTermsModal open={isModalOpen} onOpenChange={setIsModalOpen} />
+            <EditTermsModal
+                open={isModalOpen}
+                onOpenChange={setIsModalOpen}
+                terms={allRoundsVocabJson}
+                setTerms={setAllRoundsVocabJson}
+            />
         </div>
     );
 }

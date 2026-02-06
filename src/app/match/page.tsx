@@ -5,7 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 
 // import common components and utils
 import CommonButton from "@/components/common/CommonButton";
-import { getHashedCache, setHashedCache } from "@/lib/utils";
+import { getHashedCache, appendGameHistory, getGameHistory } from "@/lib/utils";
 import SectionHeader from "@/components/common/SectionHeader";
 
 import { Toaster } from "@/components/ui/toaster";
@@ -17,6 +17,7 @@ import { GameControls } from "./_components/GameControls";
 import { GameStats } from "./_components/GameStats";
 
 import { useKeyboardShortcut } from "@/hooks/use-key-shortcut";
+import { set } from "zod";
 
 type vocabObj = Record<string, string | boolean>;
 
@@ -45,6 +46,9 @@ export default function Match() {
     const [score, setScore] = useState(0);
     const [answered, setAnswered] = useState<number[]>([]);
     const [latestCorrectAnw, setLatestCorrectAnw] = useState<number[]>([]);
+    const [allRoundsVocabJson, setAllRoundsVocabJson] = useState<vocabObj[]>(
+        [],
+    );
     const [gameVocabJson, setGameVocabJson] = useState<vocabObj[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [timer, setTimer] = useState(0);
@@ -168,14 +172,14 @@ export default function Match() {
             }
         } else if (isReviewHistory) {
             const historyHash = urlParams.get("historyTerms");
-            cachedJsonString = localStorage.getItem(historyHash ?? "");
+            cachedJsonString = getGameHistory(historyHash ?? "", true);
             if (!cachedJsonString) {
-                alert("No history terms found.");
+                alert("No history terms found for key: " + historyHash);
                 setIsLoading(false);
                 return;
             }
         } else {
-            cachedJsonString = getHashedCache("vocabGame" + activeTextStr);
+            cachedJsonString = getGameHistory(activeTextStr, false);
         }
         if (cachedJsonString) {
             reply = cachedJsonString;
@@ -220,14 +224,19 @@ export default function Match() {
                 return;
             }
             //cache the request using hash of activeText
-            setHashedCache("vocabGame" + activeTextStr, reply);
+            appendGameHistory(activeTextStr, reply);
         }
 
         //handle success
         console.log("json string reply", reply);
 
+        //parse the reply to json
         let replyJson = JSON.parse(reply) as JsonArray;
 
+        //keep a copy of vocab for all rounds in the state so the user can do things like edit all terms
+        setAllRoundsVocabJson(replyJson as vocabObj[]);
+
+        //filter to only include favorites if in favorites mode
         replyJson = replyJson.filter((item) => {
             if (isFavoritesMode) {
                 //only include items with is_favorite true
@@ -523,6 +532,8 @@ export default function Match() {
                 isFavoritesMode={isFavoritesMode}
                 setIsFavoritesMode={setIsFavoritesMode}
                 setIsTestReading={setIsTestReading}
+                allRoundsVocabJson={allRoundsVocabJson}
+                setAllRoundsVocabJson={setAllRoundsVocabJson}
             />
             {/* Stats row */}
             <GameStats

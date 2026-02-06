@@ -26,3 +26,34 @@ export function setHashedCache(key: string, content: string): void {
   // store content in local storage
   localStorage.setItem(hashToSet, content);
 }
+
+export function appendGameHistory(key: string, content: string, isKeyHashed = false): void {
+  const history = localStorage.getItem("historyTerms") ?? "{}";
+  const historyHashmap: Record<string, string> = JSON.parse(history) as Record<string, string>;
+  const hashToSet = isKeyHashed ? key : createHash("sha256")
+    .update(key)
+    .digest("hex");
+  historyHashmap[hashToSet] = content;
+  localStorage.setItem("historyTerms", JSON.stringify(historyHashmap));
+}
+
+export function getGameHistory(key: string, isKeyHashed: boolean): string | null {
+  const history = localStorage.getItem("historyTerms") ?? "{}";
+  const historyHashmap: Record<string, string> = JSON.parse(history) as Record<string, string>;
+  const hashToCheck = isKeyHashed ? key : createHash("sha256").update(key).digest("hex");
+  return historyHashmap[hashToCheck] ?? null;
+}
+
+export function removeGameHistory(key: string, isKeyHashed: boolean): void {
+  const history = localStorage.getItem("historyTerms") ?? "{}";
+  const historyHashmap: Record<string, string> = JSON.parse(history) as Record<string, string>;
+  const hashToRemove = isKeyHashed ? key : createHash("sha256").update(key).digest("hex");
+  delete historyHashmap[hashToRemove];
+  localStorage.setItem("historyTerms", JSON.stringify(historyHashmap));
+}
+
+export function getAllGameHistories(): Record<string, string> {
+  const history = localStorage.getItem("historyTerms") ?? "{}";
+  const historyHashmap: Record<string, string> = JSON.parse(history) as Record<string, string>;
+  return historyHashmap;
+}
