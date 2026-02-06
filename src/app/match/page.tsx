@@ -155,12 +155,22 @@ export default function Match() {
         const isReviewFavorites =
             urlParams.get("favorites") === "1" ? true : false;
 
+        const isReviewHistory = urlParams.get("history") === "1" ? true : false;
+
         let cachedJsonString: string | null = null;
 
         if (isReviewFavorites) {
             cachedJsonString = localStorage.getItem("favoriteTerms");
             if (!cachedJsonString) {
                 alert("No favorite terms found.");
+                setIsLoading(false);
+                return;
+            }
+        } else if (isReviewHistory) {
+            const historyHash = urlParams.get("historyTerms");
+            cachedJsonString = localStorage.getItem(historyHash ?? "");
+            if (!cachedJsonString) {
+                alert("No history terms found.");
                 setIsLoading(false);
                 return;
             }
