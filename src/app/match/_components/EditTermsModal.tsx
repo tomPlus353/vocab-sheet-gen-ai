@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import {
     Dialog,
     DialogContent,
@@ -13,7 +12,6 @@ import { FavoritesList } from "@/components/common/FavoritesList";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 import { useToast } from "@/hooks/use-toast";
-import { getGameHistory, getHashedCache } from "@/lib/utils";
 
 interface ImageTextModalProps {
     open: boolean;
@@ -47,21 +45,27 @@ export function EditTermsModal({
                         on later. <br />
                     </DialogDescription>
                 </DialogHeader>
-                <ScrollArea className="my-2 flex-1 overflow-y-auto rounded-md border">
-                    {!terms ? (
-                        <pre className="font-body whitespace-pre-wrap p-4 text-sm text-foreground text-white">
-                            No terms available.
-                        </pre>
-                    ) : (
-                        <div>
-                            <FavoritesList
-                                mode="current"
-                                terms={terms}
-                                setTerms={setTerms}
-                            />
-                        </div>
-                    )}
-                </ScrollArea>
+                <div className="text-md flex justify-between font-bold">
+                    <span className="text-violet-300/80">
+                        Terms: {terms ? terms.length : 0}
+                    </span>
+                    <span className="text-right text-red-500">
+                        Favorites:{" "}
+                        {terms ? terms.filter((t) => t.isFavorite).length : 0}
+                    </span>
+                </div>
+                {!terms ? (
+                    <pre className="font-body whitespace-pre-wrap p-4 text-sm text-foreground text-white">
+                        No terms available.
+                    </pre>
+                ) : (
+                    <FavoritesList
+                        mode="current"
+                        terms={terms}
+                        setTerms={setTerms}
+                    />
+                )}
+
                 {/* <DialogFooter></DialogFooter> */}
             </DialogContent>
         </Dialog>

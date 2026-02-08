@@ -3,6 +3,7 @@
 import { Heart } from "lucide-react";
 import { appendGameHistory, getGameHistory } from "@/lib/utils";
 import { boolean } from "zod";
+import { ScrollArea } from "../ui/scroll-area";
 
 type vocabObj = Record<string, string | boolean>;
 
@@ -99,27 +100,45 @@ export function FavoritesList({ mode, terms, setTerms }: Props) {
         // 1. update the list of terms in local storage
         const urlParams = new URLSearchParams(window.location.search);
         const isReviewHistory = urlParams.get("history") === "1" ? true : false;
+        const isReviewFavorites =
+            urlParams.get("favorites") === "1" ? true : false;
 
         // Update the history cache
         let historyTermsKey: string | null = null;
-        let isKeyHashed: boolean;
         if (isReviewHistory) {
             historyTermsKey = urlParams.get("historyTerms");
-            isKeyHashed = true;
         } else {
             // If reviewing history, use a fixed key for history terms
             const activeText = localStorage.getItem("activeText");
             historyTermsKey = activeText;
-            isKeyHashed = false;
         }
 
-        if (historyTermsKey) {
+        // case 1: past game history review
+        if (isReviewHistory && historyTermsKey) {
             // Cache the updated terms list
             appendGameHistory(
                 historyTermsKey,
                 JSON.stringify(updatedTerms),
-                isKeyHashed,
+                true,
             );
+            // case 2: reviewing all favorites
+        } else if (isReviewFavorites) {
+            //if reviewing favorites, update the favorite terms cache
+            localStorage.setItem(
+                GLOBAL_FAV_LIST_KEY,
+                JSON.stringify(updatedTerms),
+            );
+            // case 3: default, reviewing active text terms
+        } else if (!isReviewHistory && !isReviewFavorites) {
+            // If not reviewing history or favorites, update the active text terms
+            const activeText = localStorage.getItem("activeText");
+            if (activeText) {
+                appendGameHistory(
+                    activeText,
+                    JSON.stringify(updatedTerms),
+                    false,
+                );
+            }
         } else {
             console.warn("No valid key found for updating game history terms.");
         }
@@ -163,30 +182,48 @@ export function FavoritesList({ mode, terms, setTerms }: Props) {
         mode === "all" ? handleFavoriteClickAll : handleFavoriteClickCurrent;
 
     return (
-        <ul className="rounded-xl border border-slate-800 bg-slate-900/70 p-3">
-            {terms?.map((termObj, index) => (
-                <li
-                    key={index}
-                    className="flex justify-between border-2 border-blue-600/50"
-                >
-                    <span>{termObj.japanese}</span>
-                    {/* Favorite button */}
-                    <button
-                        className="ml-4 rounded-md px-2 py-1 text-sm text-red-500 hover:bg-slate-800"
-                        onClick={() => favoriteClickHandler(index)}
+        <ScrollArea className="my-2 max-h-96 flex-1 overflow-y-auto rounded-md border">
+            {" "}
+            {/* remove favorites button */}
+            <button
+                className="mb-4 rounded-md bg-red-600/50 px-3 py-1 text-sm text-white hover:bg-red-600"
+                onClick={() => {
+                    // Clear all favorites
+                    const updatedTerms = terms.map((term) => {
+                        return { ...term, isFavorite: false };
+                    });
+                    setTerms(updatedTerms);
+                    // Clear global favorites list in localStorage
+                    localStorage.removeItem(GLOBAL_FAV_LIST_KEY);
+                }}
+            >
+                Clear All Favorites
+            </button>
+            <ul className="rounded-xl border border-slate-800 bg-slate-900/70 p-3">
+                {terms?.map((termObj, index) => (
+                    <li
+                        key={index}
+                        className="flex justify-between border-2 border-blue-600/50"
                     >
-                        {termObj.isFavorite ? (
-                            // Filled heart icon for favorite
-                            <Heart
-                                className="inline-block h-8 w-8"
-                                fill="red"
-                            />
-                        ) : (
-                            <Heart className="inline-block h-8 w-8" />
-                        )}
-                    </button>
-                </li>
-            ))}
-        </ul>
+                        <span>{termObj.japanese}</span>
+                        {/* Favorite button */}
+                        <button
+                            className="ml-4 rounded-md px-2 py-1 text-sm text-red-500 hover:bg-slate-800"
+                            onClick={() => favoriteClickHandler(index)}
+                        >
+                            {termObj.isFavorite ? (
+                                // Filled heart icon for favorite
+                                <Heart
+                                    className="inline-block h-8 w-8"
+                                    fill="red"
+                                />
+                            ) : (
+                                <Heart className="inline-block h-8 w-8" />
+                            )}
+                        </button>
+                    </li>
+                ))}
+            </ul>
+        </ScrollArea>
     );
 }
