@@ -201,7 +201,7 @@ const InputTextArea = function () {
                     </div>
 
                     {/* stats section */}
-                    <div className="mb-4 flex flex-row items-center gap-4">
+                    <div className="mb-4 flex flex-row flex-wrap items-center gap-4">
                         {/* sentence count */}
                         <div className="flex items-center gap-3 rounded-lg border border-slate-700/50 bg-slate-900/60 p-4">
                             <div className="rounded-full bg-amber-600/20 p-2">
