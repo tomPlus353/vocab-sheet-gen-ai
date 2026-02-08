@@ -63,7 +63,7 @@ const History = () => {
                                 key={key}
                                 className="rounded-lg border border-slate-800 bg-slate-900/70 p-3"
                             >
-                                <div className="flex items-center justify-between">
+                                <div className="flex items-start justify-between">
                                     <div>
                                         <p className="text-slate-200">
                                             {getSampleTerms(
