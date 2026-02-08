@@ -54,7 +54,7 @@ export function GameControls(props: Props) {
     const router = useRouter();
 
     const CONTROL_BUTTON_STYLE =
-        "mx-1 p-1 bg-indigo-600 shadow-md focus-within:outline-indigo-600 text-white";
+        "mx-1 p-1 bg-indigo-600 shadow-md focus-within:outline-indigo-600 text-white text-sm sm:text-sm md:text-lg";
 
     function computeRoundButtonStyle(direction: "prev" | "next") {
         // base style
@@ -75,10 +75,10 @@ export function GameControls(props: Props) {
     }
 
     return (
-        <div className="mb-2 flex flex-col gap-4">
+        <div className="flex flex-col gap-1">
             {/* Row 1 - Buttons (Left) and Round Selector (Right) */}
             <div className="flex items-center justify-between">
-                {/* Section 1 - buttons */}
+                {/* Section 1 - Nav Buttons */}
                 <div className="flex gap-2">
                     <CommonButton
                         //emoji for going back
@@ -115,7 +115,10 @@ export function GameControls(props: Props) {
                     />
                     {totalRounds > 1 && (
                         <div className="flex flex-col items-start gap-1">
-                            <Label className="text-lg" htmlFor="round-select">
+                            <Label
+                                className="text-sm md:text-lg"
+                                htmlFor="round-select"
+                            >
                                 Round
                             </Label>
                             <Select
@@ -156,66 +159,67 @@ export function GameControls(props: Props) {
                 </div>
             </div>
 
-            {/* Row 2 - Checkboxes (Full Width) */}
-            <div className="flex flex-nowrap items-center gap-4">
-                {/* hide reading */}
-                <div className="flex items-center gap-1">
-                    <Checkbox
-                        className="border-indigo-800 bg-gray-200 data-[state=checked]:bg-indigo-900"
-                        id="hide-reading"
-                        checked={isHideReading}
-                        onCheckedChange={() =>
-                            setIsHideReading(isHideReading ? false : true)
-                        }
-                    ></Checkbox>
-                    <Label
+            {/* Row 2 - Checkboxes (Distinct Section) */}
+            <div className="w-full border border-x-0 border-gray-700 bg-gray-900 px-4 py-3">
+                <div className="flex justify-center gap-6">
+                    {/* hide reading */}
+                    <label
                         htmlFor="hide-reading"
-                        className="text-md cursor-pointer"
+                        className="flex cursor-pointer items-center gap-3"
                     >
-                        <p>Hide Reading</p>
-                    </Label>
-                </div>
-                {/* Test Reading */}
-                <div className="flex items-center gap-1">
-                    <Checkbox
-                        className="border-indigo-800 bg-gray-200 data-[state=checked]:bg-indigo-900"
-                        id="test-reading"
-                        checked={isTestReading}
-                        onCheckedChange={() =>
-                            setIsTestReading(isTestReading ? false : true)
-                        }
-                    ></Checkbox>
-                    <Label
-                        htmlFor="test-reading"
-                        className="text-md cursor-pointer"
-                    >
-                        <p>Test Reading</p>
-                    </Label>
-                </div>
+                        <Checkbox
+                            className="h-5 w-5 rounded-sm border-gray-500 bg-transparent data-[state=checked]:border-indigo-500 data-[state=checked]:bg-indigo-500"
+                            id="hide-reading"
+                            checked={isHideReading}
+                            onCheckedChange={() =>
+                                setIsHideReading(!isHideReading)
+                            }
+                        />
+                        <span className="text-sm font-medium text-gray-200">
+                            Hide Reading
+                        </span>
+                    </label>
 
-                {
-                    //hide favorites only checkbox if the user is reviewing all favorites from previous games
-                    !isAllFavoritesReviewMode() && (
-                        <div className="flex items-center gap-1">
-                            <Checkbox
-                                className="border-indigo-800 bg-gray-200 data-[state=checked]:bg-indigo-900"
-                                id="favorites-only"
-                                checked={isFavoritesMode}
-                                onCheckedChange={() =>
-                                    setIsFavoritesMode(
-                                        isFavoritesMode ? false : true,
-                                    )
-                                }
-                            ></Checkbox>
-                            <Label
+                    {/* Test Reading */}
+                    <label
+                        htmlFor="test-reading"
+                        className="flex cursor-pointer items-center gap-3"
+                    >
+                        <Checkbox
+                            className="h-5 w-5 rounded-sm border-gray-500 bg-transparent data-[state=checked]:border-indigo-500 data-[state=checked]:bg-indigo-500"
+                            id="test-reading"
+                            checked={isTestReading}
+                            onCheckedChange={() =>
+                                setIsTestReading(!isTestReading)
+                            }
+                        />
+                        <span className="text-sm font-medium text-gray-200">
+                            Test Reading
+                        </span>
+                    </label>
+
+                    {
+                        // hide favorites only checkbox if the user is reviewing all favorites from previous games
+                        !isAllFavoritesReviewMode() && (
+                            <label
                                 htmlFor="favorites-only"
-                                className="text-md cursor-pointer"
+                                className="flex cursor-pointer items-center gap-3"
                             >
-                                <p>Favorites only</p>
-                            </Label>
-                        </div>
-                    )
-                }
+                                <Checkbox
+                                    className="h-5 w-5 rounded-sm border-gray-500 bg-transparent data-[state=checked]:border-indigo-500 data-[state=checked]:bg-indigo-500"
+                                    id="favorites-only"
+                                    checked={isFavoritesMode}
+                                    onCheckedChange={() =>
+                                        setIsFavoritesMode(!isFavoritesMode)
+                                    }
+                                />
+                                <span className="text-sm font-medium text-gray-200">
+                                    Favorites only
+                                </span>
+                            </label>
+                        )
+                    }
+                </div>
             </div>
             <EditTermsModal
                 open={isModalOpen}
