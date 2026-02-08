@@ -29,7 +29,7 @@ const Favorites = () => {
         }
     };
     return (
-        <div className="rounded-xl border border-slate-800 bg-slate-800 p-5">
+        <div className="rounded-xl border border-slate-700 bg-slate-800 p-5">
             {/* Favorites Flow */}
             <div className="mb-2 flex items-center justify-between">
                 <p className="font-medium text-slate-100">⭐ Favorites</p>

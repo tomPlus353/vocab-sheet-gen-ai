@@ -520,29 +520,31 @@ export default function Match() {
         <div>
             <SectionHeader title={"Matching Game"} />
             {/* Game Controls */}
-            <GameControls
-                startGame={startGame}
-                round={round}
-                roundsArray={roundsArray}
-                totalRounds={totalRounds}
-                handleRoundChange={handleRoundChange}
-                isHideReading={isHideReading}
-                setIsHideReading={setIsHideReading}
-                isTestReading={isTestReading}
-                isFavoritesMode={isFavoritesMode}
-                setIsFavoritesMode={setIsFavoritesMode}
-                setIsTestReading={setIsTestReading}
-                allRoundsVocabJson={allRoundsVocabJson}
-                setAllRoundsVocabJson={setAllRoundsVocabJson}
-            />
-            {/* Stats row */}
-            <GameStats
-                score={score}
-                round={round}
-                totalRounds={totalRounds}
-                timer={timer}
-                gameVocabJson={gameVocabJson}
-            />
+            <div className="flex flex-col">
+                <GameControls
+                    startGame={startGame}
+                    round={round}
+                    roundsArray={roundsArray}
+                    totalRounds={totalRounds}
+                    handleRoundChange={handleRoundChange}
+                    isHideReading={isHideReading}
+                    setIsHideReading={setIsHideReading}
+                    isTestReading={isTestReading}
+                    isFavoritesMode={isFavoritesMode}
+                    setIsFavoritesMode={setIsFavoritesMode}
+                    setIsTestReading={setIsTestReading}
+                    allRoundsVocabJson={allRoundsVocabJson}
+                    setAllRoundsVocabJson={setAllRoundsVocabJson}
+                />
+                {/* Stats row */}
+                <GameStats
+                    score={score}
+                    round={round}
+                    totalRounds={totalRounds}
+                    timer={timer}
+                    gameVocabJson={gameVocabJson}
+                />
+            </div>
             {!isLoading ? (
                 <div>
                     <div className="m-auto grid grid-cols-2 lg:w-[80%]">
