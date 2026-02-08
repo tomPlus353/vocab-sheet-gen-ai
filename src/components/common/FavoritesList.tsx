@@ -2,6 +2,7 @@
 
 import { Heart } from "lucide-react";
 import { appendGameHistory, getGameHistory } from "@/lib/utils";
+import { boolean } from "zod";
 
 type vocabObj = Record<string, string | boolean>;
 
@@ -101,12 +102,15 @@ export function FavoritesList({ mode, terms, setTerms }: Props) {
 
         // Update the history cache
         let historyTermsKey: string | null = null;
+        let isKeyHashed: boolean;
         if (isReviewHistory) {
             historyTermsKey = urlParams.get("historyTerms");
+            isKeyHashed = true;
         } else {
             // If reviewing history, use a fixed key for history terms
             const activeText = localStorage.getItem("activeText");
             historyTermsKey = activeText;
+            isKeyHashed = false;
         }
 
         if (historyTermsKey) {
@@ -114,7 +118,7 @@ export function FavoritesList({ mode, terms, setTerms }: Props) {
             appendGameHistory(
                 historyTermsKey,
                 JSON.stringify(updatedTerms),
-                true,
+                isKeyHashed,
             );
         } else {
             console.warn("No valid key found for updating game history terms.");

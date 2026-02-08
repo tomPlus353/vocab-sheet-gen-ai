@@ -1,7 +1,8 @@
 "use client";
 import React from "react";
 import { useRouter } from "next/navigation";
-import { getAllGameHistories } from "@/lib/utils";
+import { getAllGameHistories, removeGameHistory } from "@/lib/utils";
+import { Trash } from "lucide-react";
 
 type vocabObj = Record<string, string | boolean>;
 
@@ -12,7 +13,7 @@ const History = () => {
     const router = useRouter();
 
     React.useEffect(() => {
-        // Simulating fetching game history from localStorage
+        // Fetch initial game history from localStorage
         const history = getAllGameHistories();
         if (history) {
             setGameHistory(history);
@@ -25,6 +26,16 @@ const History = () => {
         } catch (e) {
             console.log("Error pushing to match page: ", e);
         }
+    };
+
+    const handleDeleteHistory = (key: string, isKeyHashed = true) => {
+        // Remove from local state
+        const updatedHistory = { ...gameHistory };
+        delete updatedHistory[key];
+        setGameHistory(updatedHistory);
+
+        // Remove from localStorage
+        removeGameHistory(key, isKeyHashed);
     };
 
     const getSampleTerms = (terms: vocabObj[]): string => {
@@ -79,6 +90,19 @@ const History = () => {
                                         </button>
                                         <button className="rounded border border-slate-700 px-2 py-1 hover:bg-slate-800">
                                             View all
+                                        </button>
+                                        <button className="group rounded border border-slate-700 px-2 py-1 hover:bg-slate-800">
+                                            <Trash className="group-hover:hidden" />
+                                            <Trash
+                                                className="hidden group-hover:block"
+                                                fill="red"
+                                                onClick={() =>
+                                                    handleDeleteHistory(
+                                                        key,
+                                                        true,
+                                                    )
+                                                }
+                                            />
                                         </button>
                                     </div>
                                 </div>
