@@ -70,6 +70,9 @@ export function GameControls(props: Props) {
     }
 
     function isAllFavoritesReviewMode() {
+        // ensure window is defined to avoid SSR issues during build
+        if (typeof window === "undefined") return false;
+        // detect from url params if we are in all favorites review mode
         const urlParams = new URLSearchParams(window.location.search);
         return urlParams.get("favorites") === "1" ? true : false;
     }
