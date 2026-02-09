@@ -48,7 +48,6 @@ export function ViewHistoryModal({
 
             if (!historyTermsKey) {
                 if (mode === "history") {
-                    setTerms([]);
                     return;
                 }
             }
@@ -58,8 +57,6 @@ export function ViewHistoryModal({
                     storedHistory,
                 ) as vocabObj[];
                 setTerms(parsedHistory);
-            } else {
-                setTerms([]);
             }
         } catch (e) {
             console.error("Error fetching history terms: ", e);
