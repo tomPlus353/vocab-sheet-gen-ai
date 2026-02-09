@@ -51,7 +51,7 @@ const History = () => {
             terms
                 .slice(0, 3)
                 .map((term) => term.japanese as string)
-                .join(", ") + "... "
+                .join("、") + "... "
         );
     };
 
@@ -73,7 +73,7 @@ const History = () => {
                             >
                                 <div className="flex items-start justify-between">
                                     <div>
-                                        <p className="text-slate-200">
+                                        <p className="max-w-32 truncate text-sm text-slate-200 md:max-w-40 md:text-base">
                                             {getSampleTerms(
                                                 JSON.parse(vocab) as vocabObj[],
                                             ) ?? "No terms available."}
