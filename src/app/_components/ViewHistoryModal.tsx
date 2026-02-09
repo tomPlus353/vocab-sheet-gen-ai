@@ -11,25 +11,48 @@ import {
 import { FavoritesList } from "@/components/common/FavoritesList";
 
 import { useToast } from "@/hooks/use-toast";
+import { useEffect, useState } from "react";
 
-interface ImageTextModalProps {
+import { getGameHistory } from "@/lib/utils";
+
+interface ViewHistoryModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    terms: Record<string, string | boolean>[];
-    setTerms: React.Dispatch<
-        React.SetStateAction<Record<string, string | boolean>[]>
-    >;
+    historyTermsKey: string;
 }
 
 type vocabObj = Record<string, string | boolean>;
 
-export function EditTermsModal({
+export function ViewHistoryModal({
     open,
     onOpenChange,
-    terms,
-    setTerms,
-}: ImageTextModalProps) {
+    historyTermsKey,
+}: ViewHistoryModalProps) {
     const { toast } = useToast();
+
+    const [terms, setTerms] = useState<vocabObj[]>([]);
+
+    useEffect(() => {
+        // Fetch terms from localStorage using the historyTermsKey
+        try {
+            const storedHistory = getGameHistory(historyTermsKey, true);
+            if (storedHistory) {
+                const parsedHistory: vocabObj[] = JSON.parse(
+                    storedHistory,
+                ) as vocabObj[];
+                setTerms(parsedHistory);
+            } else {
+                setTerms([]);
+            }
+        } catch (e) {
+            console.error("Error fetching history terms: ", e);
+            toast({
+                title: "Error",
+                description: "There was an error fetching the history terms.",
+                variant: "destructive",
+            });
+        }
+    }, [open, historyTermsKey]);
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -62,6 +85,7 @@ export function EditTermsModal({
                         mode="current"
                         terms={terms}
                         setTerms={setTerms}
+                        historyTermsKey={historyTermsKey}
                     />
                 )}
 

@@ -3,6 +3,7 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { getAllGameHistories, removeGameHistory } from "@/lib/utils";
 import { Trash } from "lucide-react";
+import { ViewHistoryModal } from "./ViewHistoryModal";
 
 type vocabObj = Record<string, string | boolean>;
 
@@ -10,6 +11,8 @@ const History = () => {
     const [gameHistory, setGameHistory] = React.useState<
         Record<string, string>
     >({});
+    const [isModalOpen, setIsModalOpen] = React.useState(false);
+    const [modalTargetKey, setModalTargetKey] = React.useState<string>("");
     const router = useRouter();
 
     React.useEffect(() => {
@@ -26,6 +29,11 @@ const History = () => {
         } catch (e) {
             console.log("Error pushing to match page: ", e);
         }
+    };
+
+    const handleOpenTermsModal = (key: string) => {
+        setModalTargetKey(key);
+        setIsModalOpen(true);
     };
 
     const handleDeleteHistory = (key: string, isKeyHashed = true) => {
@@ -88,7 +96,12 @@ const History = () => {
                                         >
                                             Study
                                         </button>
-                                        <button className="rounded border border-slate-700 px-2 py-1 hover:bg-slate-800">
+                                        <button
+                                            className="rounded border border-slate-700 px-2 py-1 hover:bg-slate-800"
+                                            onClick={() =>
+                                                handleOpenTermsModal(key)
+                                            }
+                                        >
                                             View all
                                         </button>
                                         <button className="group rounded border border-slate-700 px-2 py-1 hover:bg-slate-800">
@@ -104,6 +117,11 @@ const History = () => {
                                                 }
                                             />
                                         </button>
+                                        <ViewHistoryModal
+                                            open={isModalOpen}
+                                            onOpenChange={setIsModalOpen}
+                                            historyTermsKey={modalTargetKey}
+                                        />
                                     </div>
                                 </div>
                             </div>

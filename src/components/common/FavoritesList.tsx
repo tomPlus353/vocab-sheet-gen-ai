@@ -1,8 +1,7 @@
 "use client";
 
 import { Heart } from "lucide-react";
-import { appendGameHistory, getGameHistory } from "@/lib/utils";
-import { boolean } from "zod";
+import { appendGameHistory } from "@/lib/utils";
 import { ScrollArea } from "../ui/scroll-area";
 
 type vocabObj = Record<string, string | boolean>;
@@ -13,9 +12,15 @@ interface Props {
     mode: "all" | "current";
     terms: Record<string, string | boolean>[];
     setTerms: React.Dispatch<React.SetStateAction<vocabObj[]>>;
+    historyTermsKey?: string | null;
 }
 
-export function FavoritesList({ mode, terms, setTerms }: Props) {
+export function FavoritesList({
+    mode,
+    terms,
+    setTerms,
+    historyTermsKey = null,
+}: Props) {
     function handleFavoriteClickAll(index: number) {
         // For use in "all" mode to toggle favorite status
         // e.g. viewing all favorite terms
@@ -104,17 +109,24 @@ export function FavoritesList({ mode, terms, setTerms }: Props) {
             urlParams.get("favorites") === "1" ? true : false;
 
         // Update the history cache
-        let historyTermsKey: string | null = null;
-        if (isReviewHistory) {
+        if (historyTermsKey) {
+            // use the provided historyTermsKey, no need to change
+        } else if (isReviewHistory) {
+            // If reviewing history and history terms not set yet
+            // then try to get key from URL params
             historyTermsKey = urlParams.get("historyTerms");
         } else {
-            // If reviewing history, use a fixed key for history terms
+            // If no key is provided, default to active text
             const activeText = localStorage.getItem("activeText");
             historyTermsKey = activeText;
         }
 
         // case 1: past game history review
-        if (isReviewHistory && historyTermsKey) {
+        if (historyTermsKey) {
+            console.log(
+                "Case 1. Updating history terms for key: ",
+                historyTermsKey,
+            );
             // Cache the updated terms list
             appendGameHistory(
                 historyTermsKey,
@@ -123,6 +135,10 @@ export function FavoritesList({ mode, terms, setTerms }: Props) {
             );
             // case 2: reviewing all favorites
         } else if (isReviewFavorites) {
+            console.log(
+                "Case 2. Updating favorite terms for key: ",
+                GLOBAL_FAV_LIST_KEY,
+            );
             //if reviewing favorites, update the favorite terms cache
             localStorage.setItem(
                 GLOBAL_FAV_LIST_KEY,
@@ -130,6 +146,8 @@ export function FavoritesList({ mode, terms, setTerms }: Props) {
             );
             // case 3: default, reviewing active text terms
         } else if (!isReviewHistory && !isReviewFavorites) {
+            console.log("Case 3. Updating history with active text terms. ");
+
             // If not reviewing history or favorites, update the active text terms
             const activeText = localStorage.getItem("activeText");
             if (activeText) {
@@ -183,7 +201,10 @@ export function FavoritesList({ mode, terms, setTerms }: Props) {
 
     return (
         <ScrollArea className="my-2 max-h-96 flex-1 overflow-y-auto rounded-md border">
-            {" "}
+            {/* display history key's first 10 digits */}
+            {historyTermsKey &&
+                historyTermsKey.length > 10 &&
+                historyTermsKey.substring(0, 10)}{" "}
             {/* remove favorites button */}
             <button
                 className="mb-4 rounded-md bg-red-600/50 px-3 py-1 text-sm text-white hover:bg-red-600"
