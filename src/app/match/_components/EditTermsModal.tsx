@@ -59,7 +59,7 @@ export function EditTermsModal({
                     </pre>
                 ) : (
                     <FavoritesList
-                        mode="current"
+                        mode="history"
                         terms={terms}
                         setTerms={setTerms}
                     />

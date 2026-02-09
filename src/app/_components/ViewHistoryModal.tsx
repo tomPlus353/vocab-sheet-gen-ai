@@ -18,7 +18,8 @@ import { getGameHistory } from "@/lib/utils";
 interface ViewHistoryModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    historyTermsKey: string;
+    historyTermsKey?: string;
+    mode?: "history" | "favorites";
 }
 
 type vocabObj = Record<string, string | boolean>;
@@ -26,7 +27,8 @@ type vocabObj = Record<string, string | boolean>;
 export function ViewHistoryModal({
     open,
     onOpenChange,
-    historyTermsKey,
+    historyTermsKey = "",
+    mode = "history",
 }: ViewHistoryModalProps) {
     const { toast } = useToast();
 
@@ -35,6 +37,21 @@ export function ViewHistoryModal({
     useEffect(() => {
         // Fetch terms from localStorage using the historyTermsKey
         try {
+            if (mode === "favorites") {
+                const cachedJsonString = localStorage.getItem("favoriteTerms");
+                const termsAsJson: vocabObj[] = JSON.parse(
+                    cachedJsonString ?? "[]",
+                );
+                setTerms(termsAsJson);
+                return;
+            }
+
+            if (!historyTermsKey) {
+                if (mode === "history") {
+                    setTerms([]);
+                    return;
+                }
+            }
             const storedHistory = getGameHistory(historyTermsKey, true);
             if (storedHistory) {
                 const parsedHistory: vocabObj[] = JSON.parse(
@@ -82,7 +99,7 @@ export function ViewHistoryModal({
                     </pre>
                 ) : (
                     <FavoritesList
-                        mode="current"
+                        mode={mode}
                         terms={terms}
                         setTerms={setTerms}
                         historyTermsKey={historyTermsKey}

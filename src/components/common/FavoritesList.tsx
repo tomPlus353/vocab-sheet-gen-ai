@@ -9,7 +9,7 @@ type vocabObj = Record<string, string | boolean>;
 const GLOBAL_FAV_LIST_KEY = "favoriteTerms";
 
 interface Props {
-    mode: "all" | "current";
+    mode: "favorites" | "history";
     terms: Record<string, string | boolean>[];
     setTerms: React.Dispatch<React.SetStateAction<vocabObj[]>>;
     historyTermsKey?: string | null;
@@ -22,7 +22,7 @@ export function FavoritesList({
     historyTermsKey = null,
 }: Props) {
     function handleFavoriteClickAll(index: number) {
-        // For use in "all" mode to toggle favorite status
+        // For use in "favorites" mode to toggle favorite status
         // e.g. viewing all favorite terms
 
         if (!terms) return;
@@ -78,7 +78,7 @@ export function FavoritesList({
     }
 
     function handleFavoriteClickCurrent(index: number) {
-        // For use in "current" mode to toggle favorite status
+        // For use in "history" mode to toggle favorite status
         // e.g. editing the terms for the current game
 
         if (!terms) return;
@@ -197,7 +197,9 @@ export function FavoritesList({
         );
     }
     const favoriteClickHandler =
-        mode === "all" ? handleFavoriteClickAll : handleFavoriteClickCurrent;
+        mode === "favorites"
+            ? handleFavoriteClickAll
+            : handleFavoriteClickCurrent;
 
     return (
         <ScrollArea className="my-2 max-h-96 flex-1 overflow-y-auto rounded-md border">

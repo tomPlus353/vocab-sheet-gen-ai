@@ -3,12 +3,18 @@ import { FavoritesList } from "@/components/common/FavoritesList";
 
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { ViewHistoryModal } from "./ViewHistoryModal";
 
 type vocabObj = Record<string, string | boolean>;
 
 const Favorites = () => {
     const [favoriteTerms, setFavoriteTerms] = React.useState<vocabObj[]>([]);
     const router = useRouter();
+    const [isModalOpen, setIsModalOpen] = React.useState(false);
+
+    const handleOpenTermsModal = () => {
+        setIsModalOpen(true);
+    };
 
     useEffect(() => {
         // Extract gameVocabJson data from localStorage when the modal opens
@@ -40,7 +46,10 @@ const Favorites = () => {
                     >
                         Study
                     </button>
-                    <button className="rounded border border-slate-700 px-2 py-1 hover:bg-slate-800">
+                    <button
+                        className="rounded border border-slate-700 px-2 py-1 hover:bg-slate-800"
+                        onClick={() => handleOpenTermsModal()}
+                    >
                         View all
                     </button>
                 </div>
@@ -56,11 +65,16 @@ const Favorites = () => {
             </p>
             <div>
                 <FavoritesList
-                    mode="all"
+                    mode="favorites"
                     terms={favoriteTerms}
                     setTerms={setFavoriteTerms}
                 />
             </div>
+            <ViewHistoryModal
+                open={isModalOpen}
+                onOpenChange={setIsModalOpen}
+                mode="favorites"
+            />
         </div>
     );
 };
