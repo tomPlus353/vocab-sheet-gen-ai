@@ -14,7 +14,13 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 //lucide sparkle
-import { BookType, RefreshCcw, Gamepad, NotepadText } from "lucide-react";
+import {
+    BookType,
+    RefreshCcw,
+    Gamepad,
+    NotepadText,
+    Orbit,
+} from "lucide-react";
 
 import { CheatSheet } from "./Cheatsheet";
 import CommonButton from "@/components/common/CommonButton";
@@ -34,6 +40,14 @@ const Modal: React.FC<Props> = (props: Props) => {
             router.push("/match", undefined);
         } catch (e) {
             console.log("Error pushing to match page: ", e);
+        }
+    };
+
+    const handleGoGravity = () => {
+        try {
+            router.push("/gravity", undefined);
+        } catch (e) {
+            console.log("Error pushing to gravity page: ", e);
         }
     };
 
@@ -99,6 +113,14 @@ const Modal: React.FC<Props> = (props: Props) => {
                         >
                             <span className='tooltip absolute right-0 bottom-full rounded shadow-lg p-1 bg-black text-white text-sm -mt-8 -mr-8'>Review with game</span>
                             <Gamepad className="m-auto h-5 w-5" />
+                        </CommonButton>
+                        <CommonButton
+                            label=""
+                            additionalclasses="ml-auto h-10 w-10 flex flex-row items-center px-0 py-0 has-tooltip relative"
+                            onClick={handleGoGravity}
+                        >
+                            <span className='tooltip absolute right-0 bottom-full rounded shadow-lg p-1 bg-black text-white text-sm -mt-8 -mr-8'>Gravity typing game</span>
+                            <Orbit className="m-auto h-5 w-5" />
                         </CommonButton>
                         <CommonButton
                             label=""
