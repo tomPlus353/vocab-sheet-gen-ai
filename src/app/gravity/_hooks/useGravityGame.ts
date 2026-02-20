@@ -30,6 +30,9 @@ export function useGravityGame() {
     const [isCorrectionModalOpen, setIsCorrectionModalOpen] = React.useState(false);
     const [correctionInput, setCorrectionInput] = React.useState("");
     const [correctionError, setCorrectionError] = React.useState("");
+    const [isAllLearntModalOpen, setIsAllLearntModalOpen] = React.useState(false);
+    const [hasShownAllLearntModal, setHasShownAllLearntModal] =
+        React.useState(false);
 
     const inputRef = React.useRef<HTMLInputElement>(null);
     const playfieldRef = React.useRef<HTMLDivElement>(null);
@@ -141,6 +144,8 @@ export function useGravityGame() {
                     romanization: item.romanization as string,
                     english_definition: item.english_definition as string,
                     isFavorite: item.isFavorite as boolean | undefined,
+                    gravity_score: undefined,
+                    isLearnt: false,
                 }));
         } catch (error) {
             console.error("Failed to parse game terms:", error);
@@ -166,9 +171,44 @@ export function useGravityGame() {
         setIsCorrectionModalOpen(false);
         setCorrectionInput("");
         setCorrectionError("");
+        setIsAllLearntModalOpen(false);
+        setHasShownAllLearntModal(false);
         spawnTerm(queue, parsedTerms);
         setIsLoading(false);
     }, [spawnTerm]);
+
+    const updateTermScore = React.useCallback(
+        (term: VocabTerm, action: "correct" | "wrong", shouldIncrement: boolean) => {
+            const targetKey = getTermKey(term);
+            setTerms((prevTerms) =>
+                prevTerms.map((oneTerm) => {
+                    if (getTermKey(oneTerm) !== targetKey) {
+                        return oneTerm;
+                    }
+
+                    if (action === "wrong") {
+                        return {
+                            ...oneTerm,
+                            gravity_score: 0,
+                            isLearnt: false,
+                        };
+                    }
+
+                    if (!shouldIncrement) {
+                        return oneTerm;
+                    }
+
+                    const nextScore = (oneTerm.gravity_score ?? 0) + 1;
+                    return {
+                        ...oneTerm,
+                        gravity_score: nextScore,
+                        isLearnt: nextScore >= 2,
+                    };
+                }),
+            );
+        },
+        [],
+    );
 
     const handleWrongAttempt = React.useCallback(
         (term: VocabTerm) => {
@@ -189,10 +229,10 @@ export function useGravityGame() {
             }
 
             setIsCorrectionModalOpen(true);
-            setCorrectionInput("");
+            setCorrectionInput(answer);
             setCorrectionError("");
         },
-        [termWrongCounts],
+        [answer, termWrongCounts],
     );
 
     const activeTermWrongCount = activeTerm
@@ -208,6 +248,7 @@ export function useGravityGame() {
 
         if (isAnswerCorrect(answer, activeTerm.term.japanese)) {
             setScore((prev) => prev + 1);
+            updateTermScore(activeTerm.term, "correct", !showReadingHint);
             setAnswer("");
             toast({
                 title: "Correct",
@@ -225,6 +266,7 @@ export function useGravityGame() {
             duration: 800,
             variant: "destructive",
         });
+        updateTermScore(activeTerm.term, "wrong", false);
         handleWrongAttempt(activeTerm.term);
     }, [
         activeTerm,
@@ -234,9 +276,11 @@ export function useGravityGame() {
         isGameOver,
         isLoading,
         remainingQueue,
+        showReadingHint,
         spawnTerm,
         terms,
         toast,
+        updateTermScore,
     ]);
 
     const handleCorrectionSubmit = React.useCallback((event: React.FormEvent<HTMLFormElement>) => {
@@ -266,7 +310,12 @@ export function useGravityGame() {
     }, [loadVocabTerms]);
 
     React.useEffect(() => {
-        if (isLoading || isGameOver || isCorrectionModalOpen) {
+        if (
+            isLoading ||
+            isGameOver ||
+            isCorrectionModalOpen ||
+            isAllLearntModalOpen
+        ) {
             return;
         }
 
@@ -275,7 +324,7 @@ export function useGravityGame() {
         }, 1000);
 
         return () => clearInterval(interval);
-    }, [isLoading, isGameOver, isCorrectionModalOpen]);
+    }, [isLoading, isGameOver, isCorrectionModalOpen, isAllLearntModalOpen]);
 
     React.useEffect(() => {
         if (!activeTerm || isLoading || isGameOver || isCorrectionModalOpen) {
@@ -310,6 +359,7 @@ export function useGravityGame() {
                 duration: 800,
                 variant: "destructive",
             });
+            updateTermScore(activeTerm.term, "wrong", false);
             handleWrongAttempt(activeTerm.term);
         }
     }, [
@@ -319,7 +369,28 @@ export function useGravityGame() {
         isLoading,
         isCorrectionModalOpen,
         toast,
+        updateTermScore,
     ]);
+
+    React.useEffect(() => {
+        if (terms.length === 0 || isGameOver) {
+            return;
+        }
+
+        const allLearnt = terms.every((term) => (term.gravity_score ?? 0) >= 2);
+        if (allLearnt && !hasShownAllLearntModal) {
+            setHasShownAllLearntModal(true);
+            setIsAllLearntModalOpen(true);
+            setActiveTerm(null);
+        }
+    }, [hasShownAllLearntModal, isGameOver, terms]);
+
+    React.useEffect(() => {
+        const hasUnlearntTerm = terms.some((term) => (term.gravity_score ?? 0) < 2);
+        if (hasUnlearntTerm && hasShownAllLearntModal) {
+            setHasShownAllLearntModal(false);
+        }
+    }, [hasShownAllLearntModal, terms]);
 
     React.useEffect(() => {
         inputRef.current?.focus();
@@ -388,6 +459,17 @@ export function useGravityGame() {
         }
     }, [activeTerm, playfieldWidth]);
 
+    const learntTermsCount = terms.filter(
+        (term) => (term.gravity_score ?? 0) >= 2,
+    ).length;
+
+    const resumeAfterAllLearntModal = React.useCallback(() => {
+        setIsAllLearntModalOpen(false);
+        if (!isGameOver && terms.length > 0) {
+            spawnTerm(remainingQueue, terms);
+        }
+    }, [isGameOver, remainingQueue, spawnTerm, terms]);
+
     return {
         activeTerm,
         activeTermWrongCount,
@@ -398,18 +480,22 @@ export function useGravityGame() {
         handleCorrectionSubmit,
         handleSubmit,
         inputRef,
+        isAllLearntModalOpen,
         isCorrectionModalOpen,
         isGameOver,
         isLoading,
+        learntTermsCount,
         loadVocabTerms,
         playfieldRef,
         activeCardRef,
         remainingQueue,
+        resumeAfterAllLearntModal,
         score,
         setAnswer,
         setCorrectionInput,
         setShowReadingHint,
         showReadingHint,
+        totalTermsCount: terms.length,
         timer,
     };
 }

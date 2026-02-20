@@ -3,6 +3,8 @@ export type VocabTerm = {
     romanization: string;
     english_definition: string;
     isFavorite?: boolean;
+    gravity_score?: number;
+    isLearnt?: boolean;
 };
 
 export type FallingTerm = {

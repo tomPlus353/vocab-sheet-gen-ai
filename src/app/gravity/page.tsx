@@ -7,6 +7,7 @@ import SectionHeader from "@/components/common/SectionHeader";
 import { Toaster } from "@/components/ui/toaster";
 
 import { Loader } from "../match/_components/Loader";
+import { AllLearntModal } from "./_components/AllLearntModal";
 import { CorrectionModal } from "./_components/CorrectionModal";
 import { useGravityGame } from "./_hooks/useGravityGame";
 import { PLAYFIELD_HEIGHT_PX } from "./_lib/gravity-utils";
@@ -24,14 +25,18 @@ export default function GravityPage() {
         handleCorrectionSubmit,
         handleSubmit,
         inputRef,
+        isAllLearntModalOpen,
         isCorrectionModalOpen,
         isGameOver,
         isLoading,
+        learntTermsCount,
         loadVocabTerms,
         playfieldRef,
         activeCardRef,
         remainingQueue,
+        resumeAfterAllLearntModal,
         score,
+        totalTermsCount,
         setAnswer,
         setCorrectionInput,
         setShowReadingHint,
@@ -87,7 +92,7 @@ export default function GravityPage() {
             </div>
 
             <div className="border border-x-0 border-gray-600 bg-gray-700/50">
-                <div className="mx-auto grid w-[96%] max-w-6xl grid-cols-3 gap-4 text-center">
+                <div className="mx-auto grid w-[96%] max-w-6xl grid-cols-4 gap-4 text-center">
                     <div className="py-2">
                         <span className="text-sm uppercase tracking-wider text-indigo-400">
                             Score
@@ -104,6 +109,14 @@ export default function GravityPage() {
                             {activeTerm
                                 ? remainingQueue.length + 1
                                 : remainingQueue.length}
+                        </div>
+                    </div>
+                    <div className="py-2">
+                        <span className="text-sm uppercase tracking-wider text-indigo-400">
+                            Learnt
+                        </span>
+                        <div className="text-3xl font-extrabold text-indigo-400">
+                            {learntTermsCount}/{totalTermsCount}
                         </div>
                     </div>
                     <div className="py-2">
@@ -202,6 +215,11 @@ export default function GravityPage() {
                 correctionError={correctionError}
                 onCorrectionInputChange={setCorrectionInput}
                 onSubmit={handleCorrectionSubmit}
+            />
+            <AllLearntModal
+                open={isAllLearntModalOpen && !isGameOver}
+                onReturnToReader={() => router.push("/paginator")}
+                onContinuePractice={resumeAfterAllLearntModal}
             />
 
             <Toaster />
