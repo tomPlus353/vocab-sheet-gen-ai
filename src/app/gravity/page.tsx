@@ -463,7 +463,7 @@ export default function GravityPage() {
             </div>
 
             <div className="border border-x-0 border-gray-600 bg-gray-700/50">
-                <div className="mx-auto grid max-w-[90%] grid-cols-3 gap-4 text-center">
+                <div className="mx-auto grid w-[96%] max-w-6xl grid-cols-3 gap-4 text-center">
                     <div className="py-2">
                         <span className="text-sm uppercase tracking-wider text-indigo-400">
                             Score
@@ -496,7 +496,7 @@ export default function GravityPage() {
             {isLoading ? (
                 <Loader />
             ) : (
-                <div className="mx-auto mt-6 max-w-3xl px-4">
+                <div className="mx-auto mt-6 w-[96%] max-w-6xl px-4">
                     <div
                         ref={playfieldRef}
                         className="relative overflow-hidden rounded-xl border border-blue-300/20 bg-slate-900"
