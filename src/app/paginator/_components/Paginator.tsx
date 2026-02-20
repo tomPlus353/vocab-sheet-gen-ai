@@ -14,6 +14,7 @@ interface Props {
 
 const Paginator = ({ allText = [] }: Props) => {
     console.log("Paginator component start rendering!");
+    const LAST_PAGINATOR_PAGE_KEY = "lastPaginatorPage";
 
     //convert numSentences string from localstorage into a number
     const { perPage } = useSettings();
@@ -47,6 +48,7 @@ const Paginator = ({ allText = [] }: Props) => {
         setCurrentPage(page);
         router.push(`?page=${page}`, undefined);
         handleSetActiveText(page, allText);
+        localStorage.setItem(LAST_PAGINATOR_PAGE_KEY, String(page));
         setPageNumberArray(paginate({ current: page, max: totalPages })?.items);
     };
 
@@ -70,6 +72,7 @@ const Paginator = ({ allText = [] }: Props) => {
     };
     const handleGoMatch = () => {
         try {
+            localStorage.setItem(LAST_PAGINATOR_PAGE_KEY, String(currentPage));
             router.push("/match", undefined);
         } catch (e) {
             console.log("Error pushing to match page: ", e);
@@ -78,6 +81,7 @@ const Paginator = ({ allText = [] }: Props) => {
 
     const handleGoGravity = () => {
         try {
+            localStorage.setItem(LAST_PAGINATOR_PAGE_KEY, String(currentPage));
             router.push("/gravity", undefined);
         } catch (e) {
             console.log("Error pushing to gravity page: ", e);
@@ -92,6 +96,7 @@ const Paginator = ({ allText = [] }: Props) => {
 
         if (page >= 1 && page <= totalPages) {
             setCurrentPage(page);
+            localStorage.setItem(LAST_PAGINATOR_PAGE_KEY, String(page));
             setPageNumberArray(
                 paginate({ current: page, max: totalPages })?.items,
             ); // reset pagination
@@ -99,6 +104,7 @@ const Paginator = ({ allText = [] }: Props) => {
             return;
         } else {
             setCurrentPage(1); // reset to first page when no page param is set in URL
+            localStorage.setItem(LAST_PAGINATOR_PAGE_KEY, "1");
             setPageNumberArray(
                 paginate({ current: 1, max: totalPages })?.items,
             ); // set pagination

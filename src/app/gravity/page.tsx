@@ -14,6 +14,7 @@ import { PLAYFIELD_HEIGHT_PX } from "./_lib/gravity-utils";
 
 export default function GravityPage() {
     const router = useRouter();
+    const LAST_PAGINATOR_PAGE_KEY = "lastPaginatorPage";
 
     const {
         activeTerm,
@@ -30,19 +31,24 @@ export default function GravityPage() {
         isGameOver,
         isLoading,
         learntTermsCount,
+        learningTermsCount,
         loadVocabTerms,
         playfieldRef,
         activeCardRef,
-        remainingQueue,
         resumeAfterAllLearntModal,
-        score,
         totalTermsCount,
         setAnswer,
         setCorrectionInput,
         setShowReadingHint,
         showReadingHint,
         timer,
+        unlearntTermsCount,
     } = useGravityGame();
+
+    const handleReturnToEreaderPage = () => {
+        const page = localStorage.getItem(LAST_PAGINATOR_PAGE_KEY) ?? "1";
+        router.push(`/paginator?page=${page}`);
+    };
 
     return (
         <div>
@@ -95,20 +101,18 @@ export default function GravityPage() {
                 <div className="mx-auto grid w-[96%] max-w-6xl grid-cols-4 gap-4 text-center">
                     <div className="py-2">
                         <span className="text-sm uppercase tracking-wider text-indigo-400">
-                            Score
+                            Learning
                         </span>
                         <div className="text-3xl font-extrabold text-indigo-400">
-                            {score}
+                            {learningTermsCount}
                         </div>
                     </div>
                     <div className="py-2">
                         <span className="text-sm uppercase tracking-wider text-indigo-400">
-                            Remaining
+                            Unlearnt
                         </span>
                         <div className="text-3xl font-extrabold text-indigo-400">
-                            {activeTerm
-                                ? remainingQueue.length + 1
-                                : remainingQueue.length}
+                            {unlearntTermsCount}
                         </div>
                     </div>
                     <div className="py-2">
@@ -116,7 +120,10 @@ export default function GravityPage() {
                             Learnt
                         </span>
                         <div className="text-3xl font-extrabold text-indigo-400">
-                            {learntTermsCount}/{totalTermsCount}
+                            <span className="text-green-300">
+                                {learntTermsCount}
+                            </span>
+                            /{totalTermsCount}
                         </div>
                     </div>
                     <div className="py-2">
@@ -218,7 +225,7 @@ export default function GravityPage() {
             />
             <AllLearntModal
                 open={isAllLearntModalOpen && !isGameOver}
-                onReturnToReader={() => router.push("/paginator")}
+                onReturnToReader={handleReturnToEreaderPage}
                 onContinuePractice={resumeAfterAllLearntModal}
             />
 

@@ -34,9 +34,17 @@ interface Props {
 const Modal: React.FC<Props> = (props: Props) => {
     const router = useRouter();
     const [refreshSignal, setRefreshSignal] = React.useState<number>(0);
+    const LAST_PAGINATOR_PAGE_KEY = "lastPaginatorPage";
+
+    const persistCurrentPage = () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentPage = urlParams.get("page") ?? "1";
+        localStorage.setItem(LAST_PAGINATOR_PAGE_KEY, currentPage);
+    };
 
     const handleGoMatch = () => {
         try {
+            persistCurrentPage();
             router.push("/match", undefined);
         } catch (e) {
             console.log("Error pushing to match page: ", e);
@@ -45,6 +53,7 @@ const Modal: React.FC<Props> = (props: Props) => {
 
     const handleGoGravity = () => {
         try {
+            persistCurrentPage();
             router.push("/gravity", undefined);
         } catch (e) {
             console.log("Error pushing to gravity page: ", e);
