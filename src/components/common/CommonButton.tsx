@@ -14,7 +14,7 @@ const CommonButton: React.FC<Props> = ({
     ...props
 }) => {
     const className =
-        "focus:outline-none flex-wrap mx-2 my-2 rounded-xl border-2 border-blue-100/20 bg-blue-500/50 px-4 py-2 shadow-md hover:bg-blue-300 hover:text-black";
+        "focus:outline-none flex-wrap mx-2 my-2 rounded-xl border-2 border-blue-100/20 bg-blue-500/50 px-2 py-1 shadow-md hover:bg-blue-300 hover:text-black";
 
     let styleString: string = twMerge(className, additionalclasses);
 

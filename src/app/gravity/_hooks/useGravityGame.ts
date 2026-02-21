@@ -15,6 +15,32 @@ import {
     PLAYFIELD_HEIGHT_PX,
 } from "../_lib/gravity-utils";
 
+const GRAVITY_PROGRESS_STORAGE_KEY = "gravityProgressByTerm";
+
+type PersistedGravityProgress = {
+    gravity_score: number;
+    isLearnt: boolean;
+};
+
+function getPersistedGravityProgressMap(): Record<string, PersistedGravityProgress> {
+    try {
+        const raw = localStorage.getItem(GRAVITY_PROGRESS_STORAGE_KEY);
+        if (!raw) {
+            return {};
+        }
+        return JSON.parse(raw) as Record<string, PersistedGravityProgress>;
+    } catch (error) {
+        console.error("Failed to read gravity progress:", error);
+        return {};
+    }
+}
+
+function setPersistedGravityProgressMap(
+    map: Record<string, PersistedGravityProgress>,
+): void {
+    localStorage.setItem(GRAVITY_PROGRESS_STORAGE_KEY, JSON.stringify(map));
+}
+
 export function useGravityGame() {
     // Holds all terms used in the gravity session and their learning metadata.
     const [terms, setTerms] = React.useState<VocabTerm[]>([]);
@@ -153,6 +179,7 @@ export function useGravityGame() {
         let parsedTerms: VocabTerm[] = [];
         try {
             const asJson = JSON.parse(reply) as Array<Record<string, unknown>>;
+            const persistedMap = getPersistedGravityProgressMap();
             parsedTerms = asJson
                 .filter((item) => {
                     return (
@@ -161,14 +188,25 @@ export function useGravityGame() {
                         typeof item.english_definition === "string"
                     );
                 })
-                .map((item) => ({
-                    japanese: item.japanese as string,
-                    romanization: item.romanization as string,
-                    english_definition: item.english_definition as string,
-                    isFavorite: item.isFavorite as boolean | undefined,
-                    gravity_score: item.gravity_score as number | undefined,
-                    isLearnt: (item.isLearnt as boolean) ?? false,
-                }));
+                .map((item) => {
+                    const term: VocabTerm = {
+                        japanese: item.japanese as string,
+                        romanization: item.romanization as string,
+                        english_definition: item.english_definition as string,
+                        isFavorite: item.isFavorite as boolean | undefined,
+                        gravity_score: undefined,
+                        isLearnt: false,
+                    };
+                    const persisted = persistedMap[getTermKey(term)];
+                    if (!persisted) {
+                        return term;
+                    }
+                    return {
+                        ...term,
+                        gravity_score: persisted.gravity_score,
+                        isLearnt: persisted.isLearnt,
+                    };
+                });
         } catch (error) {
             console.error("Failed to parse game terms:", error);
             alert("Could not parse terms for gravity game.");
@@ -292,7 +330,6 @@ export function useGravityGame() {
             variant: "destructive",
         });
         setAnswer("");
-        updateTermScore(activeTerm.term, "wrong", false);
     }, [
         activeTerm,
         answer,
@@ -304,7 +341,6 @@ export function useGravityGame() {
         spawnTerm,
         terms,
         toast,
-        updateTermScore,
     ]);
 
     // Handles submission inside the correction modal to resume gameplay.
@@ -432,6 +468,21 @@ export function useGravityGame() {
         }
     }, [hasShownAllLearntModal, terms]);
 
+    // Persists gravity learning scores for currently loaded terms.
+    React.useEffect(() => {
+        if (terms.length === 0) {
+            return;
+        }
+        const map = getPersistedGravityProgressMap();
+        for (const term of terms) {
+            map[getTermKey(term)] = {
+                gravity_score: term.gravity_score ?? 0,
+                isLearnt: (term.gravity_score ?? 0) >= 2,
+            };
+        }
+        setPersistedGravityProgressMap(map);
+    }, [terms]);
+
     // Keeps keyboard focus on the answer input as terms change.
     React.useEffect(() => {
         inputRef.current?.focus();
@@ -524,6 +575,34 @@ export function useGravityGame() {
         }
     }, [isGameOver, remainingQueue, spawnTerm, terms]);
 
+    // Resets learning progress for all currently loaded terms.
+    const resetLearningProgress = React.useCallback(() => {
+        if (terms.length === 0) {
+            return;
+        }
+
+        setTerms((prevTerms) =>
+            prevTerms.map((term) => ({
+                ...term,
+                gravity_score: 0,
+                isLearnt: false,
+            })),
+        );
+        setTermWrongCounts({});
+        setIsAllLearntModalOpen(false);
+        setHasShownAllLearntModal(false);
+        setIsCorrectionModalOpen(false);
+        setCorrectionInput("");
+        setCorrectionError("");
+        setAnswer("");
+        toast({
+            title: "Progress reset",
+            description: "Learning progress was reset for this term set.",
+            duration: 1200,
+            variant: "default",
+        });
+    }, [terms, toast]);
+
     return {
         activeTerm,
         activeTermWrongCount,
@@ -544,6 +623,7 @@ export function useGravityGame() {
         playfieldRef,
         activeCardRef,
         resumeAfterAllLearntModal,
+        resetLearningProgress,
         setAnswer,
         setCorrectionInput,
         setShowReadingHint,

@@ -36,6 +36,7 @@ export default function GravityPage() {
         playfieldRef,
         activeCardRef,
         resumeAfterAllLearntModal,
+        resetLearningProgress,
         totalTermsCount,
         setAnswer,
         setCorrectionInput,
@@ -54,16 +55,16 @@ export default function GravityPage() {
         <div>
             <SectionHeader title="Gravity Typing Game" />
 
-            <div className="flex items-center justify-between border border-x-0 border-gray-700 bg-gray-900 px-4 py-3">
+            <div className="flex items-center justify-between border border-x-0 border-gray-700 bg-gray-900 px-1">
                 <div className="flex gap-2">
                     <CommonButton
-                        label="↩ Back to Ereader"
-                        additionalclasses="mx-0 bg-indigo-600"
+                        label="↩ Back"
+                        additionalclasses="mx-0 whitespace-nowrap bg-indigo-600 text-xs sm:text-sm"
                         onClick={() => router.back()}
                     />
                     <CommonButton
                         label="⟳ Restart"
-                        additionalclasses="mx-0 bg-indigo-600"
+                        additionalclasses="mx-0 whitespace-nowrap bg-indigo-600 text-xs sm:text-sm"
                         onClick={() => {
                             loadVocabTerms().catch((err) => {
                                 console.error(
@@ -73,8 +74,13 @@ export default function GravityPage() {
                             });
                         }}
                     />
+                    <CommonButton
+                        label="Reset Progress"
+                        additionalclasses="mx-0 whitespace-nowrap bg-red-700 text-xs sm:text-sm hover:bg-red-600"
+                        onClick={resetLearningProgress}
+                    />
                 </div>
-                <div className="text-sm text-gray-200">
+                <div className="px-1 text-xs text-gray-200 sm:text-sm">
                     {activeTermWrongCount > 0 ? (
                         <span className="font-semibold text-red-400">
                             Warning: this term ends the game if missed again.

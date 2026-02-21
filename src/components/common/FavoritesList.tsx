@@ -131,7 +131,7 @@ export function FavoritesList({
             appendGameHistory(
                 historyTermsKey,
                 JSON.stringify(updatedTerms),
-                true,
+                false,
             );
             // case 2: reviewing all favorites
         } else if (isReviewFavorites) {
