@@ -3,7 +3,7 @@ import { useRouter } from "next/navigation";
 import Modal from "./Modal";
 import SectionHeader from "../../../components/common/SectionHeader";
 import CommonButton from "@/components/common/CommonButton";
-import { Grid2x2Check } from "lucide-react";
+import { Grid2x2Check, Orbit } from "lucide-react";
 import { paginate } from "../_methods/paginationArray";
 import { useSettings } from "@/app/SettingsProvider";
 
@@ -14,6 +14,7 @@ interface Props {
 
 const Paginator = ({ allText = [] }: Props) => {
     console.log("Paginator component start rendering!");
+    const LAST_PAGINATOR_PAGE_KEY = "lastPaginatorPage";
 
     //convert numSentences string from localstorage into a number
     const { perPage } = useSettings();
@@ -47,6 +48,7 @@ const Paginator = ({ allText = [] }: Props) => {
         setCurrentPage(page);
         router.push(`?page=${page}`, undefined);
         handleSetActiveText(page, allText);
+        localStorage.setItem(LAST_PAGINATOR_PAGE_KEY, String(page));
         setPageNumberArray(paginate({ current: page, max: totalPages })?.items);
     };
 
@@ -70,9 +72,19 @@ const Paginator = ({ allText = [] }: Props) => {
     };
     const handleGoMatch = () => {
         try {
+            localStorage.setItem(LAST_PAGINATOR_PAGE_KEY, String(currentPage));
             router.push("/match", undefined);
         } catch (e) {
             console.log("Error pushing to match page: ", e);
+        }
+    };
+
+    const handleGoGravity = () => {
+        try {
+            localStorage.setItem(LAST_PAGINATOR_PAGE_KEY, String(currentPage));
+            router.push("/gravity", undefined);
+        } catch (e) {
+            console.log("Error pushing to gravity page: ", e);
         }
     };
 
@@ -84,6 +96,7 @@ const Paginator = ({ allText = [] }: Props) => {
 
         if (page >= 1 && page <= totalPages) {
             setCurrentPage(page);
+            localStorage.setItem(LAST_PAGINATOR_PAGE_KEY, String(page));
             setPageNumberArray(
                 paginate({ current: page, max: totalPages })?.items,
             ); // reset pagination
@@ -91,6 +104,7 @@ const Paginator = ({ allText = [] }: Props) => {
             return;
         } else {
             setCurrentPage(1); // reset to first page when no page param is set in URL
+            localStorage.setItem(LAST_PAGINATOR_PAGE_KEY, "1");
             setPageNumberArray(
                 paginate({ current: 1, max: totalPages })?.items,
             ); // set pagination
@@ -190,6 +204,20 @@ const Paginator = ({ allText = [] }: Props) => {
                                         <Grid2x2Check className="mx-auto h-5 w-5 md:mr-2"></Grid2x2Check>
                                         <span className="hidden md:inline">
                                             Match
+                                        </span>
+                                    </div>
+                                </button>
+                                <button
+                                    className="has-tooltip relative ml-auto w-auto shrink rounded-xl border-2 border-solid border-blue-100/20 bg-blue-500/20 px-3 py-2 hover:bg-blue-500"
+                                    onClick={handleGoGravity}
+                                >
+                                    <span className="tooltip absolute bottom-full right-0 -mt-8 rounded bg-black p-1 text-sm text-white shadow-lg">
+                                        Gravity typing game
+                                    </span>
+                                    <div className="flex flex-row">
+                                        <Orbit className="mx-auto h-5 w-5 md:mr-2"></Orbit>
+                                        <span className="hidden md:inline">
+                                            Gravity
                                         </span>
                                     </div>
                                 </button>
