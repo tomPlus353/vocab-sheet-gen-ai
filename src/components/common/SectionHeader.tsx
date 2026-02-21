@@ -7,11 +7,9 @@ export interface SectionHeaderProps {
 export default function SectionHeader(props: SectionHeaderProps) {
     return (
         <div className="flex w-[100%] flex-col items-center">
-            <hr className="my-2 w-[100%] border-2 border-blue-100/20" />
-            <h1 className="py-2 text-center text-4xl font-bold">
-                {props.title}
-            </h1>
-            <hr className="my-2 w-[100%] border-2 border-blue-100/20" />
+            <hr className="w-[100%] border-2 border-blue-100/20" />
+            <h1 className="text-center text-4xl font-bold">{props.title}</h1>
+            <hr className="w-[100%] border-2 border-blue-100/20" />
         </div>
     );
 }
