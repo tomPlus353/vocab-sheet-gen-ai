@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import CommonButton from "@/components/common/CommonButton";
 import SectionHeader from "@/components/common/SectionHeader";
 import { Toaster } from "@/components/ui/toaster";
+import { Loader } from "@/components/common/Loader";
 
-import { Loader } from "../match/_components/Loader";
 import { AllLearntModal } from "./_components/AllLearntModal";
 import { CorrectionModal } from "./_components/CorrectionModal";
 import { useGravityGame } from "./_hooks/useGravityGame";
@@ -46,9 +46,13 @@ export default function GravityPage() {
         unlearntTermsCount,
     } = useGravityGame();
 
-    const handleReturnToEreaderPage = () => {
+    const handleReturnFromGravityPage = () => {
         const page = localStorage.getItem(LAST_PAGINATOR_PAGE_KEY) ?? "1";
-        router.push(`/paginator?page=${page}`);
+        if (page === "0") {
+            router.back();
+        } else {
+            router.push(`/paginator?page=${page}`);
+        }
     };
 
     return (
@@ -231,7 +235,7 @@ export default function GravityPage() {
             />
             <AllLearntModal
                 open={isAllLearntModalOpen && !isGameOver}
-                onReturnToReader={handleReturnToEreaderPage}
+                onReturnToReader={handleReturnFromGravityPage}
                 onContinuePractice={resumeAfterAllLearntModal}
             />
 

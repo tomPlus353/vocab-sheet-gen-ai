@@ -2,10 +2,12 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { getAllGameHistories, removeGameHistory } from "@/lib/utils";
-import { Trash } from "lucide-react";
+import { Grid2x2Check, Orbit, Trash2 } from "lucide-react";
 import { ViewHistoryModal } from "./ViewHistoryModal";
 
 type vocabObj = Record<string, string | boolean>;
+
+const LAST_PAGINATOR_PAGE_KEY = "lastPaginatorPage";
 
 const History = () => {
     const [gameHistory, setGameHistory] = React.useState<
@@ -25,9 +27,19 @@ const History = () => {
 
     const handleGoMatch = (key: string) => {
         try {
+            localStorage.setItem(LAST_PAGINATOR_PAGE_KEY, "0");
             router.push(`/match?history=1&historyTerms=${key}`, undefined);
         } catch (e) {
             console.log("Error pushing to match page: ", e);
+        }
+    };
+
+    const handleGoGravity = (key: string) => {
+        try {
+            localStorage.setItem(LAST_PAGINATOR_PAGE_KEY, "0");
+            router.push(`/gravity?history=1&historyTerms=${key}`, undefined);
+        } catch (e) {
+            console.log("Error pushing to gravity page: ", e);
         }
     };
 
@@ -91,13 +103,19 @@ const History = () => {
                                     </div>
                                     <div className="flex gap-2 text-xs">
                                         <button
-                                            className="rounded border border-slate-700 px-2 py-1 hover:bg-slate-800"
+                                            className="rounded border border-slate-700 px-2 py-1 hover:bg-blue-300 hover:text-black"
                                             onClick={() => handleGoMatch(key)}
                                         >
-                                            Study
+                                            <Grid2x2Check className="mx-auto h-5 w-5"></Grid2x2Check>
                                         </button>
                                         <button
-                                            className="rounded border border-slate-700 px-2 py-1 hover:bg-slate-800"
+                                            className="rounded border border-slate-700 px-2 py-1 hover:bg-blue-300 hover:text-black"
+                                            onClick={() => handleGoGravity(key)}
+                                        >
+                                            <Orbit className="mx-auto h-5 w-5"></Orbit>
+                                        </button>
+                                        <button
+                                            className="rounded border border-slate-700 px-2 py-1 hover:bg-blue-300 hover:text-black"
                                             onClick={() =>
                                                 handleOpenTermsModal(key)
                                             }
@@ -105,9 +123,9 @@ const History = () => {
                                             View all
                                         </button>
                                         <button className="group rounded border border-slate-700 px-2 py-1 hover:bg-slate-800">
-                                            <Trash className="group-hover:hidden" />
-                                            <Trash
-                                                className="hidden group-hover:block"
+                                            <Trash2 className="group-hover:hidden" />
+                                            <Trash2
+                                                className="hidden text-red-500 group-hover:block"
                                                 fill="red"
                                                 onClick={() =>
                                                     handleDeleteHistory(

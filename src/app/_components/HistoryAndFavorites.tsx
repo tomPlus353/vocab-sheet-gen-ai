@@ -1,10 +1,10 @@
 import React from "react";
 import Favorites from "./Favorites";
 import History from "./History";
-import { auth } from "@/server/auth";
+// import { auth } from "@/server/auth";
 
 const HistoryAndFavorites = async () => {
-    const session = await auth();
+    // const session = await auth();
     return (
         <section className="mt-16">
             {/* History and favorites section*/}

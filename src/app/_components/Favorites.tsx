@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ViewHistoryModal } from "./ViewHistoryModal";
 
 type vocabObj = Record<string, string | boolean>;
+const LAST_PAGINATOR_PAGE_KEY = "lastPaginatorPage";
 
 const Favorites = () => {
     const [favoriteTerms, setFavoriteTerms] = React.useState<vocabObj[]>([]);
@@ -29,9 +30,19 @@ const Favorites = () => {
 
     const handleGoMatch = () => {
         try {
+            localStorage.setItem(LAST_PAGINATOR_PAGE_KEY, "0");
             router.push("/match?favorites=1", undefined);
         } catch (e) {
             console.log("Error pushing to match page: ", e);
+        }
+    };
+
+    const handleGoGravity = () => {
+        try {
+            localStorage.setItem(LAST_PAGINATOR_PAGE_KEY, "0");
+            router.push("/gravity?favorites=1", undefined);
+        } catch (e) {
+            console.log("Error pushing to gravity page: ", e);
         }
     };
     return (
@@ -41,13 +52,19 @@ const Favorites = () => {
                 <p className="font-medium text-slate-100">⭐ Favorites</p>
                 <div className="flex gap-2 text-xs">
                     <button
-                        className="rounded border border-slate-700 px-2 py-1 hover:bg-slate-800"
+                        className="rounded border border-slate-700 px-2 py-1 hover:bg-blue-300 hover:text-black"
                         onClick={handleGoMatch}
                     >
-                        Study
+                        Study (Match)
                     </button>
                     <button
-                        className="rounded border border-slate-700 px-2 py-1 hover:bg-slate-800"
+                        className="rounded border border-slate-700 px-2 py-1 hover:bg-blue-300 hover:text-black"
+                        onClick={handleGoGravity}
+                    >
+                        Study (Gravity)
+                    </button>
+                    <button
+                        className="rounded border border-slate-700 px-2 py-1 hover:bg-blue-300 hover:text-black"
                         onClick={() => handleOpenTermsModal()}
                     >
                         View all

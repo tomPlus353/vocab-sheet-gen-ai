@@ -7,17 +7,15 @@ import { useToast } from "@/hooks/use-toast";
 import CommonButton from "@/components/common/CommonButton";
 import { getHashedCache, appendGameHistory, getGameHistory } from "@/lib/utils";
 import SectionHeader from "@/components/common/SectionHeader";
-
 import { Toaster } from "@/components/ui/toaster";
+import { Loader } from "@/components/common/Loader";
 import type { JsonArray } from "@prisma/client/runtime/library";
 
 // import local components
-import { Loader } from "./_components/Loader";
 import { GameControls } from "./_components/GameControls";
 import { GameStats } from "./_components/GameStats";
 
 import { useKeyboardShortcut } from "@/hooks/use-key-shortcut";
-import { set } from "zod";
 
 type vocabObj = Record<string, string | boolean>;
 
