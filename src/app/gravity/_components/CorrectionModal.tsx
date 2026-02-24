@@ -7,7 +7,6 @@ import type { VocabTerm } from "../_lib/gravity-utils";
 type Props = {
     open: boolean;
     activeTerm: VocabTerm | null;
-    showReadingHint: boolean;
     correctionInput: string;
     correctionError: string;
     onCorrectionInputChange: (value: string) => void;
@@ -18,7 +17,6 @@ export function CorrectionModal(props: Props) {
     const {
         open,
         activeTerm,
-        showReadingHint,
         correctionInput,
         correctionError,
         onCorrectionInputChange,
@@ -32,7 +30,9 @@ export function CorrectionModal(props: Props) {
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
             <div className="w-full max-w-md rounded-xl border border-red-300/30 bg-slate-900 p-5 text-white shadow-2xl">
-                <h3 className="text-xl font-bold text-red-300">First mistake</h3>
+                <h3 className="text-xl font-bold text-red-300">
+                    First mistake
+                </h3>
                 <p className="mt-2 text-sm text-gray-300">
                     Type the correct Japanese term to resume.
                 </p>
@@ -45,11 +45,9 @@ export function CorrectionModal(props: Props) {
                         {activeTerm.japanese}
                     </span>
                 </p>
-                {showReadingHint && (
-                    <p className="mt-2 text-xs text-amber-200/80">
-                        Hint: {activeTerm.romanization}
-                    </p>
-                )}
+                <p className="mt-2 text-xs text-amber-200/80">
+                    Hint: {activeTerm.romanization}
+                </p>
                 <form className="mt-4 flex flex-col gap-2" onSubmit={onSubmit}>
                     <input
                         autoFocus
@@ -62,7 +60,9 @@ export function CorrectionModal(props: Props) {
                         }
                     />
                     {correctionError && (
-                        <p className="text-sm text-red-300">{correctionError}</p>
+                        <p className="text-sm text-red-300">
+                            {correctionError}
+                        </p>
                     )}
                     <CommonButton
                         type="submit"
