@@ -1,8 +1,9 @@
 "use client";
 
-import { Heart } from "lucide-react";
+import { Heart, Trash2 } from "lucide-react";
 import { appendGameHistory } from "@/lib/utils";
 import { ScrollArea } from "../ui/scroll-area";
+import CommonButton from "./CommonButton";
 
 type vocabObj = Record<string, string | boolean>;
 
@@ -203,26 +204,28 @@ export function FavoritesList({
 
     return (
         <ScrollArea className="my-2 max-h-96 flex-1 overflow-y-auto rounded-md border">
-            {/* display history key's first 10 digits */}
-            {historyTermsKey &&
-                historyTermsKey.length > 10 &&
-                historyTermsKey.substring(0, 10)}{" "}
-            {/* remove favorites button */}
-            <button
-                className="mb-4 rounded-md bg-red-600/50 px-3 py-1 text-sm text-white hover:bg-red-600"
-                onClick={() => {
-                    // Clear all favorites
-                    const updatedTerms = terms.map((term) => {
-                        return { ...term, isFavorite: false };
-                    });
-                    setTerms(updatedTerms);
-                    // Clear global favorites list in localStorage
-                    localStorage.removeItem(GLOBAL_FAV_LIST_KEY);
-                }}
-            >
-                Clear All Favorites
-            </button>
-            <ul className="rounded-xl border border-slate-800 bg-slate-900/70 p-3">
+            <div className="mb-2 flex items-center justify-between px-1">
+                <p className="text-right text-sm font-bold text-red-500">
+                    Total Favorites:{" "}
+                    {terms ? terms.filter((t) => t.isFavorite).length : 0}
+                </p>
+                <CommonButton
+                    additionalclasses="mx-0 my-0 inline-flex items-center gap-1 rounded-full border-red-400/40 bg-red-500/10 px-2 py-1 text-xs font-medium text-red-300 transition-colors hover:bg-red-500/20 hover:text-red-200"
+                    onClick={() => {
+                        // Clear all favorites
+                        const updatedTerms = terms.map((term) => {
+                            return { ...term, isFavorite: false };
+                        });
+                        setTerms(updatedTerms);
+                        // Clear global favorites list in localStorage
+                        localStorage.removeItem(GLOBAL_FAV_LIST_KEY);
+                    }}
+                >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    Clear all
+                </CommonButton>
+            </div>
+            <ul className="rounded-xl border border-slate-800 bg-slate-900/70 p-2">
                 {terms?.map((termObj, index) => (
                     <li
                         key={index}

@@ -74,12 +74,6 @@ const Favorites = () => {
             <p className="mb-3 text-sm text-slate-400">
                 Most recent starred terms
             </p>
-            <p className="text-right text-sm font-bold text-red-500">
-                Total Favorites:{" "}
-                {favoriteTerms
-                    ? favoriteTerms.filter((t) => t.isFavorite).length
-                    : 0}
-            </p>
             <div>
                 <FavoritesList
                     mode="favorites"
