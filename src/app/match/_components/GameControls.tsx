@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 import CommonButton from "@/components/common/CommonButton";
@@ -51,6 +51,8 @@ export function GameControls(props: Props) {
     } = props;
 
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isAllFavoritesReviewMode, setIsAllFavoritesReviewMode] =
+        useState(false);
     const router = useRouter();
 
     const CONTROL_BUTTON_STYLE =
@@ -69,13 +71,10 @@ export function GameControls(props: Props) {
         return buttonStyle;
     }
 
-    function isAllFavoritesReviewMode() {
-        // ensure window is defined to avoid SSR issues during build
-        if (typeof window === "undefined") return false;
-        // detect from url params if we are in all favorites review mode
+    useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get("favorites") === "1" ? true : false;
-    }
+        setIsAllFavoritesReviewMode(urlParams.get("favorites") === "1");
+    }, []);
 
     return (
         <div className="flex flex-col gap-1">
@@ -203,7 +202,7 @@ export function GameControls(props: Props) {
 
                     {
                         // hide favorites only checkbox if the user is reviewing all favorites from previous games
-                        !isAllFavoritesReviewMode() && (
+                        !isAllFavoritesReviewMode && (
                             <label
                                 htmlFor="favorites-only"
                                 className="flex cursor-pointer items-center gap-3"
