@@ -5,9 +5,18 @@ import { useRouter } from "next/navigation";
 import CommonButton from "@/components/common/CommonButton";
 import { Checkbox } from "@/components/ui/checkbox";
 
-import { useGravityGame } from "../_hooks/useGravityGame";
+type GameControlProps = {
+    loadVocabTerms: () => Promise<void>;
+    resetLearningProgress: () => void;
+    setIsEditTermsModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+    activeTermWrongCount: number;
+    showReadingHint: boolean;
+    setShowReadingHint: React.Dispatch<React.SetStateAction<boolean>>;
+    isFavoritesMode: boolean;
+    setIsFavoritesMode: React.Dispatch<React.SetStateAction<boolean>>;
+};
 
-export function GameControls(props: any) {
+export function GameControls(props: GameControlProps) {
     const router = useRouter();
     const {
         loadVocabTerms,
@@ -18,7 +27,7 @@ export function GameControls(props: any) {
         setShowReadingHint,
         isFavoritesMode,
         setIsFavoritesMode,
-    } = useGravityGame();
+    } = props;
 
     const [isAllFavoritesReviewMode, setIsAllFavoritesReviewMode] =
         useState(false);
@@ -30,8 +39,8 @@ export function GameControls(props: any) {
 
     return (
         <div>
-            <div className="flex items-center justify-between border border-x-0 border-gray-700 bg-gray-900 px-1">
-                <div className="flex gap-2">
+            <div className="flex flex-col items-center gap-1 border border-x-0 border-gray-700 bg-gray-900 px-1 sm:flex-row sm:items-center sm:justify-around sm:gap-0">
+                <div className="flex gap-1 sm:gap-2">
                     <CommonButton
                         label="↩ Back"
                         additionalclasses="mx-0 whitespace-nowrap text-xs sm:text-sm"
@@ -50,17 +59,17 @@ export function GameControls(props: any) {
                         }}
                     />
                     <CommonButton
-                        label="Reset Progress"
+                        label="Reset"
                         additionalclasses="mx-0 whitespace-nowrap bg-red-700 text-xs sm:text-sm hover:bg-red-600"
                         onClick={resetLearningProgress}
                     />
                     <CommonButton
-                        label={"✎ Edit Terms"}
+                        label={"✎ Edit"}
                         additionalclasses="mx-0 whitespace-nowrap text-xs sm:text-sm"
                         onClick={() => setIsEditTermsModalOpen(true)}
                     />
                 </div>
-                <div className="px-1 text-xs text-gray-200 sm:text-sm">
+                <div className="px-1 text-center text-xs text-gray-200 sm:text-left sm:text-sm">
                     {activeTermWrongCount > 0 ? (
                         <span className="font-semibold text-red-400">
                             Warning: this term ends the game if missed again.

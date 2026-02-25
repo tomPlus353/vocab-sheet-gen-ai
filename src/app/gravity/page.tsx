@@ -68,7 +68,16 @@ export default function GravityPage() {
         <div>
             <SectionHeader title="Gravity Typing Game" />
 
-            <GameControls />
+            <GameControls
+                loadVocabTerms={loadVocabTerms}
+                resetLearningProgress={resetLearningProgress}
+                setIsEditTermsModalOpen={setIsEditTermsModalOpen}
+                activeTermWrongCount={activeTermWrongCount}
+                showReadingHint={showReadingHint}
+                setShowReadingHint={setShowReadingHint}
+                isFavoritesMode={isFavoritesMode}
+                setIsFavoritesMode={setIsFavoritesMode}
+            />
 
             <div className="border border-x-0 border-gray-600 bg-gray-700/50">
                 <div className="mx-auto grid w-[96%] max-w-6xl grid-cols-4 gap-4 text-center">
