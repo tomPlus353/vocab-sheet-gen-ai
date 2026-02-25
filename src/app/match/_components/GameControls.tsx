@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 
 import { EditTermsModal } from "./EditTermsModal";
+import { VocabTerm } from "@/lib/types/vocab";
 
 type Props = {
     startGame: () => void;
@@ -27,10 +28,8 @@ type Props = {
     setIsTestReading: (value: boolean) => void;
     isFavoritesMode: boolean;
     setIsFavoritesMode: (value: boolean) => void;
-    allRoundsVocabJson: Record<string, string | boolean>[];
-    setAllRoundsVocabJson: React.Dispatch<
-        React.SetStateAction<Record<string, string | boolean>[]>
-    >;
+    allRoundsVocabJson: VocabTerm[];
+    setAllRoundsVocabJson: React.Dispatch<React.SetStateAction<VocabTerm[]>>;
 };
 
 export function GameControls(props: Props) {

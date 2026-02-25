@@ -4,6 +4,7 @@ import { FavoritesList } from "@/components/common/FavoritesList";
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ViewHistoryModal } from "./ViewHistoryModal";
+import { Eye, Grid2x2Check, Orbit, RefreshCcw } from "lucide-react";
 
 type vocabObj = Record<string, string | boolean>;
 const LAST_PAGINATOR_PAGE_KEY = "lastPaginatorPage";
@@ -17,16 +18,17 @@ const Favorites = () => {
         setIsModalOpen(true);
     };
 
-    useEffect(() => {
-        // Extract gameVocabJson data from localStorage when the modal opens
-
-        //extract raw text from localStorage
+    const loadFavoriteTerms = React.useCallback(() => {
         const cachedJsonString = localStorage.getItem("favoriteTerms");
-        // parse json string into array
         const termsAsJson: vocabObj[] = JSON.parse(cachedJsonString ?? "[]");
-        // set terms to state
-        setFavoriteTerms(termsAsJson);
+        setFavoriteTerms(
+            termsAsJson.filter((term) => term.isFavorite === true),
+        );
     }, []);
+
+    useEffect(() => {
+        loadFavoriteTerms();
+    }, [loadFavoriteTerms]);
 
     const handleGoMatch = () => {
         try {
@@ -52,22 +54,48 @@ const Favorites = () => {
                 <p className="font-medium text-slate-100">⭐ Favorites</p>
                 <div className="flex gap-2 text-xs">
                     <button
-                        className="rounded border border-slate-700 px-2 py-1 hover:bg-blue-300 hover:text-black"
+                        className="has-tooltip relative rounded border border-slate-700 px-2 py-1 hover:bg-blue-300 hover:text-black"
                         onClick={handleGoMatch}
+                        aria-label="Study with Match"
+                        title="Study with Match"
                     >
-                        Study (Match)
+                        <span className="tooltip absolute bottom-full right-0 -mt-8 rounded bg-black p-1 text-sm text-white shadow-lg">
+                            Study (Match)
+                        </span>
+                        <Grid2x2Check className="h-4 w-4" />
                     </button>
                     <button
-                        className="rounded border border-slate-700 px-2 py-1 hover:bg-blue-300 hover:text-black"
+                        className="has-tooltip relative rounded border border-slate-700 px-2 py-1 hover:bg-blue-300 hover:text-black"
                         onClick={handleGoGravity}
+                        aria-label="Study with Gravity"
+                        title="Study with Gravity"
                     >
-                        Study (Gravity)
+                        <span className="tooltip absolute bottom-full right-0 -mt-8 rounded bg-black p-1 text-sm text-white shadow-lg">
+                            Study (Gravity)
+                        </span>
+                        <Orbit className="h-4 w-4" />
                     </button>
                     <button
-                        className="rounded border border-slate-700 px-2 py-1 hover:bg-blue-300 hover:text-black"
+                        className="has-tooltip relative rounded border border-slate-700 px-2 py-1 hover:bg-blue-300 hover:text-black"
                         onClick={() => handleOpenTermsModal()}
+                        aria-label="View all terms"
+                        title="View all terms"
                     >
-                        View all
+                        <span className="tooltip absolute bottom-full right-0 -mt-8 rounded bg-black p-1 text-sm text-white shadow-lg">
+                            View all
+                        </span>
+                        <Eye className="h-4 w-4" />
+                    </button>
+                    <button
+                        className="has-tooltip relative rounded border border-slate-700 px-2 py-1 hover:bg-blue-300 hover:text-black"
+                        onClick={loadFavoriteTerms}
+                        aria-label="Refresh favorites list"
+                        title="Refresh favorites list"
+                    >
+                        <span className="tooltip absolute bottom-full right-0 -mt-8 rounded bg-black p-1 text-sm text-white shadow-lg">
+                            Refresh list
+                        </span>
+                        <RefreshCcw className="h-3.5 w-3.5" />
                     </button>
                 </div>
             </div>
@@ -79,6 +107,7 @@ const Favorites = () => {
                     mode="favorites"
                     terms={favoriteTerms}
                     setTerms={setFavoriteTerms}
+                    refreshTerms={loadFavoriteTerms}
                 />
             </div>
             <ViewHistoryModal

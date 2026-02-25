@@ -7,13 +7,13 @@ import { appendGameHistory, getGameHistory } from "@/lib/utils";
 
 import {
     type FallingTerm,
-    type VocabTerm,
     getShuffledIndexes,
     getTermKey,
     HORIZONTAL_PADDING_PX,
     isAnswerCorrect,
     PLAYFIELD_HEIGHT_PX,
 } from "../_lib/gravity-utils";
+import type { VocabTerm } from "@/lib/types/vocab";
 
 type ProgressSource =
     | { mode: "favorites" }
@@ -43,17 +43,23 @@ export function useGravityGame() {
     const [gameOverMessage, setGameOverMessage] = React.useState("");
     // Toggles romanization visibility in game and correction modal.
     const [showReadingHint, setShowReadingHint] = React.useState(false);
-    // Controls visibility of the first-mistake correction modal.
-    const [isCorrectionModalOpen, setIsCorrectionModalOpen] = React.useState(false);
+    // User toggle: when true, only favorite terms are loaded into the game.
+    const [isFavoritesMode, setIsFavoritesMode] = React.useState(false);
+    
+    
     // Input value inside the correction modal form.
     const [correctionInput, setCorrectionInput] = React.useState("");
     // Inline validation error text for correction modal input.
     const [correctionError, setCorrectionError] = React.useState("");
-    // Controls visibility of the "all terms learnt" completion modal.
-    const [isAllLearntModalOpen, setIsAllLearntModalOpen] = React.useState(false);
     // Prevents repeatedly re-opening the completion modal without state change.
     const [hasShownAllLearntModal, setHasShownAllLearntModal] =
-        React.useState(false);
+    React.useState(false);
+    // Controls visibility of the first-mistake correction modal.
+    const [isCorrectionModalOpen, setIsCorrectionModalOpen] = React.useState(false);
+    // Controls visibility of the edit terms modal
+    const [isEditTermsModalOpen, setIsEditTermsModalOpen] = React.useState(false);
+    // Controls visibility of the "all terms learnt" completion modal.
+    const [isAllLearntModalOpen, setIsAllLearntModalOpen] = React.useState(false);
 
     // Ref to the main answer input for auto-focus behavior.
     const inputRef = React.useRef<HTMLInputElement>(null);
@@ -65,8 +71,14 @@ export function useGravityGame() {
     const [playfieldWidth, setPlayfieldWidth] = React.useState(0);
     // Remembers where current terms came from so updated term objects can be persisted there.
     const progressSourceRef = React.useRef<ProgressSource | null>(null);
+    // Keeps latest favorites-mode value without forcing load callback identity changes.
+    const isFavoritesModeRef = React.useRef(false);
 
     const { toast } = useToast();
+
+    React.useEffect(() => {
+        isFavoritesModeRef.current = isFavoritesMode;
+    }, [isFavoritesMode]);
 
     // Spawns the next falling term and refreshes queue when it is exhausted.
     const spawnTerm = React.useCallback((queue: number[], sourceTerms: VocabTerm[]) => {
@@ -198,8 +210,21 @@ export function useGravityGame() {
             return;
         }
 
-        setTerms(parsedTerms);
-        const queue = getShuffledIndexes(parsedTerms.length);
+        const filteredTerms = parsedTerms.filter((term) => {
+            if (isFavoritesModeRef.current) {
+                return term.isFavorite === true;
+            }
+            return true;
+        });
+
+        if (filteredTerms.length === 0) {
+            alert("No favorite terms found.");
+            setIsLoading(false);
+            return;
+        }
+
+        setTerms(filteredTerms);
+        const queue = getShuffledIndexes(filteredTerms.length);
         setScore(0);
         setTermWrongCounts({});
         setTimer(0);
@@ -211,7 +236,7 @@ export function useGravityGame() {
         setCorrectionError("");
         setIsAllLearntModalOpen(false);
         setHasShownAllLearntModal(false);
-        spawnTerm(queue, parsedTerms);
+        spawnTerm(queue, filteredTerms);
         setIsLoading(false);
     }, [spawnTerm]);
 
@@ -627,8 +652,14 @@ export function useGravityGame() {
         setCorrectionInput,
         setShowReadingHint,
         showReadingHint,
+        isFavoritesMode,
+        setIsFavoritesMode,
         totalTermsCount: terms.length,
         timer,
         unlearntTermsCount,
+        terms,
+        setTerms,
+        isEditTermsModalOpen,
+        setIsEditTermsModalOpen,
     };
 }

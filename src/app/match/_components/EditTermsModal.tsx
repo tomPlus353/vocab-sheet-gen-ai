@@ -5,32 +5,24 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
-    // DialogFooter,
     DialogDescription,
 } from "@/components/ui/dialog";
 import { FavoritesList } from "@/components/common/FavoritesList";
+import { VocabTerm } from "@/lib/types/vocab";
 
-import { useToast } from "@/hooks/use-toast";
-
-interface ImageTextModalProps {
+interface EditTermsModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    terms: Record<string, string | boolean>[];
-    setTerms: React.Dispatch<
-        React.SetStateAction<Record<string, string | boolean>[]>
-    >;
+    terms: VocabTerm[];
+    setTerms: React.Dispatch<React.SetStateAction<VocabTerm[]>>;
 }
-
-type vocabObj = Record<string, string | boolean>;
 
 export function EditTermsModal({
     open,
     onOpenChange,
     terms,
     setTerms,
-}: ImageTextModalProps) {
-    const { toast } = useToast();
-
+}: EditTermsModalProps) {
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="flex max-h-[80svh] flex-col bg-slate-900 text-white sm:max-w-xl">
@@ -64,8 +56,6 @@ export function EditTermsModal({
                         setTerms={setTerms}
                     />
                 )}
-
-                {/* <DialogFooter></DialogFooter> */}
             </DialogContent>
         </Dialog>
     );

@@ -1,19 +1,21 @@
 "use client";
 
+import React from "react";
 import { Heart, Trash2 } from "lucide-react";
 import { appendGameHistory } from "@/lib/utils";
 import { ScrollArea } from "../ui/scroll-area";
 import CommonButton from "./CommonButton";
-
-type vocabObj = Record<string, string | boolean>;
+import { ConfirmActionModal } from "./modals/ConfirmActionModal";
+import { VocabTerm } from "@/lib/types/vocab";
 
 const GLOBAL_FAV_LIST_KEY = "favoriteTerms";
 
-interface Props {
+interface FavoritesListProps {
     mode: "favorites" | "history";
-    terms: Record<string, string | boolean>[];
-    setTerms: React.Dispatch<React.SetStateAction<vocabObj[]>>;
+    terms: VocabTerm[];
+    setTerms: React.Dispatch<React.SetStateAction<VocabTerm[]>>;
     historyTermsKey?: string | null;
+    refreshTerms?: () => void;
 }
 
 export function FavoritesList({
@@ -21,7 +23,79 @@ export function FavoritesList({
     terms,
     setTerms,
     historyTermsKey = null,
-}: Props) {
+    refreshTerms = undefined,
+}: FavoritesListProps) {
+    const [isClearConfirmOpen, setIsClearConfirmOpen] = React.useState(false);
+
+    function clearAllFavorites() {
+        // 1. update the state
+        const updatedTerms = terms.map((term) => {
+            return { ...term, isFavorite: false };
+        });
+        setTerms(updatedTerms);
+        // 2. update localStorage depending on mode
+
+        // Case 1: Clear global favorites list in localStorage
+        if (mode === "favorites") {
+            localStorage.removeItem(GLOBAL_FAV_LIST_KEY);
+            refreshTerms?.(); // Refresh the favorites list after clearing
+            return;
+            // Case 2: Clear favorite status from the current history terms
+        } else if (mode === "history") {
+            // If historyTermsKey is provided, update that specific key in the game history cache
+            if (historyTermsKey) {
+                appendGameHistory(
+                    historyTermsKey,
+                    JSON.stringify(updatedTerms),
+                    true,
+                );
+            }
+            // If no specific key is provided, attempt to determine the correct key from URL params or active text
+            if (!historyTermsKey) {
+                // Check the url
+                if (typeof window !== "undefined") {
+                    const urlParams = new URLSearchParams(
+                        window.location.search,
+                    );
+                    const isReviewHistory =
+                        urlParams.get("history") === "1" ? true : false;
+
+                    if (isReviewHistory) {
+                        historyTermsKey = urlParams.get("historyTerms");
+                        appendGameHistory(
+                            historyTermsKey!,
+                            JSON.stringify(updatedTerms),
+                            true,
+                        );
+                        refreshTerms?.(); // Refresh the favorites list after clearing
+                        return;
+                    }
+                }
+                // check the local storage if no key in url and we're in a browser environment
+                if (
+                    typeof localStorage !== "undefined" &&
+                    localStorage.getItem("activeText")
+                ) {
+                    // Fallback to activeText if historyTermsKey is not set and we're in a browser environment
+                    const activeText = localStorage.getItem("activeText");
+                    historyTermsKey = activeText;
+                    appendGameHistory(
+                        historyTermsKey!,
+                        JSON.stringify(updatedTerms),
+                        false,
+                    );
+                    refreshTerms?.(); // Refresh the favorites list after clearing
+                    return;
+                }
+
+                console.warn(
+                    "No historyTermsKey provided for clearing favorites in history mode.",
+                );
+                return;
+            }
+        }
+    }
+
     function handleFavoriteClickAll(index: number) {
         // For use in "favorites" mode to toggle favorite status
         // e.g. viewing all favorite terms
@@ -48,7 +122,7 @@ export function FavoritesList({
         //3. Update localStorage cache for the global term list
         const currentFavoritesString =
             localStorage.getItem(GLOBAL_FAV_LIST_KEY);
-        let currentFavorites: vocabObj[] = [];
+        let currentFavorites: VocabTerm[] = [];
         if (currentFavoritesString) {
             currentFavorites = JSON.parse(currentFavoritesString);
         }
@@ -132,7 +206,7 @@ export function FavoritesList({
             appendGameHistory(
                 historyTermsKey,
                 JSON.stringify(updatedTerms),
-                false,
+                true,
             );
             // case 2: reviewing all favorites
         } else if (isReviewFavorites) {
@@ -168,9 +242,11 @@ export function FavoritesList({
         //3. Update localStorage cache for the global term list
         const currentFavoritesString =
             localStorage.getItem(GLOBAL_FAV_LIST_KEY);
-        let currentFavorites: vocabObj[] = [];
+        let currentFavorites: VocabTerm[] = [];
         if (currentFavoritesString) {
-            currentFavorites = JSON.parse(currentFavoritesString) as vocabObj[];
+            currentFavorites = JSON.parse(
+                currentFavoritesString,
+            ) as VocabTerm[];
         }
         // If term is now favorite, add to favorites list
         if (term.isFavorite) {
@@ -211,15 +287,7 @@ export function FavoritesList({
                 </p>
                 <CommonButton
                     additionalclasses="mx-0 my-0 inline-flex items-center gap-1 rounded-full border-red-400/40 bg-red-500/10 px-2 py-1 text-xs font-medium text-red-300 transition-colors hover:bg-red-500/20 hover:text-red-200"
-                    onClick={() => {
-                        // Clear all favorites
-                        const updatedTerms = terms.map((term) => {
-                            return { ...term, isFavorite: false };
-                        });
-                        setTerms(updatedTerms);
-                        // Clear global favorites list in localStorage
-                        localStorage.removeItem(GLOBAL_FAV_LIST_KEY);
-                    }}
+                    onClick={() => setIsClearConfirmOpen(true)}
                 >
                     <Trash2 className="h-3.5 w-3.5" />
                     Clear all
@@ -250,6 +318,14 @@ export function FavoritesList({
                     </li>
                 ))}
             </ul>
+            <ConfirmActionModal
+                open={isClearConfirmOpen}
+                title="Clear all favorites?"
+                description="This removes the favorite selection from all visible terms."
+                confirmLabel="Clear all"
+                onOpenChange={setIsClearConfirmOpen}
+                onConfirm={clearAllFavorites}
+            />
         </ScrollArea>
     );
 }

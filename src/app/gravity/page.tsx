@@ -1,20 +1,25 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import CommonButton from "@/components/common/CommonButton";
 import SectionHeader from "@/components/common/SectionHeader";
 import { Toaster } from "@/components/ui/toaster";
 import { Loader } from "@/components/common/Loader";
+import { Checkbox } from "@/components/ui/checkbox";
 
 import { AllLearntModal } from "./_components/AllLearntModal";
 import { CorrectionModal } from "./_components/CorrectionModal";
 import { useGravityGame } from "./_hooks/useGravityGame";
 import { PLAYFIELD_HEIGHT_PX } from "./_lib/gravity-utils";
+import { EditTermsModal } from "../match/_components/EditTermsModal";
 
 export default function GravityPage() {
     const router = useRouter();
     const LAST_PAGINATOR_PAGE_KEY = "lastPaginatorPage";
+    const [isAllFavoritesReviewMode, setIsAllFavoritesReviewMode] =
+        useState(false);
 
     const {
         activeTerm,
@@ -42,8 +47,14 @@ export default function GravityPage() {
         setCorrectionInput,
         setShowReadingHint,
         showReadingHint,
+        isFavoritesMode,
+        setIsFavoritesMode,
         timer,
         unlearntTermsCount,
+        terms,
+        setTerms,
+        isEditTermsModalOpen,
+        setIsEditTermsModalOpen,
     } = useGravityGame();
 
     const handleReturnFromGravityPage = () => {
@@ -55,6 +66,11 @@ export default function GravityPage() {
         }
     };
 
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        setIsAllFavoritesReviewMode(urlParams.get("favorites") === "1");
+    }, []);
+
     return (
         <div>
             <SectionHeader title="Gravity Typing Game" />
@@ -63,12 +79,12 @@ export default function GravityPage() {
                 <div className="flex gap-2">
                     <CommonButton
                         label="↩ Back"
-                        additionalclasses="mx-0 whitespace-nowrap bg-indigo-600 text-xs sm:text-sm"
+                        additionalclasses="mx-0 whitespace-nowrap text-xs sm:text-sm"
                         onClick={() => router.back()}
                     />
                     <CommonButton
                         label="⟳ Restart"
-                        additionalclasses="mx-0 whitespace-nowrap bg-indigo-600 text-xs sm:text-sm"
+                        additionalclasses="mx-0 whitespace-nowrap text-xs sm:text-sm"
                         onClick={() => {
                             loadVocabTerms().catch((err) => {
                                 console.error(
@@ -83,6 +99,11 @@ export default function GravityPage() {
                         additionalclasses="mx-0 whitespace-nowrap bg-red-700 text-xs sm:text-sm hover:bg-red-600"
                         onClick={resetLearningProgress}
                     />
+                    <CommonButton
+                        label={"✎ Edit Terms"}
+                        additionalclasses="mx-0 whitespace-nowrap text-xs sm:text-sm"
+                        onClick={() => setIsEditTermsModalOpen(true)}
+                    />
                 </div>
                 <div className="px-1 text-xs text-gray-200 sm:text-sm">
                     {activeTermWrongCount > 0 ? (
@@ -96,15 +117,43 @@ export default function GravityPage() {
                     )}
                 </div>
             </div>
-            <div className="border border-x-0 border-gray-700 bg-gray-900 px-4 py-2">
-                <label className="flex w-fit cursor-pointer items-center gap-2 text-sm text-gray-200">
-                    <input
-                        type="checkbox"
-                        checked={showReadingHint}
-                        onChange={() => setShowReadingHint((prev) => !prev)}
-                    />
-                    Show reading hint (romanization)
-                </label>
+            <div className="w-full border border-x-0 border-gray-700 bg-gray-900 px-4 py-3">
+                <div className="flex justify-center gap-6">
+                    <label
+                        htmlFor="show-reading-hint"
+                        className="flex cursor-pointer items-center gap-3"
+                    >
+                        <Checkbox
+                            className="h-5 w-5 rounded-sm border-gray-500 bg-transparent data-[state=checked]:border-indigo-500 data-[state=checked]:bg-indigo-500"
+                            id="show-reading-hint"
+                            checked={showReadingHint}
+                            onCheckedChange={() =>
+                                setShowReadingHint((prev) => !prev)
+                            }
+                        />
+                        <span className="text-sm font-medium text-gray-200">
+                            Show reading hint (romanization)
+                        </span>
+                    </label>
+                    {!isAllFavoritesReviewMode && (
+                        <label
+                            htmlFor="favorites-only"
+                            className="flex cursor-pointer items-center gap-3"
+                        >
+                            <Checkbox
+                                className="h-5 w-5 rounded-sm border-gray-500 bg-transparent data-[state=checked]:border-indigo-500 data-[state=checked]:bg-indigo-500"
+                                id="favorites-only"
+                                checked={isFavoritesMode}
+                                onCheckedChange={() =>
+                                    setIsFavoritesMode(!isFavoritesMode)
+                                }
+                            />
+                            <span className="text-sm font-medium text-gray-200">
+                                Favorites only
+                            </span>
+                        </label>
+                    )}
+                </div>
             </div>
 
             <div className="border border-x-0 border-gray-600 bg-gray-700/50">
@@ -206,7 +255,7 @@ export default function GravityPage() {
                         <CommonButton
                             type="submit"
                             label="Submit"
-                            additionalclasses="mx-0 bg-indigo-600"
+                            additionalclasses="mx-0"
                             disabled={
                                 isGameOver ||
                                 isLoading ||
@@ -236,6 +285,12 @@ export default function GravityPage() {
                 open={isAllLearntModalOpen && !isGameOver}
                 onReturnToReader={handleReturnFromGravityPage}
                 onContinuePractice={resumeAfterAllLearntModal}
+            />
+            <EditTermsModal
+                open={isEditTermsModalOpen}
+                onOpenChange={setIsEditTermsModalOpen}
+                terms={terms}
+                setTerms={setTerms}
             />
 
             <Toaster />

@@ -2,8 +2,9 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { getAllGameHistories, removeGameHistory } from "@/lib/utils";
-import { Grid2x2Check, Orbit, Trash2 } from "lucide-react";
+import { Eye, Grid2x2Check, Orbit, Trash2 } from "lucide-react";
 import { ViewHistoryModal } from "./ViewHistoryModal";
+import { ConfirmActionModal } from "@/components/common/modals/ConfirmActionModal";
 
 type vocabObj = Record<string, string | boolean>;
 
@@ -15,6 +16,8 @@ const History = () => {
     >({});
     const [isModalOpen, setIsModalOpen] = React.useState(false);
     const [modalTargetKey, setModalTargetKey] = React.useState<string>("");
+    const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = React.useState(false);
+    const [deleteTargetKey, setDeleteTargetKey] = React.useState<string>("");
     const router = useRouter();
 
     React.useEffect(() => {
@@ -56,6 +59,18 @@ const History = () => {
 
         // Remove from localStorage
         removeGameHistory(key, isKeyHashed);
+    };
+
+    const handleOpenDeleteConfirm = (key: string) => {
+        setDeleteTargetKey(key);
+        setIsDeleteConfirmOpen(true);
+    };
+
+    const handleConfirmDelete = () => {
+        if (!deleteTargetKey) return;
+        handleDeleteHistory(deleteTargetKey, true);
+        setIsDeleteConfirmOpen(false);
+        setDeleteTargetKey("");
     };
 
     const getSampleTerms = (terms: vocabObj[]): string => {
@@ -103,36 +118,55 @@ const History = () => {
                                     </div>
                                     <div className="flex gap-2 text-xs">
                                         <button
-                                            className="rounded border border-slate-700 px-2 py-1 hover:bg-blue-300 hover:text-black"
+                                            className="has-tooltip relative rounded border border-slate-700 px-2 py-1 hover:bg-blue-300 hover:text-black"
                                             onClick={() => handleGoMatch(key)}
+                                            aria-label="Study with Match"
+                                            title="Study with Match"
                                         >
+                                            <span className="tooltip absolute bottom-full right-0 -mt-8 rounded bg-black p-1 text-sm text-white shadow-lg">
+                                                Study (Match)
+                                            </span>
                                             <Grid2x2Check className="mx-auto h-5 w-5"></Grid2x2Check>
                                         </button>
                                         <button
-                                            className="rounded border border-slate-700 px-2 py-1 hover:bg-blue-300 hover:text-black"
+                                            className="has-tooltip relative rounded border border-slate-700 px-2 py-1 hover:bg-blue-300 hover:text-black"
                                             onClick={() => handleGoGravity(key)}
+                                            aria-label="Study with Gravity"
+                                            title="Study with Gravity"
                                         >
+                                            <span className="tooltip absolute bottom-full right-0 -mt-8 rounded bg-black p-1 text-sm text-white shadow-lg">
+                                                Study (Gravity)
+                                            </span>
                                             <Orbit className="mx-auto h-5 w-5"></Orbit>
                                         </button>
                                         <button
-                                            className="rounded border border-slate-700 px-2 py-1 hover:bg-blue-300 hover:text-black"
+                                            className="has-tooltip relative rounded border border-slate-700 px-2 py-1 hover:bg-blue-300 hover:text-black"
                                             onClick={() =>
                                                 handleOpenTermsModal(key)
                                             }
+                                            aria-label="View all terms"
+                                            title="View all terms"
                                         >
-                                            View all
+                                            <span className="tooltip absolute bottom-full right-0 -mt-8 rounded bg-black p-1 text-sm text-white shadow-lg">
+                                                View all
+                                            </span>
+                                            <Eye className="mx-auto h-5 w-5" />
                                         </button>
-                                        <button className="group rounded border border-slate-700 px-2 py-1 hover:bg-slate-800">
+                                        <button
+                                            className="has-tooltip group relative rounded border border-slate-700 px-2 py-1 hover:bg-slate-800"
+                                            aria-label="Delete history item"
+                                            title="Delete history item"
+                                            onClick={() =>
+                                                handleOpenDeleteConfirm(key)
+                                            }
+                                        >
+                                            <span className="tooltip absolute bottom-full right-0 -mt-8 rounded bg-black p-1 text-sm text-white shadow-lg">
+                                                Delete
+                                            </span>
                                             <Trash2 className="group-hover:hidden" />
                                             <Trash2
                                                 className="hidden text-red-500 group-hover:block"
                                                 fill="red"
-                                                onClick={() =>
-                                                    handleDeleteHistory(
-                                                        key,
-                                                        true,
-                                                    )
-                                                }
                                             />
                                         </button>
                                         <ViewHistoryModal
@@ -151,6 +185,14 @@ const History = () => {
                     </p>
                 )}
             </div>
+            <ConfirmActionModal
+                open={isDeleteConfirmOpen}
+                title="Delete this history set?"
+                description="This removes the selected vocabulary history entry."
+                confirmLabel="Delete"
+                onOpenChange={setIsDeleteConfirmOpen}
+                onConfirm={handleConfirmDelete}
+            />
         </div>
     );
 };
