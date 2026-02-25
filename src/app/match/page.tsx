@@ -17,10 +17,10 @@ import { GameStats } from "./_components/GameStats";
 
 import { useKeyboardShortcut } from "@/hooks/use-key-shortcut";
 
-type vocabObj = Record<string, string | boolean>;
+import type { VocabTerm } from "@/lib/types/vocab";
 
 //fischer y-yates shuffle
-function shuffleArray(vocabArray: vocabObj[]) {
+function shuffleArray(vocabArray: VocabTerm[]) {
     if (vocabArray.length === 0) {
         return vocabArray;
     }
@@ -44,10 +44,10 @@ export default function Match() {
     const [score, setScore] = useState(0);
     const [answered, setAnswered] = useState<number[]>([]);
     const [latestCorrectAnw, setLatestCorrectAnw] = useState<number[]>([]);
-    const [allRoundsVocabJson, setAllRoundsVocabJson] = useState<vocabObj[]>(
+    const [allRoundsVocabJson, setAllRoundsVocabJson] = useState<VocabTerm[]>(
         [],
     );
-    const [gameVocabJson, setGameVocabJson] = useState<vocabObj[]>([]);
+    const [gameVocabJson, setGameVocabJson] = useState<VocabTerm[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [timer, setTimer] = useState(0);
     const [isGameOver, setIsGameOver] = useState(false);
@@ -232,13 +232,13 @@ export default function Match() {
         let replyJson = JSON.parse(reply) as JsonArray;
 
         //keep a copy of vocab for all rounds in the state so the user can do things like edit all terms
-        setAllRoundsVocabJson(replyJson as vocabObj[]);
+        setAllRoundsVocabJson(replyJson as VocabTerm[]);
 
         //filter to only include favorites if in favorites mode
         replyJson = replyJson.filter((item) => {
             if (isFavoritesMode) {
                 //only include items with is_favorite true
-                return (item as vocabObj).isFavorite === true;
+                return (item as VocabTerm).isFavorite === true;
             } else {
                 return true;
             }
@@ -305,17 +305,17 @@ export default function Match() {
         }
 
         // generate two cards of each term, one for front and one for back
-        const front: vocabObj[] = termsForGame.map((obj) => ({
-            ...(obj as vocabObj),
+        const front: VocabTerm[] = termsForGame.map((obj) => ({
+            ...(obj as VocabTerm),
             type: "front",
         }));
-        const back: vocabObj[] = termsForGame.map((obj) => ({
-            ...(obj as vocabObj),
+        const back: VocabTerm[] = termsForGame.map((obj) => ({
+            ...(obj as VocabTerm),
             type: "back",
         }));
         const frontShuffled = shuffleArray(front);
         const backShuffled = shuffleArray(back);
-        const joinedArray: vocabObj[] = [];
+        const joinedArray: VocabTerm[] = [];
         Array.from({ length: frontShuffled.length }, (_, id) => id).forEach(
             (i: number) => {
                 joinedArray.push(frontShuffled[i]!);

@@ -8,7 +8,7 @@ import {
     DialogDescription,
 } from "@/components/ui/dialog";
 import { FavoritesList } from "@/components/common/FavoritesList";
-import { VocabTerm } from "@/lib/types/vocab";
+import type { VocabTerm } from "@/lib/types/vocab";
 
 interface EditTermsModalProps {
     open: boolean;

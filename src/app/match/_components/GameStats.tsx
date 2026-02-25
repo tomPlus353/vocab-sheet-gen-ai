@@ -1,4 +1,5 @@
 "use client";
+import type { VocabTerm } from "@/lib/types/vocab";
 import React from "react";
 
 type Props = {
@@ -6,7 +7,7 @@ type Props = {
     round: string;
     totalRounds: number;
     timer: number;
-    gameVocabJson: Array<Record<string, string | boolean>>;
+    gameVocabJson: VocabTerm[];
 };
 
 export function GameStats(props: Props) {

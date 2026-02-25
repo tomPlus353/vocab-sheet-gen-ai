@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import CommonButton from "@/components/common/CommonButton";
-import type { VocabTerm } from "../_lib/gravity-utils";
+import type { VocabTerm } from "@/lib/types/vocab";
 
 type Props = {
     open: boolean;

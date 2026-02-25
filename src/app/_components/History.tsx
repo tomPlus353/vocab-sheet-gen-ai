@@ -5,8 +5,7 @@ import { getAllGameHistories, removeGameHistory } from "@/lib/utils";
 import { Eye, Grid2x2Check, Orbit, Trash2 } from "lucide-react";
 import { ViewHistoryModal } from "./ViewHistoryModal";
 import { ConfirmActionModal } from "@/components/common/modals/ConfirmActionModal";
-
-type vocabObj = Record<string, string | boolean>;
+import type { VocabTerm } from "@/lib/types/vocab";
 
 const LAST_PAGINATOR_PAGE_KEY = "lastPaginatorPage";
 
@@ -73,11 +72,11 @@ const History = () => {
         setDeleteTargetKey("");
     };
 
-    const getSampleTerms = (terms: vocabObj[]): string => {
+    const getSampleTerms = (terms: VocabTerm[]): string => {
         return (
             terms
                 .slice(0, 3)
-                .map((term) => term.japanese as string)
+                .map((term) => term.japanese)
                 .join("、") + "... "
         );
     };
@@ -102,7 +101,9 @@ const History = () => {
                                     <div>
                                         <p className="max-w-32 truncate text-sm text-slate-200 md:max-w-40 md:text-base">
                                             {getSampleTerms(
-                                                JSON.parse(vocab) as vocabObj[],
+                                                JSON.parse(
+                                                    vocab,
+                                                ) as VocabTerm[],
                                             ) ?? "No terms available."}
                                         </p>
                                         <p className="text-xs text-slate-500">
@@ -110,7 +111,7 @@ const History = () => {
                                                 (
                                                     JSON.parse(
                                                         vocab,
-                                                    ) as vocabObj[]
+                                                    ) as VocabTerm[]
                                                 ).length
                                             }{" "}
                                             words • Dec 28 2024

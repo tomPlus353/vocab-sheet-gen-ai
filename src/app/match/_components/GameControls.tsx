@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 
 import { EditTermsModal } from "./EditTermsModal";
-import { VocabTerm } from "@/lib/types/vocab";
+import type { VocabTerm } from "@/lib/types/vocab";
 
 type Props = {
     startGame: () => void;

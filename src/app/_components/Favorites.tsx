@@ -6,11 +6,12 @@ import { useRouter } from "next/navigation";
 import { ViewHistoryModal } from "./ViewHistoryModal";
 import { Eye, Grid2x2Check, Orbit, RefreshCcw } from "lucide-react";
 
-type vocabObj = Record<string, string | boolean>;
+import type { VocabTerm } from "@/lib/types/vocab";
+
 const LAST_PAGINATOR_PAGE_KEY = "lastPaginatorPage";
 
 const Favorites = () => {
-    const [favoriteTerms, setFavoriteTerms] = React.useState<vocabObj[]>([]);
+    const [favoriteTerms, setFavoriteTerms] = React.useState<VocabTerm[]>([]);
     const router = useRouter();
     const [isModalOpen, setIsModalOpen] = React.useState(false);
 
@@ -20,7 +21,7 @@ const Favorites = () => {
 
     const loadFavoriteTerms = React.useCallback(() => {
         const cachedJsonString = localStorage.getItem("favoriteTerms");
-        const termsAsJson: vocabObj[] = JSON.parse(cachedJsonString ?? "[]");
+        const termsAsJson: VocabTerm[] = JSON.parse(cachedJsonString ?? "[]");
         setFavoriteTerms(
             termsAsJson.filter((term) => term.isFavorite === true),
         );

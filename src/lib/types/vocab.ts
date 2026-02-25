@@ -5,4 +5,5 @@ export type VocabTerm = {
     isFavorite?: boolean;
     gravity_score?: number;
     isLearnt?: boolean;
+    type?: string;
 };

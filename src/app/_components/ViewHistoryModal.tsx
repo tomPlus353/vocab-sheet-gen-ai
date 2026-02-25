@@ -15,14 +15,13 @@ import { useEffect, useState } from "react";
 
 import { getGameHistory } from "@/lib/utils";
 
+import type { VocabTerm } from "@/lib/types/vocab";
 interface ViewHistoryModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     historyTermsKey?: string;
     mode?: "history" | "favorites";
 }
-
-type vocabObj = Record<string, string | boolean>;
 
 export function ViewHistoryModal({
     open,
@@ -32,14 +31,14 @@ export function ViewHistoryModal({
 }: ViewHistoryModalProps) {
     const { toast } = useToast();
 
-    const [terms, setTerms] = useState<vocabObj[]>([]);
+    const [terms, setTerms] = useState<VocabTerm[]>([]);
 
     useEffect(() => {
         // Fetch terms from localStorage using the historyTermsKey
         try {
             if (mode === "favorites") {
                 const cachedJsonString = localStorage.getItem("favoriteTerms");
-                const termsAsJson: vocabObj[] = JSON.parse(
+                const termsAsJson: VocabTerm[] = JSON.parse(
                     cachedJsonString ?? "[]",
                 );
                 setTerms(termsAsJson);
@@ -53,9 +52,9 @@ export function ViewHistoryModal({
             }
             const storedHistory = getGameHistory(historyTermsKey, true);
             if (storedHistory) {
-                const parsedHistory: vocabObj[] = JSON.parse(
+                const parsedHistory: VocabTerm[] = JSON.parse(
                     storedHistory,
-                ) as vocabObj[];
+                ) as VocabTerm[];
                 setTerms(parsedHistory);
             }
         } catch (e) {
