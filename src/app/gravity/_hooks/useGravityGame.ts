@@ -21,8 +21,10 @@ type ProgressSource =
     | { mode: "active"; key: string };
 
 export function useGravityGame() {
-    // Holds all terms used in the gravity session and their learning metadata.
-    const [terms, setTerms] = React.useState<VocabTerm[]>([]);
+    // Full source term set for this gravity session (used for edit modal and persistence).
+    const [allTerms, setAllTerms] = React.useState<VocabTerm[]>([]);
+    // Currently studied term set (optionally filtered to favorites-only).
+    const [activeTerms, setActiveTerms] = React.useState<VocabTerm[]>([]);
     // Queue of term indexes used to pick the next falling term.
     const [remainingQueue, setRemainingQueue] = React.useState<number[]>([]);
     // The currently falling term rendered in the playfield.
@@ -223,7 +225,8 @@ export function useGravityGame() {
             return;
         }
 
-        setTerms(filteredTerms);
+        setAllTerms(parsedTerms);
+        setActiveTerms(filteredTerms);
         const queue = getShuffledIndexes(filteredTerms.length);
         setScore(0);
         setTermWrongCounts({});
@@ -246,13 +249,9 @@ export function useGravityGame() {
     const updateTermScore = React.useCallback(
         (term: VocabTerm, action: "correct" | "wrong", shouldIncrement: boolean) => {
             const targetKey = getTermKey(term);
-            setTerms((prevTerms) =>
+            const applyScoreUpdate = (prevTerms: VocabTerm[]) =>
                 prevTerms.map((oneTerm) => {
                     if (getTermKey(oneTerm) !== targetKey) {
-                        console.log("Term key mismatch:", {
-                            targetKey,
-                            oneTermKey: getTermKey(oneTerm),
-                        });
                         return oneTerm;
                     }
 
@@ -277,8 +276,10 @@ export function useGravityGame() {
                         gravity_score: nextScore,
                         isLearnt: nextScore >= 2,
                     };
-                }),
-            );
+                });
+
+            setAllTerms(applyScoreUpdate);
+            setActiveTerms(applyScoreUpdate);
         },
         [],
     );
@@ -332,7 +333,7 @@ export function useGravityGame() {
                 duration: 800,
                 variant: "success",
             });
-            spawnTerm(remainingQueue, terms);
+            spawnTerm(remainingQueue, activeTerms);
             return;
         }
 
@@ -353,7 +354,7 @@ export function useGravityGame() {
         remainingQueue,
         showReadingHint,
         spawnTerm,
-        terms,
+        activeTerms,
         toast,
     ]);
 
@@ -373,7 +374,7 @@ export function useGravityGame() {
             setCorrectionError("");
             setAnswer("");
             // spawn the next term
-            spawnTerm(remainingQueue, terms);
+            spawnTerm(remainingQueue, activeTerms);
             return;
         }
 
@@ -384,7 +385,7 @@ export function useGravityGame() {
         remainingQueue,
         showReadingHint,
         spawnTerm,
-        terms,
+        activeTerms,
         updateTermScore,
     ]);
 
@@ -465,29 +466,29 @@ export function useGravityGame() {
 
     // Opens completion modal once when every term reaches learnt threshold.
     React.useEffect(() => {
-        if (terms.length === 0 || isGameOver) {
+        if (activeTerms.length === 0 || isGameOver) {
             return;
         }
 
-        const allLearnt = terms.every((term) => (term.gravity_score ?? 0) >= 2);
+        const allLearnt = activeTerms.every((term) => (term.gravity_score ?? 0) >= 2);
         if (allLearnt && !hasShownAllLearntModal) {
             setHasShownAllLearntModal(true);
             setIsAllLearntModalOpen(true);
             setActiveTerm(null);
         }
-    }, [hasShownAllLearntModal, isGameOver, terms]);
+    }, [hasShownAllLearntModal, isGameOver, activeTerms]);
 
     // Resets completion-modal guard once any term drops below learnt threshold.
     React.useEffect(() => {
-        const hasUnlearntTerm = terms.some((term) => (term.gravity_score ?? 0) < 2);
+        const hasUnlearntTerm = activeTerms.some((term) => (term.gravity_score ?? 0) < 2);
         if (hasUnlearntTerm && hasShownAllLearntModal) {
             setHasShownAllLearntModal(false);
         }
-    }, [hasShownAllLearntModal, terms]);
+    }, [hasShownAllLearntModal, activeTerms]);
 
     // Persists updated term objects (including gravity score) back to their source.
     React.useEffect(() => {
-        if (terms.length === 0) {
+        if (allTerms.length === 0) {
             return;
         }
         const source = progressSourceRef.current;
@@ -495,7 +496,7 @@ export function useGravityGame() {
             return;
         }
 
-        const serializedTerms = JSON.stringify(terms);
+        const serializedTerms = JSON.stringify(allTerms);
         if (source.mode === "favorites") {
             localStorage.setItem("favoriteTerms", serializedTerms);
             return;
@@ -505,7 +506,7 @@ export function useGravityGame() {
             return;
         }
         appendGameHistory(source.key, serializedTerms, false);
-    }, [terms]);
+    }, [allTerms]);
 
     // Keeps keyboard focus on the answer input as terms change.
     React.useEffect(() => {
@@ -579,38 +580,44 @@ export function useGravityGame() {
     }, [activeTerm, playfieldWidth]);
 
     // Computes how many terms are currently marked as learnt (score >= 2).
-    const learntTermsCount = terms.filter(
+    const learntTermsCount = activeTerms.filter(
         (term) => (term.gravity_score ?? 0) >= 2,
     ).length;
     // Computes how many terms are in learning state (score exactly 1).
-    const learningTermsCount = terms.filter(
+    const learningTermsCount = activeTerms.filter(
         (term) => (term.gravity_score ?? 0) === 1,
     ).length;
     // Computes how many terms are still unlearnt (score 0 or undefined).
-    const unlearntTermsCount = terms.filter(
+    const unlearntTermsCount = activeTerms.filter(
         (term) => (term.gravity_score ?? 0) === 0,
     ).length;
 
     // Closes completion modal and resumes spawning terms for continued practice.
     const resumeAfterAllLearntModal = React.useCallback(() => {
         setIsAllLearntModalOpen(false);
-        if (!isGameOver && terms.length > 0) {
-            spawnTerm(remainingQueue, terms);
+        if (!isGameOver && activeTerms.length > 0) {
+            spawnTerm(remainingQueue, activeTerms);
         }
-    }, [isGameOver, remainingQueue, spawnTerm, terms]);
+    }, [isGameOver, remainingQueue, spawnTerm, activeTerms]);
 
     // Resets learning progress for all currently loaded terms.
     const resetLearningProgress = React.useCallback(() => {
-        if (terms.length === 0) {
+        if (activeTerms.length === 0) {
             return;
         }
 
-        setTerms((prevTerms) =>
-            prevTerms.map((term) => ({
-                ...term,
-                gravity_score: 0,
-                isLearnt: false,
-            })),
+        const activeTermKeys = new Set(activeTerms.map((term) => getTermKey(term)));
+        const resetTerm = (term: VocabTerm) => ({
+            ...term,
+            gravity_score: 0,
+            isLearnt: false,
+        });
+
+        setActiveTerms((prevTerms) => prevTerms.map(resetTerm));
+        setAllTerms((prevTerms) =>
+            prevTerms.map((term) =>
+                activeTermKeys.has(getTermKey(term)) ? resetTerm(term) : term,
+            ),
         );
         setTermWrongCounts({});
         setIsAllLearntModalOpen(false);
@@ -625,7 +632,7 @@ export function useGravityGame() {
             duration: 1200,
             variant: "default",
         });
-    }, [terms, toast]);
+    }, [activeTerms, toast]);
 
     return {
         activeTerm,
@@ -654,11 +661,11 @@ export function useGravityGame() {
         showReadingHint,
         isFavoritesMode,
         setIsFavoritesMode,
-        totalTermsCount: terms.length,
+        totalTermsCount: activeTerms.length,
         timer,
         unlearntTermsCount,
-        terms,
-        setTerms,
+        terms: allTerms,
+        setTerms: setAllTerms,
         isEditTermsModalOpen,
         setIsEditTermsModalOpen,
     };
