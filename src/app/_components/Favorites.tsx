@@ -11,6 +11,8 @@ import type { VocabTerm } from "@/lib/types/vocab";
 const LAST_PAGINATOR_PAGE_KEY = "lastPaginatorPage";
 
 const Favorites = () => {
+    const ACTION_BUTTON_CLASSES =
+        "has-tooltip relative rounded border border-blue-100/20 px-2 py-1 bg-blue-500/50 hover:bg-blue-300 hover:text-black";
     const [favoriteTerms, setFavoriteTerms] = React.useState<VocabTerm[]>([]);
     const router = useRouter();
     const [isModalOpen, setIsModalOpen] = React.useState(false);
@@ -55,7 +57,7 @@ const Favorites = () => {
                 <p className="font-medium text-slate-100">⭐ Favorites</p>
                 <div className="flex gap-2 text-xs">
                     <button
-                        className="has-tooltip relative rounded border border-slate-700 px-2 py-1 hover:bg-blue-300 hover:text-black"
+                        className={ACTION_BUTTON_CLASSES}
                         onClick={handleGoMatch}
                         aria-label="Study with Match"
                         title="Study with Match"
@@ -66,7 +68,7 @@ const Favorites = () => {
                         <Grid2x2Check className="h-4 w-4" />
                     </button>
                     <button
-                        className="has-tooltip relative rounded border border-slate-700 px-2 py-1 hover:bg-blue-300 hover:text-black"
+                        className={ACTION_BUTTON_CLASSES}
                         onClick={handleGoGravity}
                         aria-label="Study with Gravity"
                         title="Study with Gravity"
@@ -77,7 +79,7 @@ const Favorites = () => {
                         <Orbit className="h-4 w-4" />
                     </button>
                     <button
-                        className="has-tooltip relative rounded border border-slate-700 px-2 py-1 hover:bg-blue-300 hover:text-black"
+                        className={ACTION_BUTTON_CLASSES}
                         onClick={() => handleOpenTermsModal()}
                         aria-label="View all terms"
                         title="View all terms"
@@ -88,7 +90,7 @@ const Favorites = () => {
                         <Eye className="h-4 w-4" />
                     </button>
                     <button
-                        className="has-tooltip relative rounded border border-slate-700 px-2 py-1 hover:bg-blue-300 hover:text-black"
+                        className={ACTION_BUTTON_CLASSES}
                         onClick={loadFavoriteTerms}
                         aria-label="Refresh favorites list"
                         title="Refresh favorites list"

@@ -328,7 +328,7 @@ export function FavoritesList({
     return (
         <ScrollArea className="my-2 max-h-96 flex-1 overflow-y-auto rounded-md border">
             {/* header section */}
-            <div className="my-1 flex items-start justify-between gap-1 px-1">
+            <div className="my-1 flex items-start justify-around gap-1 px-1">
                 <div className="grid grid-cols-2 gap-1 text-xs sm:flex sm:flex-wrap sm:items-center sm:gap-2">
                     <span
                         className="inline-flex items-center gap-1 rounded-full border border-red-400/40 bg-red-500/10 px-2 py-0.5 text-red-200"
@@ -364,7 +364,7 @@ export function FavoritesList({
                     </span>
                 </div>
                 <a
-                    className="inline-flex items-center gap-1 border-slate-800/40 bg-red-500/10 px-2 py-1 text-xs font-medium text-red-300 transition-colors hover:bg-red-500/20 hover:text-red-200"
+                    className="inline-flex items-center gap-1 whitespace-nowrap border-slate-800/40 bg-red-500/10 px-2 py-1 text-xs font-medium text-red-300 transition-colors hover:bg-red-500/20 hover:text-red-200"
                     onClick={() => setIsClearConfirmOpen(true)}
                 >
                     <Trash2 className="h-3.5 w-3.5" />
@@ -380,7 +380,7 @@ export function FavoritesList({
                     return (
                         <li
                             key={index}
-                            className={`mb-1 flex items-center justify-between rounded-md border border-l-4 border-slate-700 px-2 py-1.5 last:mb-0 ${learningStatus.accentClassName}`}
+                            className={`mb-1 flex items-center justify-between rounded-md border border-l-4 border-slate-700 bg-black px-2 py-1.5 last:mb-0 ${learningStatus.accentClassName}`}
                         >
                             <div className="flex min-w-0 items-center gap-2">
                                 <span className="truncate font-medium text-slate-100">
