@@ -81,11 +81,11 @@ export function GameControls(props: GameControlProps) {
                     )}
                 </div>
             </div>
-            <div className="w-full border border-x-0 border-gray-700 bg-gray-900 px-4 py-3">
-                <div className="flex justify-center gap-6">
+            <div className="w-full border border-x-0 border-gray-700 bg-gray-900 px-2 py-1">
+                <div className="flex justify-around gap-6">
                     <label
                         htmlFor="show-reading-hint"
-                        className="flex cursor-pointer items-center gap-3"
+                        className="flex cursor-pointer items-center gap-2"
                     >
                         <Checkbox
                             className="h-5 w-5 rounded-sm border-gray-500 bg-transparent data-[state=checked]:border-indigo-500 data-[state=checked]:bg-indigo-500"
@@ -95,14 +95,14 @@ export function GameControls(props: GameControlProps) {
                                 setShowReadingHint((prev) => !prev)
                             }
                         />
-                        <span className="text-sm font-medium text-gray-200">
+                        <span className="text-xs font-medium text-gray-200 md:text-sm">
                             Show reading hint (romanization)
                         </span>
                     </label>
                     {!isAllFavoritesReviewMode && (
                         <label
                             htmlFor="favorites-only"
-                            className="flex cursor-pointer items-center gap-3"
+                            className="flex cursor-pointer items-center gap-2"
                         >
                             <Checkbox
                                 className="h-5 w-5 rounded-sm border-gray-500 bg-transparent data-[state=checked]:border-indigo-500 data-[state=checked]:bg-indigo-500"
@@ -112,7 +112,7 @@ export function GameControls(props: GameControlProps) {
                                     setIsFavoritesMode(!isFavoritesMode)
                                 }
                             />
-                            <span className="text-sm font-medium text-gray-200">
+                            <span className="text-xs font-medium text-gray-200 md:text-sm">
                                 Favorites only
                             </span>
                         </label>

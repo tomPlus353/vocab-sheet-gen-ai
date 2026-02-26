@@ -6,7 +6,7 @@ import { appendGameHistory } from "@/lib/utils";
 import { ScrollArea } from "../ui/scroll-area";
 import CommonButton from "./CommonButton";
 import { ConfirmActionModal } from "./modals/ConfirmActionModal";
-import { VocabTerm } from "@/lib/types/vocab";
+import type { VocabTerm } from "@/lib/types/vocab";
 
 const GLOBAL_FAV_LIST_KEY = "favoriteTerms";
 
@@ -18,6 +18,41 @@ interface FavoritesListProps {
     refreshTerms?: () => void;
 }
 
+function getLearningStatus(gravityScore?: number): {
+    label: "unlearned" | "learning" | "learnt";
+    icon: "○" | "◐" | "●";
+    badgeClassName: string;
+    accentClassName: string;
+} {
+    if ((gravityScore ?? 0) >= 2) {
+        return {
+            label: "learnt",
+            icon: "●",
+            badgeClassName:
+                "border-emerald-400/40 bg-emerald-500/20 text-emerald-200",
+            accentClassName: "border-l-emerald-400/70",
+        };
+    }
+
+    if ((gravityScore ?? 0) === 1) {
+        return {
+            label: "learning",
+            icon: "◐",
+            badgeClassName:
+                "border-amber-400/40 bg-amber-500/20 text-amber-200",
+            accentClassName: "border-l-amber-400/70",
+        };
+    }
+
+    return {
+        label: "unlearned",
+        icon: "○",
+        badgeClassName:
+            "border-violet-400/30 bg-violet-500/10 text-violet-200/90",
+        accentClassName: "border-l-violet-400/60",
+    };
+}
+
 export function FavoritesList({
     mode,
     terms,
@@ -26,6 +61,18 @@ export function FavoritesList({
     refreshTerms = undefined,
 }: FavoritesListProps) {
     const [isClearConfirmOpen, setIsClearConfirmOpen] = React.useState(false);
+    const favoriteCount = terms
+        ? terms.filter((term) => term.isFavorite).length
+        : 0;
+    const unlearnedCount = terms
+        ? terms.filter((term) => (term.gravity_score ?? 0) === 0).length
+        : 0;
+    const learningCount = terms
+        ? terms.filter((term) => (term.gravity_score ?? 0) === 1).length
+        : 0;
+    const learntCount = terms
+        ? terms.filter((term) => (term.gravity_score ?? 0) >= 2).length
+        : 0;
 
     function clearAllFavorites() {
         // 1. update the state
@@ -280,43 +327,95 @@ export function FavoritesList({
 
     return (
         <ScrollArea className="my-2 max-h-96 flex-1 overflow-y-auto rounded-md border">
-            <div className="mb-2 flex items-center justify-between px-1">
-                <p className="text-right text-sm font-bold text-red-500">
-                    Total Favorites:{" "}
-                    {terms ? terms.filter((t) => t.isFavorite).length : 0}
-                </p>
-                <CommonButton
-                    additionalclasses="mx-0 my-0 inline-flex items-center gap-1 rounded-full border-red-400/40 bg-red-500/10 px-2 py-1 text-xs font-medium text-red-300 transition-colors hover:bg-red-500/20 hover:text-red-200"
+            {/* header section */}
+            <div className="my-1 flex items-start justify-between gap-1 px-1">
+                <div className="grid grid-cols-2 gap-1 text-xs sm:flex sm:flex-wrap sm:items-center sm:gap-2">
+                    <span
+                        className="inline-flex items-center gap-1 rounded-full border border-red-400/40 bg-red-500/10 px-2 py-0.5 text-red-200"
+                        title={`Favorites: ${favoriteCount}`}
+                    >
+                        <Heart className="h-3.5 w-3.5" fill="currentColor" />
+                        <span className="font-medium">favorites</span>
+                        <span className="font-semibold">{favoriteCount}</span>
+                    </span>
+                    <span
+                        className="inline-flex items-center gap-1 rounded-full border border-violet-400/40 bg-violet-500/10 px-2 py-0.5 text-violet-200"
+                        title={`Unlearned: ${unlearnedCount}`}
+                    >
+                        <span className="text-sm leading-none">○</span>
+                        <span className="font-medium">unlearned</span>
+                        <span className="font-semibold">{unlearnedCount}</span>
+                    </span>
+                    <span
+                        className="inline-flex items-center gap-1 rounded-full border border-amber-400/40 bg-amber-500/10 px-2 py-0.5 text-amber-200"
+                        title={`Learning: ${learningCount}`}
+                    >
+                        <span className="text-sm leading-none">◐</span>
+                        <span className="font-medium">learning</span>
+                        <span className="font-semibold">{learningCount}</span>
+                    </span>
+                    <span
+                        className="inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-emerald-500/10 px-2 py-0.5 text-emerald-200"
+                        title={`Learnt: ${learntCount}`}
+                    >
+                        <span className="text-sm leading-none">●</span>
+                        <span className="font-medium">learnt</span>
+                        <span className="font-semibold">{learntCount}</span>
+                    </span>
+                </div>
+                <a
+                    className="inline-flex items-center gap-1 border-slate-800/40 bg-red-500/10 px-2 py-1 text-xs font-medium text-red-300 transition-colors hover:bg-red-500/20 hover:text-red-200"
                     onClick={() => setIsClearConfirmOpen(true)}
                 >
                     <Trash2 className="h-3.5 w-3.5" />
-                    Clear all
-                </CommonButton>
+                    Remove all
+                </a>
             </div>
             <ul className="rounded-xl border border-slate-800 bg-slate-900/70 p-2">
-                {terms?.map((termObj, index) => (
-                    <li
-                        key={index}
-                        className="flex justify-between border-2 border-blue-600/50"
-                    >
-                        <span>{termObj.japanese}</span>
-                        {/* Favorite button */}
-                        <button
-                            className="ml-4 rounded-md px-2 py-1 text-sm text-red-500 hover:bg-slate-800"
-                            onClick={() => favoriteClickHandler(index)}
+                {terms?.map((termObj, index) => {
+                    const learningStatus = getLearningStatus(
+                        termObj.gravity_score,
+                    );
+
+                    return (
+                        <li
+                            key={index}
+                            className={`mb-1 flex items-center justify-between rounded-md border border-l-4 border-slate-700 px-2 py-1.5 last:mb-0 ${learningStatus.accentClassName}`}
                         >
-                            {termObj.isFavorite ? (
-                                // Filled heart icon for favorite
-                                <Heart
-                                    className="inline-block h-8 w-8"
-                                    fill="red"
-                                />
-                            ) : (
-                                <Heart className="inline-block h-8 w-8" />
-                            )}
-                        </button>
-                    </li>
-                ))}
+                            <div className="flex min-w-0 items-center gap-2">
+                                <span className="truncate font-medium text-slate-100">
+                                    {termObj.japanese}
+                                </span>
+                                <span
+                                    className={`inline-flex h-5 items-center rounded-full border px-1.5 text-[10px] font-semibold tracking-wide ${learningStatus.badgeClassName}`}
+                                    title={`${learningStatus.label} (gravity score: ${termObj.gravity_score ?? 0})`}
+                                >
+                                    {learningStatus.icon} {learningStatus.label}
+                                </span>
+                            </div>
+                            {/* Favorite button */}
+                            <button
+                                className="ml-3 rounded-md px-1 py-1 text-sm text-red-500 hover:bg-slate-800"
+                                onClick={() => favoriteClickHandler(index)}
+                                title={
+                                    termObj.isFavorite
+                                        ? "Remove favorite"
+                                        : "Add favorite"
+                                }
+                            >
+                                {termObj.isFavorite ? (
+                                    // Filled heart icon for favorite
+                                    <Heart
+                                        className="inline-block h-6 w-6"
+                                        fill="red"
+                                    />
+                                ) : (
+                                    <Heart className="inline-block h-6 w-6" />
+                                )}
+                            </button>
+                        </li>
+                    );
+                })}
             </ul>
             <ConfirmActionModal
                 open={isClearConfirmOpen}
