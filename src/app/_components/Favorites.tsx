@@ -7,6 +7,7 @@ import { ViewHistoryModal } from "./ViewHistoryModal";
 import { Eye, Grid2x2Check, Orbit, RefreshCcw } from "lucide-react";
 
 import type { VocabTerm } from "@/lib/types/vocab";
+import { isVocabTerm } from "@/lib/utils";
 
 const LAST_PAGINATOR_PAGE_KEY = "lastPaginatorPage";
 
@@ -23,10 +24,27 @@ const Favorites = () => {
 
     const loadFavoriteTerms = React.useCallback(() => {
         const cachedJsonString = localStorage.getItem("favoriteTerms");
-        const termsAsJson: VocabTerm[] = JSON.parse(cachedJsonString ?? "[]");
-        setFavoriteTerms(
-            termsAsJson.filter((term) => term.isFavorite === true),
-        );
+        try {
+            const parsedTerms: unknown = JSON.parse(cachedJsonString ?? "[]");
+            // Verify first that the parsed data is an array before filtering
+            if (!Array.isArray(parsedTerms)) {
+                setFavoriteTerms([]);
+                return;
+            }
+            // Filter the parsed data to ensure all items conform to the VocabTerm structure
+            const termsAsJson = parsedTerms.filter(isVocabTerm);
+            // Set only the terms that are marked as favorite
+            setFavoriteTerms(
+                termsAsJson.filter((term) => term.isFavorite === true),
+            );
+        } catch (e) {
+            // If parsing fails, reset to an empty array
+            console.error(
+                "Error parsing favorite terms from localStorage: ",
+                e,
+            );
+            setFavoriteTerms([]);
+        }
     }, []);
 
     useEffect(() => {

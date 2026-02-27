@@ -1,11 +1,26 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { createHash } from "crypto";
+import { VocabTerm } from "./types/vocab";
 
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
+
+export function isVocabTerm(value: unknown): value is VocabTerm {
+    if (typeof value !== "object" || value === null) {
+        return false;
+    }
+
+    const term = value as Record<string, unknown>;
+    return (
+        typeof term.japanese === "string" &&
+        typeof term.romanization === "string" &&
+        typeof term.english_definition === "string"
+    );
+}
+
 
 export function getHashedCache(key: string): string | null {
   //create sha256 hash of key
