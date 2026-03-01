@@ -1,6 +1,5 @@
-import process from "process";
-import { GoogleGenAI, Type } from "@google/genai";
-import type { GenerateContentResponse } from "@google/genai";
+import { z } from "genkit";
+import { ai } from "@/ai/genkit";
 import {
   SYS_PROMPT_VOCAB,
   SYS_PROMPT_GRAMMAR,
@@ -12,6 +11,21 @@ type RequestBody = {
   text: string;
   mode: string;
 };
+
+const ExampleSentenceSchema = z.object({
+  japanese: z.string(),
+  romanization: z.string(),
+});
+
+const VocabGameTermSchema = z.object({
+  japanese: z.string(),
+  romanization: z.string(),
+  english_definition: z.string(),
+  example_sentences: z.array(ExampleSentenceSchema),
+});
+
+const VocabGameSchema = z.array(VocabGameTermSchema);
+
 export async function POST(request: Request) {
   try {
     //get request from the client
@@ -21,7 +35,7 @@ export async function POST(request: Request) {
     const mode = requestBody.mode;
 
     //get raw gemini response
-    const llmResponse = await handleGeminiPrompt(prompt, mode);
+    const llmResponse = await handlePrompt(prompt, mode);
     if (!llmResponse) {
       return Response.json({ error: "No response from LLM" }, { status: 500 });
     }
@@ -41,106 +55,34 @@ export async function POST(request: Request) {
   }
 }
 
-async function handleGeminiPrompt(
+async function handlePrompt(
   prompt: string,
   mode?: string,
 ): Promise<string | undefined> {
-  //get system prompt
-  let sys_prompt = "";
-  if (!mode) {
-    mode = "vocab";
-  }
-  if (mode === "grammar") {
-    sys_prompt = SYS_PROMPT_GRAMMAR;
-  } else if (mode === "vocab") {
-    sys_prompt = SYS_PROMPT_VOCAB;
-  } else if (mode === "vocabGame") {
-    sys_prompt = SYS_PROMPT_VOCAB_JSON;
-  }
+  const requestedMode = mode ?? "vocab";
+  const systemPrompt = getSystemPrompt(requestedMode);
 
-  //get gemini key
-  const key: string | undefined = process.env.GEMINI_KEY;
-  if (!key) {
-    throw new Error("GEMINI_KEY is not set");
-  }
-
-  //initialize gemini
-  const ai = new GoogleGenAI({ apiKey: key });
-
-  if (["vocabGame"].includes(mode)) {
+  if (requestedMode === "vocabGame") {
     //json output
 
     //create prompt
     prompt = "Create json data for this japanese text: \n\n" + prompt;
 
-    //generate response
     try {
-      const response: GenerateContentResponse = await ai.models.generateContent({
-        model: "gemini-2.5-flash-lite",
-        contents: prompt,
-        config: {
-          systemInstruction: sys_prompt,
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.ARRAY,
-            items: {
-              type: Type.OBJECT,
-              properties: {
-                japanese: {
-                  type: Type.STRING,
-                  description: "The Japanese term. Does not need to contain kana or romanization.",
-                  nullable: false,
-                },
-                romanization: {
-                  type: Type.STRING,
-                  description: "The romanization of the Japanese term",
-                  nullable: false,
-                },
-                english_definition: {
-                  type: Type.STRING,
-                  description: "The English definition of the term",
-                  nullable: false,
-                },
-                example_sentences: {
-                  type: Type.ARRAY,
-                  description:
-                    "Example sentences in Japanese and their romanization",
-                  items: {
-                    type: Type.OBJECT,
-                    properties: {
-                      japanese: {
-                        type: Type.STRING,
-                        description: "Example sentence in Japanese",
-                        nullable: false,
-                      },
-                      romanization: {
-                        type: Type.STRING,
-                        description: "Romanization of the example sentence",
-                        nullable: false,
-                      },
-                    },
-                    required: ["japanese", "romanization"],
-                  },
-                  nullable: false,
-                },
-              },
-              required: [
-                "japanese",
-                "romanization",
-                "english_definition",
-                "example_sentences",
-              ],
-            },
-          },
+      const response = await ai.generate({
+        system: systemPrompt,
+        prompt,
+        output: {
+          schema: VocabGameSchema,
         },
       });
-      if (response) {
-        if (response.text) {
-          return response.text;
-        } else {
-          return "";
-        }
+
+      const structuredOutput = response.output;
+      if (!structuredOutput) {
+        return "";
       }
+
+      return JSON.stringify(structuredOutput);
     } catch (error) {
       console.log("Error when fetching response from llm: ", error);
       return "";
@@ -152,13 +94,20 @@ async function handleGeminiPrompt(
     prompt = "Create a cheat sheet for this japanese text: \n\n" + prompt;
 
     //generate response
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash-lite",
-      contents: prompt,
-      config: {
-        systemInstruction: sys_prompt,
-      },
+    const response = await ai.generate({
+      system: systemPrompt,
+      prompt,
     });
     return response.text ?? "";
   }
+}
+
+function getSystemPrompt(mode: string): string {
+  if (mode === "grammar") {
+    return SYS_PROMPT_GRAMMAR;
+  }
+  if (mode === "vocabGame") {
+    return SYS_PROMPT_VOCAB_JSON;
+  }
+  return SYS_PROMPT_VOCAB;
 }

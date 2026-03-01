@@ -243,32 +243,9 @@ export function FavoritesList({
             historyTermsKey = activeText;
         }
 
-        // case 1: past game history review
-        if (historyTermsKey) {
-            console.log(
-                "Case 1. Updating history terms for key: ",
-                historyTermsKey,
-            );
-            // Cache the updated terms list
-            appendGameHistory(
-                historyTermsKey,
-                JSON.stringify(updatedTerms),
-                true,
-            );
-            // case 2: reviewing all favorites
-        } else if (isReviewFavorites) {
-            console.log(
-                "Case 2. Updating favorite terms for key: ",
-                GLOBAL_FAV_LIST_KEY,
-            );
-            //if reviewing favorites, update the favorite terms cache
-            localStorage.setItem(
-                GLOBAL_FAV_LIST_KEY,
-                JSON.stringify(updatedTerms),
-            );
-            // case 3: default, reviewing active text terms
-        } else if (!isReviewHistory && !isReviewFavorites) {
-            console.log("Case 3. Updating history with active text terms. ");
+        // case 1: no special params review active text terms
+        if (!isReviewHistory && !isReviewFavorites) {
+            console.log("Case 1. Updating history with active text terms. ");
 
             // If not reviewing history or favorites, update the active text terms
             const activeText = localStorage.getItem("activeText");
@@ -279,6 +256,30 @@ export function FavoritesList({
                     false,
                 );
             }
+            // case 2: past game history review
+        } else if (isReviewHistory && historyTermsKey) {
+            console.log(
+                "Case 2. Updating history terms for key: ",
+                historyTermsKey,
+            );
+            // Cache the updated terms list
+            appendGameHistory(
+                historyTermsKey,
+                JSON.stringify(updatedTerms),
+                true,
+            );
+
+            // case 3: reviewing all favorites
+        } else if (isReviewFavorites) {
+            console.log(
+                "Case 3. Updating favorite terms for key: ",
+                GLOBAL_FAV_LIST_KEY,
+            );
+            //if reviewing favorites, update the favorite terms cache
+            localStorage.setItem(
+                GLOBAL_FAV_LIST_KEY,
+                JSON.stringify(updatedTerms),
+            );
         } else {
             console.warn("No valid key found for updating game history terms.");
         }
