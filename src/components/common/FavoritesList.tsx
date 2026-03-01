@@ -329,7 +329,7 @@ export function FavoritesList({
     return (
         <ScrollArea className="my-2 max-h-96 flex-1 overflow-y-auto rounded-md border">
             {/* header section */}
-            <div className="my-1 flex items-start justify-around gap-1 px-1">
+            <div className="my-1 flex flex-wrap items-start justify-between gap-2 px-1">
                 <div className="grid grid-cols-2 gap-1 text-xs sm:flex sm:flex-wrap sm:items-center sm:gap-2">
                     <span
                         className="inline-flex items-center gap-1 rounded-full border border-red-400/40 bg-red-500/10 px-2 py-0.5 text-red-200"

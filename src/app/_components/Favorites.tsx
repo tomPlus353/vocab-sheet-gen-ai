@@ -71,9 +71,9 @@ const Favorites = () => {
     return (
         <div className="rounded-xl border border-slate-700 bg-slate-800 p-5">
             {/* Favorites Flow */}
-            <div className="mb-2 flex items-center justify-between">
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                 <p className="font-medium text-slate-100">⭐ Favorites</p>
-                <div className="flex gap-2 text-xs">
+                <div className="flex flex-wrap justify-end gap-2 text-xs sm:flex-nowrap">
                     <button
                         className={ACTION_BUTTON_CLASSES}
                         onClick={handleGoMatch}

@@ -6,7 +6,7 @@ import { Eye, Grid2x2Check, Orbit, Trash2 } from "lucide-react";
 import { ViewHistoryModal } from "./ViewHistoryModal";
 import { ConfirmActionModal } from "@/components/common/modals/ConfirmActionModal";
 import type { VocabTerm } from "@/lib/types/vocab";
-import { ScrollArea } from "@radix-ui/react-scroll-area";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const LAST_PAGINATOR_PAGE_KEY = "lastPaginatorPage";
 
@@ -102,8 +102,8 @@ const History = () => {
                                         key={key}
                                         className="mb-1 rounded-lg border border-slate-800 bg-black p-3"
                                     >
-                                        <div className="flex items-start justify-between">
-                                            <div>
+                                        <div className="flex flex-wrap items-start gap-2 sm:flex-nowrap sm:justify-between">
+                                            <div className="min-w-0 flex-1">
                                                 <p className="max-w-32 truncate text-sm text-slate-200 md:max-w-40 md:text-base">
                                                     {getSampleTerms(
                                                         JSON.parse(
@@ -122,7 +122,7 @@ const History = () => {
                                                     words • Dec 28 2024
                                                 </p>
                                             </div>
-                                            <div className="flex gap-2 text-xs">
+                                            <div className="flex w-full flex-wrap justify-end gap-2 text-xs sm:w-auto sm:flex-nowrap">
                                                 <button
                                                     className={
                                                         ACTION_BUTTON_CLASSES
