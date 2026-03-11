@@ -433,7 +433,8 @@ export function useGravityGame() {
             isLoading ||
             isGameOver ||
             isCorrectionModalOpen ||
-            isAllLearntModalOpen
+            isAllLearntModalOpen ||
+            isEditTermsModalOpen
         ) {
             return;
         }
@@ -443,11 +444,23 @@ export function useGravityGame() {
         }, 1000);
 
         return () => clearInterval(interval);
-    }, [isLoading, isGameOver, isCorrectionModalOpen, isAllLearntModalOpen]);
+    }, [
+        isLoading,
+        isGameOver,
+        isCorrectionModalOpen,
+        isAllLearntModalOpen,
+        isEditTermsModalOpen,
+    ]);
 
     // Advances the active falling term downward at speed based on score.
     React.useEffect(() => {
-        if (!activeTerm || isLoading || isGameOver || isCorrectionModalOpen) {
+        if (
+            !activeTerm ||
+            isLoading ||
+            isGameOver ||
+            isCorrectionModalOpen ||
+            isEditTermsModalOpen
+        ) {
             return;
         }
 
@@ -465,11 +478,24 @@ export function useGravityGame() {
         }, 50);
 
         return () => clearInterval(interval);
-    }, [activeTerm, isGameOver, isLoading, score, isCorrectionModalOpen]);
+    }, [
+        activeTerm,
+        isGameOver,
+        isLoading,
+        score,
+        isCorrectionModalOpen,
+        isEditTermsModalOpen,
+    ]);
 
     // Treats bottom-collision as a wrong attempt and triggers fail flow.
     React.useEffect(() => {
-        if (!activeTerm || isGameOver || isLoading || isCorrectionModalOpen) {
+        if (
+            !activeTerm ||
+            isGameOver ||
+            isLoading ||
+            isCorrectionModalOpen ||
+            isEditTermsModalOpen
+        ) {
             return;
         }
 
@@ -490,6 +516,7 @@ export function useGravityGame() {
         isGameOver,
         isLoading,
         isCorrectionModalOpen,
+        isEditTermsModalOpen,
         toast,
         updateTermScore,
     ]);
