@@ -4,11 +4,21 @@ import React from "react";
 import { Heart, Trash2 } from "lucide-react";
 import { appendGameHistory } from "@/lib/utils";
 import { ScrollArea } from "../ui/scroll-area";
+import { Checkbox } from "../ui/checkbox";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "../ui/dialog";
 import CommonButton from "./CommonButton";
 import { ConfirmActionModal } from "./modals/ConfirmActionModal";
 import type { VocabTerm } from "@/lib/types/vocab";
 
 const GLOBAL_FAV_LIST_KEY = "favoriteTerms";
+const UNFAVORITE_CONFIRM_SKIP_KEY = "favoritesListSkipUnfavoriteConfirm";
 
 interface FavoritesListProps {
     mode: "favorites" | "history";
@@ -61,6 +71,15 @@ export function FavoritesList({
     refreshTerms = undefined,
 }: FavoritesListProps) {
     const [isClearConfirmOpen, setIsClearConfirmOpen] = React.useState(false);
+    const [isUnfavoriteConfirmOpen, setIsUnfavoriteConfirmOpen] =
+        React.useState(false);
+    const [skipUnfavoriteConfirm, setSkipUnfavoriteConfirm] =
+        React.useState(false);
+    const [skipUnfavoriteConfirmChecked, setSkipUnfavoriteConfirmChecked] =
+        React.useState(false);
+    const [pendingUnfavoriteIndex, setPendingUnfavoriteIndex] = React.useState<
+        number | null
+    >(null);
     const favoriteCount = terms
         ? terms.filter((term) => term.isFavorite).length
         : 0;
@@ -73,6 +92,12 @@ export function FavoritesList({
     const learntCount = terms
         ? terms.filter((term) => (term.gravity_score ?? 0) >= 2).length
         : 0;
+
+    React.useEffect(() => {
+        if (typeof localStorage === "undefined") return;
+        const stored = localStorage.getItem(UNFAVORITE_CONFIRM_SKIP_KEY);
+        setSkipUnfavoriteConfirm(stored === "1");
+    }, []);
 
     function clearAllFavorites() {
         // 1. update the state
@@ -143,24 +168,27 @@ export function FavoritesList({
         }
     }
 
-    function handleFavoriteClickAll(index: number) {
+    function applyFavoriteToggleAll(index: number) {
         // For use in "favorites" mode to toggle favorite status
         // e.g. viewing all favorite terms
 
         if (!terms) return;
-        const updatedTerms = [...terms];
-        //toggle is_favorite property of term at index
-        const term = updatedTerms[index];
+        const filteredFavorites = terms.filter((term) => term.isFavorite); // Remove non-favorite terms from the list since we're in "favorites" mode
+        const term = filteredFavorites[index];
 
         if (!term) return;
 
-        //1 toggle favorite status
-        if (term.isFavorite === undefined) {
-            //initialize to true if clicked for the first time
-            term.isFavorite = true;
+        const nextIsFavorite = term.isFavorite ? false : true;
+        const nextTerm: VocabTerm = { ...term, isFavorite: nextIsFavorite };
+
+        let updatedTerms: VocabTerm[] = [];
+        if (nextIsFavorite) {
+            updatedTerms = [...filteredFavorites];
+            updatedTerms[index] = nextTerm;
         } else {
-            //if not first time, then toggle the favorite status
-            term.isFavorite = !term.isFavorite;
+            updatedTerms = filteredFavorites.filter(
+                (_term, termIndex) => termIndex !== index,
+            );
         }
 
         //2 update state
@@ -174,22 +202,26 @@ export function FavoritesList({
             currentFavorites = JSON.parse(currentFavoritesString);
         }
         // If term is now favorite, add to favorites list
-        if (term.isFavorite) {
+        if (nextTerm.isFavorite) {
             // Avoid duplicates
             const exists = currentFavorites.some(
                 (favTerm) =>
-                    favTerm.english_definition === term.english_definition &&
-                    favTerm.japanese === term.japanese,
+                    favTerm.english_definition ===
+                        nextTerm.english_definition &&
+                    favTerm.japanese === nextTerm.japanese,
             );
             if (!exists) {
-                currentFavorites.push(term);
+                currentFavorites.push(nextTerm);
             }
         } else {
             // If term is unfavorited, remove from favorites list
             currentFavorites = currentFavorites.filter(
                 (favTerm) =>
-                    favTerm.english_definition !== term.english_definition &&
-                    favTerm.japanese !== term.japanese,
+                    !(
+                        favTerm.english_definition ===
+                            nextTerm.english_definition &&
+                        favTerm.japanese === nextTerm.japanese
+                    ),
             );
         }
         // save updated favorites list to localStorage
@@ -197,6 +229,42 @@ export function FavoritesList({
             GLOBAL_FAV_LIST_KEY,
             JSON.stringify(currentFavorites),
         );
+    }
+
+    function handleFavoriteClickAll(index: number) {
+        if (!terms) return;
+        const currentFavorites = terms.filter((term) => term.isFavorite);
+        const term = currentFavorites[index];
+
+        if (!term) return;
+
+        const isUnfavorite = term.isFavorite === true;
+        if (isUnfavorite && !skipUnfavoriteConfirm) {
+            setPendingUnfavoriteIndex(index);
+            setSkipUnfavoriteConfirmChecked(false);
+            setIsUnfavoriteConfirmOpen(true);
+            return;
+        }
+
+        applyFavoriteToggleAll(index);
+    }
+
+    function handleConfirmUnfavorite() {
+        if (pendingUnfavoriteIndex === null) {
+            setIsUnfavoriteConfirmOpen(false);
+            return;
+        }
+
+        if (skipUnfavoriteConfirmChecked) {
+            setSkipUnfavoriteConfirm(true);
+            if (typeof localStorage !== "undefined") {
+                localStorage.setItem(UNFAVORITE_CONFIRM_SKIP_KEY, "1");
+            }
+        }
+
+        applyFavoriteToggleAll(pendingUnfavoriteIndex);
+        setPendingUnfavoriteIndex(null);
+        setIsUnfavoriteConfirmOpen(false);
     }
 
     function handleFavoriteClickCurrent(index: number) {
@@ -426,6 +494,50 @@ export function FavoritesList({
                 onOpenChange={setIsClearConfirmOpen}
                 onConfirm={clearAllFavorites}
             />
+            <Dialog
+                open={isUnfavoriteConfirmOpen}
+                onOpenChange={(open) => {
+                    setIsUnfavoriteConfirmOpen(open);
+                    if (!open) {
+                        setPendingUnfavoriteIndex(null);
+                        setSkipUnfavoriteConfirmChecked(false);
+                    }
+                }}
+            >
+                <DialogContent className="bg-slate-900 text-white">
+                    <DialogHeader>
+                        <DialogTitle>Remove this favorite?</DialogTitle>
+                        <DialogDescription className="text-slate-300">
+                            This will permanently remove the term from your
+                            favorites list.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <label className="mt-2 flex items-center gap-2 text-sm text-slate-200">
+                        <Checkbox
+                            className="h-4 w-4 rounded-sm border-slate-500 bg-transparent data-[state=checked]:border-red-500 data-[state=checked]:bg-red-500"
+                            checked={skipUnfavoriteConfirmChecked}
+                            onCheckedChange={(checked) =>
+                                setSkipUnfavoriteConfirmChecked(
+                                    checked === true,
+                                )
+                            }
+                        />
+                        Do not ask again
+                    </label>
+                    <DialogFooter>
+                        <CommonButton
+                            label="Cancel"
+                            additionalclasses="mx-0 bg-slate-700 hover:bg-slate-600"
+                            onClick={() => setIsUnfavoriteConfirmOpen(false)}
+                        />
+                        <CommonButton
+                            label="Remove"
+                            additionalclasses="mx-0 bg-red-700 hover:bg-red-600"
+                            onClick={handleConfirmUnfavorite}
+                        />
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </ScrollArea>
     );
 }

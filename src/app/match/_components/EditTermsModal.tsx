@@ -15,6 +15,7 @@ interface EditTermsModalProps {
     onOpenChange: (open: boolean) => void;
     terms: VocabTerm[];
     setTerms: React.Dispatch<React.SetStateAction<VocabTerm[]>>;
+    mode?: "favorites" | "history";
 }
 
 export function EditTermsModal({
@@ -22,6 +23,7 @@ export function EditTermsModal({
     onOpenChange,
     terms,
     setTerms,
+    mode = "history",
 }: EditTermsModalProps) {
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -51,7 +53,7 @@ export function EditTermsModal({
                     </pre>
                 ) : (
                     <FavoritesList
-                        mode="history"
+                        mode={mode}
                         terms={terms}
                         setTerms={setTerms}
                     />

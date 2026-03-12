@@ -18,6 +18,9 @@ import { GameControls } from "./_components/GameControls";
 export default function GravityPage() {
     const router = useRouter();
     const LAST_PAGINATOR_PAGE_KEY = "lastPaginatorPage";
+    const [editTermsMode, setEditTermsMode] = useState<
+        "favorites" | "history"
+    >("history");
 
     const {
         activeTerm,
@@ -54,6 +57,13 @@ export default function GravityPage() {
         isEditTermsModalOpen,
         setIsEditTermsModalOpen,
     } = useGravityGame();
+
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        setEditTermsMode(
+            urlParams.get("favorites") === "1" ? "favorites" : "history",
+        );
+    }, []);
 
     const handleReturnFromGravityPage = () => {
         const page = localStorage.getItem(LAST_PAGINATOR_PAGE_KEY) ?? "1";
@@ -214,6 +224,7 @@ export default function GravityPage() {
                 onOpenChange={setIsEditTermsModalOpen}
                 terms={terms}
                 setTerms={setTerms}
+                mode={editTermsMode}
             />
 
             <Toaster />
