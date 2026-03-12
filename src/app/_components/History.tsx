@@ -6,7 +6,7 @@ import { Eye, Grid2x2Check, Orbit, Trash2 } from "lucide-react";
 import { ViewHistoryModal } from "./ViewHistoryModal";
 import { ConfirmActionModal } from "@/components/common/modals/ConfirmActionModal";
 import type { VocabTerm } from "@/lib/types/vocab";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 const LAST_PAGINATOR_PAGE_KEY = "lastPaginatorPage";
 
@@ -133,7 +133,7 @@ const History = () => {
                                                     aria-label="Study with Match"
                                                     title="Study with Match"
                                                 >
-                                                    <span className="tooltip absolute bottom-full right-0 -mt-8 rounded bg-black p-1 text-sm text-white shadow-lg">
+                                                    <span className="tooltip absolute bottom-full right-0 mt-8 rounded bg-black p-1 text-sm text-white shadow-lg">
                                                         Study (Match)
                                                     </span>
                                                     <Grid2x2Check className="mx-auto h-5 w-5"></Grid2x2Check>
@@ -209,6 +209,7 @@ const History = () => {
                             </p>
                         )}{" "}
                     </div>
+                    <ScrollBar orientation="horizontal" className="hidden" />
                 </ScrollArea>
             </div>
             <ConfirmActionModal
