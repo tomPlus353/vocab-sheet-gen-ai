@@ -96,7 +96,7 @@ export function GameControls(props: GameControlProps) {
                             }
                         />
                         <span className="text-xs font-medium text-gray-200 md:text-sm">
-                            Show reading hint (romanization)
+                            Show reading hint (kana)
                         </span>
                     </label>
                     {!isAllFavoritesReviewMode && (

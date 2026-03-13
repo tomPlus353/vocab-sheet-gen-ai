@@ -405,11 +405,11 @@ export default function Match() {
                 if (isHideReading || isTestReading) {
                     label = `${idAsLetter}. ${termObj?.japanese}`;
                 } else {
-                    label = `${idAsLetter}. ${termObj?.japanese}(${termObj?.romanization})`;
+                    label = `${idAsLetter}. ${termObj?.japanese}(${termObj?.kana})`;
                 }
             } else if (termObj?.type === "back") {
                 if (isTestReading) {
-                    label = `${idAsLetter}. ${termObj?.romanization}`;
+                    label = `${idAsLetter}. ${termObj?.kana}`;
                 } else {
                     label = termObj?.english_definition
                         ? `${idAsLetter}. ${termObj.english_definition}`

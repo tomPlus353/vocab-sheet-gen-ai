@@ -6,6 +6,7 @@
 - Use `pnpm` for scripts and package commands (not `npm`).
 - After you update a feature, always run `pnpm check` and look for errors rather than warnings(This includes both the project linter and the more robust `tsc --noEmit`).
 - If you are worried about a warning you can ask the user for permission to fix. For errors you can fix without permission.
+- When changes are made to the UI, you should try to test in a browser directly to make sure the feature is working; it is not enough to only write code and run `pnpm check`.
 - Typical commands:
     - `pnpm dev`
     - `pnpm lint`

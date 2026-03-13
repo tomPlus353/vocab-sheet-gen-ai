@@ -1,6 +1,6 @@
 export type VocabTerm = {
     japanese: string;
-    romanization: string;
+    kana: string;
     english_definition: string;
     isFavorite?: boolean;
     gravity_score?: number;

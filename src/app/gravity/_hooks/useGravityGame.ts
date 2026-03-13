@@ -47,7 +47,7 @@ export function useGravityGame() {
     const [isGameOver, setIsGameOver] = React.useState(false);
     // Human-readable message shown when game is over.
     const [gameOverMessage, setGameOverMessage] = React.useState("");
-    // Toggles romanization visibility in game and correction modal.
+    // Toggles kana visibility in game and correction modal.
     const [showReadingHint, setShowReadingHint] = React.useState(false);
     // User toggle: when true, only favorite terms are loaded into the game.
     const [isFavoritesMode, setIsFavoritesMode] = React.useState(false);
@@ -193,7 +193,7 @@ export function useGravityGame() {
                 .filter((item) => {
                     return (
                         typeof item.japanese === "string" &&
-                        typeof item.romanization === "string" &&
+                        typeof item.kana === "string" &&
                         typeof item.english_definition === "string"
                     );
                 })
@@ -204,7 +204,7 @@ export function useGravityGame() {
                             : undefined;
                     return {
                         japanese: item.japanese as string,
-                        romanization: item.romanization as string,
+                        kana: item.kana as string,
                         english_definition: item.english_definition as string,
                         isFavorite: item.isFavorite as boolean | undefined,
                         gravity_score: score,

@@ -46,7 +46,7 @@ export function CorrectionModal(props: Props) {
                     </span>
                 </p>
                 <p className="mt-2 text-xs text-amber-200/80">
-                    Hint: {activeTerm.romanization}
+                    Hint: {activeTerm.kana}
                 </p>
                 <form className="mt-4 flex flex-col gap-2" onSubmit={onSubmit}>
                     <input

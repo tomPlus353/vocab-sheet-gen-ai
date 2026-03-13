@@ -18,9 +18,9 @@ import { GameControls } from "./_components/GameControls";
 export default function GravityPage() {
     const router = useRouter();
     const LAST_PAGINATOR_PAGE_KEY = "lastPaginatorPage";
-    const [editTermsMode, setEditTermsMode] = useState<
-        "favorites" | "history"
-    >("history");
+    const [editTermsMode, setEditTermsMode] = useState<"favorites" | "history">(
+        "history",
+    );
 
     const {
         activeTerm,
@@ -157,7 +157,7 @@ export default function GravityPage() {
                                 </p>
                                 {showReadingHint && (
                                     <p className="text-xs text-amber-200/80">
-                                        Hint: {activeTerm.term.romanization}
+                                        Hint: {activeTerm.term.kana}
                                     </p>
                                 )}
                             </div>

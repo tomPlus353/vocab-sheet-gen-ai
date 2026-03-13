@@ -15,7 +15,7 @@ export const SYS_PROMPT_VOCAB = `**Instructions:**
         *   Demonstrate the meaning clearly
         *   Include the selected word
         *   Are natural-sounding and grammatically correct.
-    * Include furigana when there are multiple possible readings.
+    * Provide kana readings (hiragana/katakana) for each selected word and for each example sentence.
 4.  **Brevity:**
     * You are expected to produce a cheatsheet and nothing else.
     * Apart from the cheatsheet to do reply to the user, explain anything say anything else.
@@ -105,12 +105,12 @@ Present your output in the following format, *using JSON*:
 [
   {
     "japanese": string,
-    "romanization": string,
+    "kana": string,
     "english_definition": string,
     "example_sentences": [
       {
         "japanese": string,
-        "romanization": "string,
+        "kana": string
       }
     ]
   },
@@ -119,46 +119,46 @@ e.g.
 [
   {
     "japanese": "過ぎ去る",
-    "romanization": "sugisaru",
+    "kana": "すぎさる",
     "english_definition": "To pass; to elapse; to go by (time)",
     "example_sentences": [
       {
         "japanese": "時間が過ぎ去るのは早い。",
-        "romanization": "Jikan ga sugisaru no wa hayai."
+        "kana": "じかんがすぎさるのははやい。"
       },
       {
         "japanese": "問題は時間が過ぎ去るにつれて解決した。",
-        "romanization": "Mondai wa jikan ga sugisaru ni tsurete kaiketsu shita."
+        "kana": "もんだいはじかんがすぎさるにつれてかいけつした。"
       }
     ]
   },
   {
     "japanese": "迷う",
-    "romanization": "mayou",
+    "kana": "まよう",
     "english_definition": "To be puzzled; to be uncertain; to hesitate",
     "example_sentences": [
       {
         "japanese": "どの道に進むべきか迷っています。",
-        "romanization": "Dono michi ni susumu beki ka mayotte imasu."
+        "kana": "どのみちにすすむべきかまよっています。"
       },
       {
         "japanese": "新しいプロジェクトに参加するかどうか迷っている。",
-        "romanization": "Atarashii purojekuto ni sanka suru ka dou ka mayotte iru."
+        "kana": "あたらしいぷろじぇくとにさんかするかどうかまよっている。"
       }
     ]
   },
   {
     "japanese": "～というような",
-    "romanization": "~toiu you na",
+    "kana": "〜というような",
     "english_definition": "Such as; like; of the kind",
     "example_sentences": [
       {
         "japanese": "猫というような動物が好きです。",
-        "romanization": "Neko toiu you na doubutsu ga suki desu."
+        "kana": "ねこというようなどうぶつがすきです。"
       },
       {
         "japanese": "これは山田さんというような人が書いた本です。",
-        "romanization": "Kore wa Yamada-san toiu you na hito ga kaita hon desu."
+        "kana": "これはやまださんというようなひとがかいたほんです。"
       }
     ]
   }
@@ -186,7 +186,7 @@ Present your output in the following format, *using markdown*:
 
 # Grammar Analysis:
 
-N[1-5]: [Grammar terms] (romanization and definitions) (Optional. Grammar Documentation links and details)
+N[1-5]: [Grammar terms] (kana and definitions) (Optional. Grammar Documentation links and details)
 [example sentence]
 ------------------------------------------
 

@@ -16,7 +16,7 @@ export function isVocabTerm(value: unknown): value is VocabTerm {
     const term = value as Record<string, unknown>;
     return (
         typeof term.japanese === "string" &&
-        typeof term.romanization === "string" &&
+        typeof term.kana === "string" &&
         typeof term.english_definition === "string"
     );
 }

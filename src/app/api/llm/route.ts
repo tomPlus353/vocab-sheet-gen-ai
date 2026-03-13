@@ -14,12 +14,12 @@ type RequestBody = {
 
 const ExampleSentenceSchema = z.object({
   japanese: z.string(),
-  romanization: z.string(),
+  kana: z.string(),
 });
 
 const VocabGameTermSchema = z.object({
   japanese: z.string(),
-  romanization: z.string(),
+  kana: z.string(),
   english_definition: z.string(),
   example_sentences: z.array(ExampleSentenceSchema),
 });
