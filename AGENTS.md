@@ -6,12 +6,17 @@
 - Use `pnpm` for scripts and package commands (not `npm`).
 - After you update a feature, always run `pnpm check` and look for errors rather than warnings(This includes both the project linter and the more robust `tsc --noEmit`).
 - If you are worried about a warning you can ask the user for permission to fix. For errors you can fix without permission.
-- When changes are made to the UI, you should try to test in a browser directly to make sure the feature is working; it is not enough to only write code and run `pnpm check`.
 - Typical commands:
     - `pnpm dev`
     - `pnpm lint`
     - `pnpm typecheck`
     - `pnpm test`
+
+## Testing
+
+- When changes are made to the UI, you should try to test in a browser directly to make sure the feature is working; it is not enough to only write code and run `pnpm check`.
+- There are some limited jest tests in the **tests** folder. Please run with pnpm test at the end of workflow. It normally includes tests that call the LLM so may incur cost. So if in doubt always ask the user.
+- Workflow tests that you can carry out in a browser environment are in .codex/workflows/\*.md. If you cannot use browser natively you can use the playwright tool.
 
 ## Commit Management
 

@@ -3,28 +3,23 @@
 import * as React from "react";
 
 import { useToast } from "@/hooks/use-toast";
-import { appendGameHistory, getGameHistory } from "@/lib/utils";
 
 import {
     type FallingTerm,
-    getShuffledIndexes,
-    getTermKey,
     HORIZONTAL_PADDING_PX,
-    isAnswerCorrect,
+    getShuffledIndexes,
     PLAYFIELD_HEIGHT_PX,
 } from "../_lib/gravity-utils";
 import type { VocabTerm } from "@/lib/types/vocab";
-
-type ProgressSource =
-    | { mode: "favorites" }
-    | { mode: "history"; key: string }
-    | { mode: "active"; key: string };
+import { useGravityAnswerHandlers } from "./useGravityAnswerHandlers";
+import { useGravityFavoritesMode } from "./useGravityFavoritesMode";
+import { useGravityPlayfield } from "./useGravityPlayfield";
+import { useGravityProgressReset } from "./useGravityProgressReset";
+import { useGravityTermsLoader } from "./useGravityTermsLoader";
+import { useGravityTermScore } from "./useGravityTermScore";
+import { useGravityTimer } from "./useGravityTimer";
 
 export function useGravityGame() {
-    // Full source term set for this gravity session (used for edit modal and persistence).
-    const [allTerms, setAllTerms] = React.useState<VocabTerm[]>([]);
-    // Currently studied term set (optionally filtered to favorites-only).
-    const [activeTerms, setActiveTerms] = React.useState<VocabTerm[]>([]);
     // Queue of term indexes used to pick the next falling term.
     const [remainingQueue, setRemainingQueue] = React.useState<number[]>([]);
     // The currently falling term rendered in the playfield.
@@ -39,18 +34,14 @@ export function useGravityGame() {
     const [termWrongCounts, setTermWrongCounts] = React.useState<
         Record<string, number>
     >({});
-    // Elapsed game time in seconds.
-    const [timer, setTimer] = React.useState(0);
-    // Indicates whether terms/loading setup is in progress.
-    const [isLoading, setIsLoading] = React.useState(true);
     // Marks game over state after terminal failure.
     const [isGameOver, setIsGameOver] = React.useState(false);
     // Human-readable message shown when game is over.
     const [gameOverMessage, setGameOverMessage] = React.useState("");
     // Toggles kana visibility in game and correction modal.
     const [showReadingHint, setShowReadingHint] = React.useState(false);
-    // User toggle: when true, only favorite terms are loaded into the game.
-    const [isFavoritesMode, setIsFavoritesMode] = React.useState(false);
+    // Elapsed game time in seconds.
+    const [timer, setTimer] = React.useState(0);
 
     // Input value inside the correction modal form.
     const [correctionInput, setCorrectionInput] = React.useState("");
@@ -71,22 +62,10 @@ export function useGravityGame() {
 
     // Ref to the main answer input for auto-focus behavior.
     const inputRef = React.useRef<HTMLInputElement>(null);
-    // Ref to the falling-term playfield container.
-    const playfieldRef = React.useRef<HTMLDivElement>(null);
-    // Ref to the active falling term card for width measurement.
-    const activeCardRef = React.useRef<HTMLDivElement>(null);
-    // Cached playfield width used to clamp card horizontal position.
-    const [playfieldWidth, setPlayfieldWidth] = React.useState(0);
-    // Remembers where current terms came from so updated term objects can be persisted there.
-    const progressSourceRef = React.useRef<ProgressSource | null>(null);
-    // Keeps latest favorites-mode value without forcing load callback identity changes.
-    const isFavoritesModeRef = React.useRef(false);
 
     const { toast } = useToast();
-
-    React.useEffect(() => {
-        isFavoritesModeRef.current = isFavoritesMode;
-    }, [isFavoritesMode]);
+    const { isFavoritesMode, setIsFavoritesMode, isFavoritesModeRef } =
+        useGravityFavoritesMode();
 
     // Spawns the next falling term and refreshes queue when it is exhausted.
     const spawnTerm = React.useCallback(
@@ -117,307 +96,97 @@ export function useGravityGame() {
         [],
     );
 
-    // Loads terms from favorites/history/cache/API and resets game state.
-    const loadVocabTerms = React.useCallback(async () => {
-        setIsLoading(true);
+    const {
+        allTerms,
+        setAllTerms,
+        activeTerms,
+        setActiveTerms,
+        isLoading,
+        setIsLoading,
+        loadVocabTerms,
+    } = useGravityTermsLoader({
+        isFavoritesModeRef,
+        spawnTerm,
+        setScore,
+        setTermWrongCounts,
+        setTimer,
+        setAnswer,
+        setIsGameOver,
+        setGameOverMessage,
+        setIsCorrectionModalOpen,
+        setCorrectionInput,
+        setCorrectionError,
+        setIsAllLearntModalOpen,
+        setHasShownAllLearntModal,
+    });
 
-        const activeTextStr = localStorage.getItem("activeText");
-        if (!activeTextStr) {
-            alert("No active text found. Please use the ereader first.");
-            setIsLoading(false);
-            return;
-        }
+    const { updateTermScore } = useGravityTermScore({
+        setAllTerms,
+        setActiveTerms,
+    });
 
-        let cachedJsonString: string | null = null;
-        const urlParams = new URLSearchParams(window.location.search);
-        const isReviewFavorites = urlParams.get("favorites") === "1";
-        const isReviewHistory = urlParams.get("history") === "1";
+    useGravityTimer({
+        setTimer,
+        isLoading,
+        isGameOver,
+        isCorrectionModalOpen,
+        isAllLearntModalOpen,
+        isEditTermsModalOpen,
+    });
 
-        if (isReviewFavorites) {
-            cachedJsonString = localStorage.getItem("favoriteTerms");
-            progressSourceRef.current = { mode: "favorites" };
-            if (!cachedJsonString) {
-                alert("No favorite terms found.");
-                setIsLoading(false);
-                return;
-            }
-        } else if (isReviewHistory) {
-            const historyHash = urlParams.get("historyTerms") ?? "";
-            cachedJsonString = getGameHistory(historyHash, true);
-            progressSourceRef.current = { mode: "history", key: historyHash };
-            if (!cachedJsonString) {
-                alert("No history terms found for key: " + historyHash);
-                setIsLoading(false);
-                return;
-            }
-        } else {
-            cachedJsonString = getGameHistory(activeTextStr, false);
-            progressSourceRef.current = { mode: "active", key: activeTextStr };
-        }
+    const { playfieldRef, activeCardRef } = useGravityPlayfield({
+        activeTerm,
+        setActiveTerm,
+        isLoading,
+        isGameOver,
+        isCorrectionModalOpen,
+        isEditTermsModalOpen,
+        score,
+    });
 
-        let reply = cachedJsonString ?? "";
+    const {
+        activeTermWrongCount,
+        handleWrongAttempt,
+        handleSubmit,
+        handleCorrectionSubmit,
+    } = useGravityAnswerHandlers({
+        activeTerm,
+        answer,
+        setAnswer,
+        isGameOver,
+        isLoading,
+        isCorrectionModalOpen,
+        showReadingHint,
+        correctionInput,
+        remainingQueue,
+        activeTerms,
+        spawnTerm,
+        setActiveTerm,
+        setScore,
+        updateTermScore,
+        termWrongCounts,
+        setTermWrongCounts,
+        setIsGameOver,
+        setGameOverMessage,
+        setIsCorrectionModalOpen,
+        setCorrectionInput,
+        setCorrectionError,
+        toast,
+    });
 
-        if (!reply) {
-            const response = await fetch("/api/llm", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                cache: "force-cache",
-                body: JSON.stringify({
-                    text: activeTextStr,
-                    mode: "vocabGame",
-                }),
-            });
-
-            const jsonResponse = (await response.json()) as Record<
-                string,
-                string
-            >;
-            const responseCode = response.status;
-            reply = jsonResponse?.jsonMarkdownString ?? "";
-
-            if (responseCode !== 200 || !reply) {
-                setIsLoading(false);
-                alert("Server Error: LLM could not generate terms.");
-                return;
-            }
-
-            appendGameHistory(activeTextStr, reply);
-        }
-
-        let parsedTerms: VocabTerm[] = [];
-        try {
-            const asJson = JSON.parse(reply) as Array<Record<string, unknown>>;
-            parsedTerms = asJson
-                .filter((item) => {
-                    return (
-                        typeof item.japanese === "string" &&
-                        typeof item.kana === "string" &&
-                        typeof item.english_definition === "string"
-                    );
-                })
-                .map((item) => {
-                    const score =
-                        typeof item.gravity_score === "number"
-                            ? item.gravity_score
-                            : undefined;
-                    return {
-                        japanese: item.japanese as string,
-                        kana: item.kana as string,
-                        english_definition: item.english_definition as string,
-                        isFavorite: item.isFavorite as boolean | undefined,
-                        gravity_score: score,
-                        isLearnt:
-                            typeof score === "number" ? score >= 2 : false,
-                    };
-                });
-        } catch (error) {
-            console.error("Failed to parse game terms:", error);
-            alert("Could not parse terms for gravity game.");
-            setIsLoading(false);
-            return;
-        }
-
-        if (parsedTerms.length === 0) {
-            alert("No terms found for this game.");
-            setIsLoading(false);
-            return;
-        }
-
-        const filteredTerms = parsedTerms.filter((term) => {
-            if (isFavoritesModeRef.current) {
-                return term.isFavorite === true;
-            }
-            return true;
-        });
-
-        if (filteredTerms.length === 0) {
-            alert("No favorite terms found.");
-            setIsLoading(false);
-            return;
-        }
-
-        setAllTerms(parsedTerms);
-        setActiveTerms(filteredTerms);
-        const queue = getShuffledIndexes(filteredTerms.length);
-        setScore(0);
-        setTermWrongCounts({});
-        setTimer(0);
-        setAnswer("");
-        setIsGameOver(false);
-        setGameOverMessage("");
-        setIsCorrectionModalOpen(false);
-        setCorrectionInput("");
-        setCorrectionError("");
-        setIsAllLearntModalOpen(false);
-        setHasShownAllLearntModal(false);
-        spawnTerm(queue, filteredTerms);
-        setIsLoading(false);
-    }, [spawnTerm]);
-
-    // Applies the term-level mastery policy.
-    // `shouldIncrement` controls whether a correct answer is allowed to count
-    // toward mastery streak (for example, hint-on correct answers can be excluded).
-    const updateTermScore = React.useCallback(
-        (
-            term: VocabTerm,
-            action: "correct" | "wrong",
-            shouldIncrement: boolean,
-        ) => {
-            const targetKey = getTermKey(term);
-            const applyScoreUpdate = (prevTerms: VocabTerm[]) =>
-                prevTerms.map((oneTerm) => {
-                    if (getTermKey(oneTerm) !== targetKey) {
-                        return oneTerm;
-                    }
-
-                    if (action === "wrong") {
-                        // Any hard miss breaks the streak for this term.
-                        return {
-                            ...oneTerm,
-                            gravity_score: 0,
-                            isLearnt: false,
-                        };
-                    }
-
-                    if (!shouldIncrement) {
-                        // Correct answer accepted, but mastery progress intentionally unchanged.
-                        return oneTerm;
-                    }
-
-                    // Mastery is defined as two earned correct answers in a row.
-                    const nextScore = (oneTerm.gravity_score ?? 0) + 1;
-                    return {
-                        ...oneTerm,
-                        gravity_score: nextScore,
-                        isLearnt: nextScore >= 2,
-                    };
-                });
-
-            setAllTerms(applyScoreUpdate);
-            setActiveTerms(applyScoreUpdate);
-        },
-        [],
-    );
-
-    // Applies per-term wrong-attempt logic and opens correction flow or game over.
-    const handleWrongAttempt = React.useCallback(
-        (term: VocabTerm) => {
-            const termKey = getTermKey(term);
-            const previousCount = termWrongCounts[termKey] ?? 0;
-            const nextCount = previousCount + 1;
-
-            setTermWrongCounts((prev) => ({
-                ...prev,
-                [termKey]: nextCount,
-            }));
-
-            if (nextCount >= 2) {
-                setActiveTerm(null);
-                setIsGameOver(true);
-                setGameOverMessage(
-                    `Game over. "${term.japanese}" was missed twice.`,
-                );
-                return;
-            }
-
-            setIsCorrectionModalOpen(true);
-            setCorrectionInput(answer);
-            setCorrectionError("");
-        },
-        [answer, termWrongCounts],
-    );
-
-    const activeTermWrongCount = activeTerm
-        ? (termWrongCounts[getTermKey(activeTerm.term)] ?? 0)
-        : 0;
-
-    // Handles submission from the main input box during active gameplay.
-    const handleSubmit = React.useCallback(
-        (event: React.FormEvent) => {
-            event.preventDefault();
-
-            if (
-                !activeTerm ||
-                isGameOver ||
-                isLoading ||
-                isCorrectionModalOpen
-            ) {
-                return;
-            }
-
-            if (isAnswerCorrect(answer, activeTerm.term.japanese)) {
-                setScore((prev) => prev + 1);
-                // Only hint-off correct answers are allowed to advance mastery.
-                updateTermScore(activeTerm.term, "correct", !showReadingHint);
-                setAnswer("");
-                toast({
-                    title: "Correct",
-                    description: `${activeTerm.term.english_definition} = ${activeTerm.term.japanese}`,
-                    duration: 800,
-                    variant: "success",
-                });
-                spawnTerm(remainingQueue, activeTerms);
-                return;
-            }
-
-            toast({
-                title: "Incorrect",
-                description: "Try again.",
-                duration: 800,
-                variant: "destructive",
-            });
-            // Typing mistakes are feedback-only; no mastery reset on typed wrong answers.
-            setAnswer("");
-        },
-        [
-            activeTerm,
-            answer,
-            isCorrectionModalOpen,
-            isGameOver,
-            isLoading,
-            remainingQueue,
-            showReadingHint,
-            spawnTerm,
-            activeTerms,
-            toast,
-        ],
-    );
-
-    // Handles submission inside the correction modal to resume gameplay.
-    const handleCorrectionSubmit = React.useCallback(
-        (event: React.FormEvent<HTMLFormElement>) => {
-            event.preventDefault();
-
-            if (!activeTerm) {
-                return;
-            }
-
-            if (isAnswerCorrect(correctionInput, activeTerm.term.japanese)) {
-                // close the modal
-                setIsCorrectionModalOpen(false);
-                // clear the correction input and error for next time
-                setCorrectionInput("");
-                setCorrectionError("");
-                setAnswer("");
-                // spawn the next term
-                spawnTerm(remainingQueue, activeTerms);
-                return;
-            }
-
-            setCorrectionError("That is not the correct Japanese term yet.");
-        },
-        [
-            activeTerm,
-            correctionInput,
-            remainingQueue,
-            showReadingHint,
-            spawnTerm,
-            activeTerms,
-            updateTermScore,
-        ],
-    );
+    const { resetLearningProgress } = useGravityProgressReset({
+        activeTerms,
+        setActiveTerms,
+        setAllTerms,
+        setTermWrongCounts,
+        setIsAllLearntModalOpen,
+        setHasShownAllLearntModal,
+        setIsCorrectionModalOpen,
+        setCorrectionInput,
+        setCorrectionError,
+        setAnswer,
+        toast,
+    });
 
     // Loads terms once on mount (and whenever loader callback identity changes).
     React.useEffect(() => {
@@ -426,66 +195,6 @@ export function useGravityGame() {
             setIsLoading(false);
         });
     }, [loadVocabTerms]);
-
-    // Runs/pauses the timer depending on loading, modal, and game-over states.
-    React.useEffect(() => {
-        if (
-            isLoading ||
-            isGameOver ||
-            isCorrectionModalOpen ||
-            isAllLearntModalOpen ||
-            isEditTermsModalOpen
-        ) {
-            return;
-        }
-
-        const interval = setInterval(() => {
-            setTimer((prev) => prev + 1);
-        }, 1000);
-
-        return () => clearInterval(interval);
-    }, [
-        isLoading,
-        isGameOver,
-        isCorrectionModalOpen,
-        isAllLearntModalOpen,
-        isEditTermsModalOpen,
-    ]);
-
-    // Advances the active falling term downward at speed based on score.
-    React.useEffect(() => {
-        if (
-            !activeTerm ||
-            isLoading ||
-            isGameOver ||
-            isCorrectionModalOpen ||
-            isEditTermsModalOpen
-        ) {
-            return;
-        }
-
-        const speedPerTick = Math.min(5, 1.3 + score * 0.08);
-        const interval = setInterval(() => {
-            setActiveTerm((prev) => {
-                if (!prev) {
-                    return prev;
-                }
-                return {
-                    ...prev,
-                    y: prev.y + speedPerTick,
-                };
-            });
-        }, 50);
-
-        return () => clearInterval(interval);
-    }, [
-        activeTerm,
-        isGameOver,
-        isLoading,
-        score,
-        isCorrectionModalOpen,
-        isEditTermsModalOpen,
-    ]);
 
     // Treats bottom-collision as a wrong attempt and triggers fail flow.
     React.useEffect(() => {
@@ -547,98 +256,10 @@ export function useGravityGame() {
         }
     }, [hasShownAllLearntModal, activeTerms]);
 
-    // Persists updated term objects (including gravity score) back to their source.
-    React.useEffect(() => {
-        if (allTerms.length === 0) {
-            return;
-        }
-        const source = progressSourceRef.current;
-        if (!source) {
-            return;
-        }
-
-        const serializedTerms = JSON.stringify(allTerms);
-        if (source.mode === "favorites") {
-            localStorage.setItem("favoriteTerms", serializedTerms);
-            return;
-        }
-        if (source.mode === "history") {
-            appendGameHistory(source.key, serializedTerms, true);
-            return;
-        }
-        appendGameHistory(source.key, serializedTerms, false);
-    }, [allTerms]);
-
     // Keeps keyboard focus on the answer input as terms change.
     React.useEffect(() => {
         inputRef.current?.focus();
     }, [activeTerm]);
-
-    // Tracks playfield width and updates it on window resize.
-    React.useEffect(() => {
-        const updatePlayfieldWidth = () => {
-            setPlayfieldWidth(playfieldRef.current?.clientWidth ?? 0);
-        };
-
-        updatePlayfieldWidth();
-        window.addEventListener("resize", updatePlayfieldWidth);
-        return () => window.removeEventListener("resize", updatePlayfieldWidth);
-    }, []);
-
-    // Randomly positions each newly spawned card within horizontal bounds.
-    React.useEffect(() => {
-        if (!activeTerm || activeTerm.isPositioned) {
-            return;
-        }
-
-        const cardWidth = activeCardRef.current?.offsetWidth ?? 0;
-        if (!playfieldWidth || !cardWidth) {
-            return;
-        }
-
-        const maxLeft = Math.max(
-            HORIZONTAL_PADDING_PX,
-            playfieldWidth - cardWidth - HORIZONTAL_PADDING_PX,
-        );
-        const randomLeft =
-            HORIZONTAL_PADDING_PX +
-            Math.random() * Math.max(0, maxLeft - HORIZONTAL_PADDING_PX);
-
-        setActiveTerm((prev) =>
-            prev && prev.id === activeTerm.id
-                ? { ...prev, x: randomLeft, isPositioned: true }
-                : prev,
-        );
-    }, [activeTerm, playfieldWidth]);
-
-    // Re-clamps active card horizontal position if container/card size changes.
-    React.useEffect(() => {
-        if (!activeTerm?.isPositioned) {
-            return;
-        }
-
-        const cardWidth = activeCardRef.current?.offsetWidth ?? 0;
-        if (!playfieldWidth || !cardWidth) {
-            return;
-        }
-
-        const maxLeft = Math.max(
-            HORIZONTAL_PADDING_PX,
-            playfieldWidth - cardWidth - HORIZONTAL_PADDING_PX,
-        );
-        const clampedLeft = Math.min(
-            Math.max(activeTerm.x, HORIZONTAL_PADDING_PX),
-            maxLeft,
-        );
-
-        if (clampedLeft !== activeTerm.x) {
-            setActiveTerm((prev) =>
-                prev && prev.id === activeTerm.id
-                    ? { ...prev, x: clampedLeft }
-                    : prev,
-            );
-        }
-    }, [activeTerm, playfieldWidth]);
 
     // Computes how many terms are currently marked as learnt (score >= 2).
     const learntTermsCount = activeTerms.filter(
@@ -661,41 +282,6 @@ export function useGravityGame() {
         }
     }, [isGameOver, remainingQueue, spawnTerm, activeTerms]);
 
-    // Resets learning progress for all currently loaded terms.
-    const resetLearningProgress = React.useCallback(() => {
-        if (activeTerms.length === 0) {
-            return;
-        }
-
-        const activeTermKeys = new Set(
-            activeTerms.map((term) => getTermKey(term)),
-        );
-        const resetTerm = (term: VocabTerm) => ({
-            ...term,
-            gravity_score: 0,
-            isLearnt: false,
-        });
-
-        setActiveTerms((prevTerms) => prevTerms.map(resetTerm));
-        setAllTerms((prevTerms) =>
-            prevTerms.map((term) =>
-                activeTermKeys.has(getTermKey(term)) ? resetTerm(term) : term,
-            ),
-        );
-        setTermWrongCounts({});
-        setIsAllLearntModalOpen(false);
-        setHasShownAllLearntModal(false);
-        setIsCorrectionModalOpen(false);
-        setCorrectionInput("");
-        setCorrectionError("");
-        setAnswer("");
-        toast({
-            title: "Progress reset",
-            description: "Learning progress was reset for this term set.",
-            duration: 1200,
-            variant: "default",
-        });
-    }, [activeTerms, toast]);
 
     return {
         activeTerm,

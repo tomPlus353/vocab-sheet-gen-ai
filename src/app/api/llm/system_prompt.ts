@@ -80,7 +80,9 @@ Example:
 export const SYS_PROMPT_VOCAB_JSON = `**Instructions:**
 
 1.  **Vocabulary Extraction:**
-    *   Analyze the provided Japanese text and identify 20-30 words that would likely be challenging for intermediate to advanced Japanese language learners (JLPT N3 level and above) in a business context.
+    *   Analyze the provided Japanese text and identify words that would likely be challenging for intermediate to advanced Japanese language learners (JLPT N3 level and above) in a business context.
+    *   If there are no intermediate to advanced words, select the most challenging words for learners at this level.
+    *   Try to select at least 2-3 words for each sentence you are given. 
     *   Prioritize words that are:
         *   Less commonly used in everyday conversation but may be common within specific industries (especially IT).
         *   Written in Kanji, especially words with multiple possible readings (though be mindful that less-common katakana words may also be challenging).
