@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Flame, Heart, RotateCcw, Trophy } from "lucide-react";
 
 import CommonButton from "@/components/common/CommonButton";
+import { ConfirmActionModal } from "@/components/common/modals/ConfirmActionModal";
 import SectionHeader from "@/components/common/SectionHeader";
 import { Loader } from "@/components/common/Loader";
 import {
@@ -174,6 +175,10 @@ export default function KanjiPage() {
     const [termQuestionIndexes, setTermQuestionIndexes] = useState<
         Record<string, number>
     >({});
+    const [isRestartConfirmOpen, setIsRestartConfirmOpen] = useState(false);
+    const [pendingModeChange, setPendingModeChange] = useState<KanjiMode | null>(
+        null,
+    );
 
     const initializeRun = (terms: KanjiGameTerm[], nextMode: KanjiMode) => {
         const initialCounts = Object.fromEntries(
@@ -232,7 +237,7 @@ export default function KanjiPage() {
                 }
 
                 const cacheKey = isReviewHistory
-                    ? urlParams.get("historyTerms") ?? ""
+                    ? (urlParams.get("historyTerms") ?? "")
                     : kanjiSourceText;
                 const isCacheKeyHashed = isReviewHistory;
                 const cachedTerms = getNamedHistory(
@@ -242,7 +247,9 @@ export default function KanjiPage() {
                 );
 
                 if (cachedTerms) {
-                    const parsedCachedTerms = JSON.parse(cachedTerms) as unknown[];
+                    const parsedCachedTerms = JSON.parse(
+                        cachedTerms,
+                    ) as unknown[];
                     nextTerms = parsedCachedTerms.filter(isKanjiGameTerm);
                 } else {
                     nextTerms = await fetchKanjiTermsFromText(kanjiSourceText);
@@ -280,7 +287,10 @@ export default function KanjiPage() {
                             false,
                         );
                     } catch (kanjiFetchError) {
-                        console.error("Error loading kanji prompts:", kanjiFetchError);
+                        console.error(
+                            "Error loading kanji prompts:",
+                            kanjiFetchError,
+                        );
                         throw kanjiFetchError;
                     }
                 }
@@ -389,6 +399,11 @@ export default function KanjiPage() {
             return;
         }
 
+        if (hasActiveSession) {
+            setPendingModeChange(nextMode);
+            return;
+        }
+
         initializeRun(allTerms, nextMode);
     };
 
@@ -398,6 +413,20 @@ export default function KanjiPage() {
         }
 
         initializeRun(loadedTerms, nextMode);
+    };
+
+    const handleRestartCurrentSet = (nextMode: KanjiMode) => {
+        if (allTerms.length > 0) {
+            initializeRun(allTerms, nextMode);
+            return;
+        }
+
+        if (loadedTerms.length > 0) {
+            initializeRun(loadedTerms, nextMode);
+            return;
+        }
+
+        void loadKanjiTerms();
     };
 
     const hasActiveSession =
@@ -411,31 +440,13 @@ export default function KanjiPage() {
             feedback !== null);
 
     const handleRestartRun = () => {
-        if (
-            hasActiveSession &&
-            !window.confirm(
-                "Restart this kanji set from the beginning? Your current run progress will be cleared.",
-            )
-        ) {
+        if (hasActiveSession) {
+            setPendingModeChange(null);
+            setIsRestartConfirmOpen(true);
             return;
         }
 
         void loadKanjiTerms();
-    };
-
-    const handleEndSession = () => {
-        if (
-            !window.confirm(
-                "End this study session now? Your current run will stop, and you can review your current score and progress.",
-            )
-        ) {
-            return;
-        }
-
-        setFeedback(null);
-        setPendingGameOver(false);
-        setIsGameOver(true);
-        setHasWon(false);
     };
 
     const completeRewriteStep = () => {
@@ -532,7 +543,10 @@ export default function KanjiPage() {
         const currentQuestionIndex = termQuestionIndexes[termKey] ?? 0;
         const currentSupportWord =
             currentTerm.support_words[
-                Math.min(currentQuestionIndex, currentTerm.support_words.length - 1)
+                Math.min(
+                    currentQuestionIndex,
+                    currentTerm.support_words.length - 1,
+                )
             ];
         const remainingTerms = activeTerms.filter(
             (term) => getTermKey(term) !== termKey,
@@ -716,11 +730,14 @@ export default function KanjiPage() {
 
     const isPracticeMode = mode === "practice";
     const currentQuestionIndex = currentTerm
-        ? termQuestionIndexes[getTermKey(currentTerm)] ?? 0
+        ? (termQuestionIndexes[getTermKey(currentTerm)] ?? 0)
         : 0;
     const currentSupportWord = currentTerm
         ? currentTerm.support_words[
-              Math.min(currentQuestionIndex, currentTerm.support_words.length - 1)
+              Math.min(
+                  currentQuestionIndex,
+                  currentTerm.support_words.length - 1,
+              )
           ]
         : null;
     const promptParts = currentSupportWord
@@ -734,6 +751,14 @@ export default function KanjiPage() {
         ? feedbackWord.sentence_template.split("__TARGET__")
         : ["", ""];
     const practiceCompletedCount = allTerms.length - activeTerms.length;
+    const totalPracticeWords = allTerms.reduce(
+        (sum, term) => sum + term.support_words.length,
+        0,
+    );
+    const completedPracticeWords = allTerms.reduce((sum, term) => {
+        const count = termCorrectCounts[getTermKey(term)] ?? 0;
+        return sum + Math.min(count, term.support_words.length);
+    }, 0);
     const loadStateDetails = errorMessage
         ? getLoadStateDetails(errorMessage)
         : null;
@@ -755,13 +780,46 @@ export default function KanjiPage() {
                 returnTargetLabel={returnTargetLabel}
                 onBackToReader={goBack}
                 onOpenChange={(open) => {
-                    if (!open && loadedTerms.length > 0 && allTerms.length === 0) {
+                    if (
+                        !open &&
+                        loadedTerms.length > 0 &&
+                        allTerms.length === 0
+                    ) {
                         return;
                     }
                     setIsStudyConfirmOpen(open);
                 }}
                 onStartGame={() => handleStartLoadedStudy("game")}
                 onStartPractice={() => handleStartLoadedStudy("practice")}
+            />
+            <ConfirmActionModal
+                open={isRestartConfirmOpen}
+                title={
+                    pendingModeChange
+                        ? `Switch to ${getModeLabel(pendingModeChange)}?`
+                        : "Restart this set?"
+                }
+                description={
+                    pendingModeChange
+                        ? "Your current kanji run progress will be cleared and the set will restart in the selected mode."
+                        : "Your current kanji run progress will be cleared and the set will reload from the beginning."
+                }
+                confirmLabel={pendingModeChange ? "Switch mode" : "Restart"}
+                onOpenChange={(open) => {
+                    setIsRestartConfirmOpen(open);
+                    if (!open) {
+                        setPendingModeChange(null);
+                    }
+                }}
+                onConfirm={() => {
+                    if (pendingModeChange) {
+                        initializeRun(allTerms, pendingModeChange);
+                        setPendingModeChange(null);
+                        return;
+                    }
+
+                    void loadKanjiTerms();
+                }}
             />
 
             <SectionHeader title="Kanji Speed Chain" />
@@ -772,149 +830,92 @@ export default function KanjiPage() {
                         Back
                     </span>
                 </CommonButton>
-                <div className="flex flex-wrap gap-2">
-                    {allTerms.length > 0 && !isGameOver ? (
-                        <CommonButton
-                            onClick={handleEndSession}
-                            additionalclasses="mx-0 bg-slate-700 text-white hover:bg-slate-600"
-                        >
-                            End Session
-                        </CommonButton>
-                    ) : null}
-                    <CommonButton
-                        onClick={handleRestartRun}
-                        additionalclasses="mx-0"
+            </div>
+
+            <div className="mt-4 flex items-center gap-2">
+                <div className="inline-flex rounded-xl border border-slate-700 bg-slate-900 p-1">
+                    <button
+                        type="button"
+                        onClick={() => handleModeChange("game")}
+                        className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
+                            mode === "game"
+                                ? "bg-blue-500 text-white shadow-sm"
+                                : "text-slate-300 hover:bg-slate-800"
+                        }`}
+                        aria-pressed={mode === "game"}
                     >
-                        <span className="flex items-center gap-2">
-                            <RotateCcw className="h-4 w-4" />
-                            Restart This Set
-                        </span>
-                    </CommonButton>
+                        Challenge Run
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => handleModeChange("practice")}
+                        className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
+                            mode === "practice"
+                                ? "bg-emerald-500 text-white shadow-sm"
+                                : "text-slate-300 hover:bg-slate-800"
+                        }`}
+                        aria-pressed={mode === "practice"}
+                    >
+                        Practice Run
+                    </button>
                 </div>
-            </div>
-
-            <div className="mt-4 inline-flex rounded-xl border border-slate-700 bg-slate-900 p-1">
                 <button
                     type="button"
-                    onClick={() => handleModeChange("game")}
-                    className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
-                        mode === "game"
-                            ? "bg-blue-500 text-white shadow-sm"
-                            : "text-slate-300 hover:bg-slate-800"
-                    }`}
-                    aria-pressed={mode === "game"}
+                    onClick={handleRestartRun}
+                    aria-label="Restart this set"
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-slate-700 bg-slate-900 text-slate-300 transition hover:bg-slate-800 hover:text-white"
                 >
-                    Challenge Run
-                </button>
-                <button
-                    type="button"
-                    onClick={() => handleModeChange("practice")}
-                    className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
-                        mode === "practice"
-                            ? "bg-emerald-500 text-white shadow-sm"
-                            : "text-slate-300 hover:bg-slate-800"
-                    }`}
-                    aria-pressed={mode === "practice"}
-                >
-                    Practice Run
+                    <RotateCcw className="h-4 w-4" />
                 </button>
             </div>
 
-            <div className="mt-3 rounded-xl border border-slate-700 bg-slate-900 p-4 text-sm text-slate-300">
-                {mode === "game"
-                    ? "Challenge Run: type the full kanji word from the kana clue, build your chain, and protect your hearts."
-                    : "Practice Run: work through the set with no score or hearts, and confirm each word before moving on."}
-            </div>
-
-            {mode === "game" ? (
-                <>
-                    <div className="mt-4 grid gap-3 md:grid-cols-4">
-                        <div className="rounded-xl border border-blue-400/30 bg-slate-800 p-4">
-                            <p className="text-xs uppercase tracking-wider text-slate-400">
-                                Score
-                            </p>
-                            <p className="text-3xl font-bold text-blue-200">
-                                {score}
-                            </p>
-                        </div>
-                        <div className="rounded-xl border border-orange-400/30 bg-slate-800 p-4">
-                            <p className="text-xs uppercase tracking-wider text-slate-400">
-                                Speed Chain
-                            </p>
-                            <div className="flex items-center gap-2 text-3xl font-bold text-orange-300">
-                                <Flame className="h-7 w-7" />
-                                {streak}
-                            </div>
-                            <p className="mt-1 text-sm text-orange-200">
-                                x{multiplier} multiplier
-                            </p>
-                        </div>
-                        <div className="rounded-xl border border-red-400/30 bg-slate-800 p-4">
-                            <p className="text-xs uppercase tracking-wider text-slate-400">
-                                Hearts
-                            </p>
-                            <div className="mt-1 flex items-center gap-2 text-red-300">
-                                {Array.from({
-                                    length: KANJI_STARTING_HEARTS,
-                                }).map((_, index) => (
-                                    <Heart
-                                        key={index}
-                                        className={`h-6 w-6 ${
-                                            index < hearts
-                                                ? "fill-red-400 text-red-400"
-                                                : "text-slate-600"
-                                        }`}
-                                    />
-                                ))}
-                            </div>
-                        </div>
-                        <div className="rounded-xl border border-emerald-400/30 bg-slate-800 p-4">
-                            <p className="text-xs uppercase tracking-wider text-slate-400">
-                                Mastered
-                            </p>
-                            <div className="flex items-center gap-2 text-3xl font-bold text-emerald-300">
-                                <Trophy className="h-7 w-7" />
-                                {masteryCounts.mastered}/{allTerms.length}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="mt-4 rounded-xl border border-slate-700 bg-slate-900 p-4 text-sm text-slate-300">
-                        <p>
-                            Study progress: not started {masteryCounts.new} | in
-                            progress {masteryCounts.learning} | learned{" "}
-                            {masteryCounts.mastered}
-                        </p>
-                    </div>
-                </>
-            ) : (
-                <div className="mt-4 grid gap-3 md:grid-cols-3">
-                    <div className="rounded-xl border border-blue-400/30 bg-slate-800 p-4">
-                        <p className="text-xs uppercase tracking-wider text-slate-400">
-                            Remaining
-                        </p>
-                        <p className="text-3xl font-bold text-blue-200">
-                            {activeTerms.length}
-                        </p>
-                    </div>
-                    <div className="rounded-xl border border-emerald-400/30 bg-slate-800 p-4">
-                        <p className="text-xs uppercase tracking-wider text-slate-400">
-                            Completed
-                        </p>
-                        <p className="text-3xl font-bold text-emerald-300">
-                            {practiceCompletedCount}/{allTerms.length}
-                        </p>
-                    </div>
-                    <div className="rounded-xl border border-violet-400/30 bg-slate-800 p-4">
-                        <p className="text-xs uppercase tracking-wider text-slate-400">
-                            Mode
-                        </p>
-                        <p className="text-2xl font-bold text-violet-200">
-                            Practice Run
-                        </p>
-                    </div>
+            {!isGameOver && mode === "game" ? (
+                <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-slate-300">
+                    <span className="font-medium text-blue-200">
+                        Score {score}
+                    </span>
+                    <span className="inline-flex items-center gap-1 font-medium text-orange-300">
+                        <Flame className="h-4 w-4" />
+                        Chain {streak}
+                    </span>
+                    <span className="font-medium text-orange-200">
+                        x{multiplier}
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-red-300">
+                        {Array.from({
+                            length: KANJI_STARTING_HEARTS,
+                        }).map((_, index) => (
+                            <Heart
+                                key={index}
+                                className={`h-4 w-4 ${
+                                    index < hearts
+                                        ? "fill-red-400 text-red-400"
+                                        : "text-slate-600"
+                                }`}
+                            />
+                        ))}
+                    </span>
+                    <span className="inline-flex items-center gap-1 font-medium text-emerald-300">
+                        <Trophy className="h-4 w-4" />
+                        Learned {masteryCounts.mastered}/{allTerms.length}
+                    </span>
+                    <span className="text-slate-400">
+                        Progress {masteryCounts.new} not started,{" "}
+                        {masteryCounts.learning} in progress
+                    </span>
                 </div>
-            )}
+            ) : !isGameOver ? (
+                <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-slate-300">
+                    <span className="font-medium text-blue-200">
+                        Kanji completed {practiceCompletedCount}/
+                        {allTerms.length}
+                    </span>
+                    <span className="font-medium text-emerald-300">
+                        Words completed {completedPracticeWords}/
+                        {totalPracticeWords}
+                    </span>
+                </div>
+            ) : null}
 
             {isLoading ? (
                 <Loader />
@@ -971,19 +972,19 @@ export default function KanjiPage() {
                                     <p className="mt-1 text-lg">
                                         {isPracticeMode
                                             ? `${currentSupportWord?.word ?? currentTerm.japanese} (${currentSupportWord?.kana ?? currentTerm.kana})`
-                                            : currentSupportWord?.kana ??
-                                              currentTerm.kana}
+                                            : (currentSupportWord?.kana ??
+                                              currentTerm.kana)}
                                     </p>
                                 </div>
                                 <div className="rounded-lg border border-slate-700 bg-slate-900/70 p-3">
                                     <p className="text-xs uppercase tracking-wider text-slate-500">
-                                        {isPracticeMode ? "Level" : "Meaning"}
+                                        {isPracticeMode ? "Kanji" : "Meaning"}
                                     </p>
                                     <p className="mt-1 text-lg">
                                         {isPracticeMode
-                                            ? currentTerm.jlpt_level ?? "N1+"
-                                            : currentSupportWord?.english_definition ??
-                                              currentTerm.english_definition}
+                                            ? currentTerm.japanese
+                                            : (currentSupportWord?.english_definition ??
+                                              currentTerm.english_definition)}
                                     </p>
                                 </div>
                             </div>
@@ -1016,9 +1017,9 @@ export default function KanjiPage() {
                                 </CommonButton>
                             </form>
                             <p className="mt-2 text-xs text-slate-400">
-                                Input tip: on desktop, a Chinese handwriting pad can
-                                help if you have a trackpad. On mobile, try Google
-                                Japanese handwriting input.
+                                Input tip: on desktop, a Chinese handwriting pad
+                                can help if you have a trackpad. On mobile, try
+                                Google Japanese handwriting input.
                             </p>
                         </>
                     ) : feedback ? (
@@ -1030,9 +1031,13 @@ export default function KanjiPage() {
                             }`}
                         >
                             <p className="font-semibold">{feedback.message}</p>
+                            <p className="text-current/85 mt-2 text-sm">
+                                {feedbackWord?.word} | {feedbackWord?.kana} |{" "}
+                                {feedbackWord?.english_definition}
+                            </p>
                             {feedback.requiresRewrite ? (
                                 <div className="mt-4 rounded-lg border border-white/10 bg-black/20 p-4">
-                                    <p className="text-xs uppercase tracking-wider text-current/70">
+                                    <p className="text-current/70 text-xs uppercase tracking-wider">
                                         Rewrite to continue
                                     </p>
                                     <p className="mt-2 text-lg">
@@ -1042,8 +1047,8 @@ export default function KanjiPage() {
                                         </span>
                                     </p>
                                     <p className="mt-2 text-sm">
-                                        Enter the exact full kanji word shown above
-                                        to continue.
+                                        Enter the exact full kanji word shown
+                                        above to continue.
                                     </p>
                                     <p className="mt-2 text-sm leading-relaxed">
                                         Sentence: {feedbackRevealParts[0]}
@@ -1076,24 +1081,25 @@ export default function KanjiPage() {
                                             Confirm Rewrite
                                         </CommonButton>
                                     </form>
-                                    <p className="mt-2 text-xs text-current/80">
-                                        Input tip: on desktop, a Chinese handwriting
-                                        pad can help if you have a trackpad. On
-                                        mobile, try Google Japanese handwriting
-                                        input.
+                                    <p className="text-current/80 mt-2 text-xs">
+                                        Input tip: on desktop, a Chinese
+                                        handwriting pad can help if you have a
+                                        trackpad. On mobile, try Google Japanese
+                                        handwriting input.
                                     </p>
                                     {rewriteError && (
                                         <p className="mt-2 text-sm text-yellow-100">
                                             {rewriteError}
                                         </p>
                                     )}
-                                    <details className="mt-4 text-sm text-current/80">
+                                    <details className="text-current/80 mt-4 text-sm">
                                         <summary className="cursor-pointer select-none">
                                             Show kanji details
                                         </summary>
                                         <div className="mt-3 space-y-1 rounded-lg border border-white/10 bg-black/10 p-3">
                                             <p>
-                                                Target kanji: {currentTerm.japanese}
+                                                Target kanji:{" "}
+                                                {currentTerm.japanese}
                                             </p>
                                             <p>Reading: {currentTerm.kana}</p>
                                             <p>
@@ -1101,11 +1107,13 @@ export default function KanjiPage() {
                                                 {currentTerm.english_definition}
                                             </p>
                                             <p>
-                                                Level: {currentTerm.jlpt_level ?? "N1+"}
+                                                Level:{" "}
+                                                {currentTerm.jlpt_level ??
+                                                    "N1+"}
                                             </p>
                                         </div>
                                     </details>
-                                    <details className="mt-4 text-sm text-current/80">
+                                    <details className="text-current/80 mt-4 text-sm">
                                         <summary className="cursor-pointer select-none">
                                             Show word details
                                         </summary>
@@ -1113,7 +1121,9 @@ export default function KanjiPage() {
                                             <p>Reading: {feedbackWord?.kana}</p>
                                             <p>
                                                 Meaning:{" "}
-                                                {feedbackWord?.english_definition}
+                                                {
+                                                    feedbackWord?.english_definition
+                                                }
                                             </p>
                                             <p>
                                                 Study status:{" "}
@@ -1128,7 +1138,8 @@ export default function KanjiPage() {
                                 <>
                                     {feedback.pointsAwarded > 0 && (
                                         <p className="mt-2 text-sm">
-                                            Points gained: {feedback.pointsAwarded}
+                                            Points gained:{" "}
+                                            {feedback.pointsAwarded}
                                         </p>
                                     )}
                                     {!isGameOver && (
@@ -1156,7 +1167,7 @@ export default function KanjiPage() {
                             </p>
                             <p className="mt-2 text-sm">
                                 {mode === "practice"
-                                    ? `Confirmed ${practiceCompletedCount} of ${allTerms.length} kanji this session.`
+                                    ? `Kanji completed ${practiceCompletedCount}/${allTerms.length} | Words completed ${completedPracticeWords}/${totalPracticeWords}`
                                     : `Final score: ${score} | Best chain this run: ${bestStreak}`}
                             </p>
                             <div className="mt-4 flex gap-2">
@@ -1167,11 +1178,29 @@ export default function KanjiPage() {
                                     Back to {returnTargetLabel}
                                 </CommonButton>
                                 <CommonButton
-                                    onClick={handleRestartRun}
+                                    onClick={() =>
+                                        mode === "practice"
+                                            ? handleRestartCurrentSet(
+                                                  "practice",
+                                              )
+                                            : handleRestartCurrentSet("game")
+                                    }
                                     additionalclasses="mx-0 text-white"
                                 >
-                                    Play Again
+                                    {mode === "practice"
+                                        ? "Practice Again"
+                                        : "Play Again"}
                                 </CommonButton>
+                                {mode === "practice" ? (
+                                    <CommonButton
+                                        onClick={() =>
+                                            handleRestartCurrentSet("game")
+                                        }
+                                        additionalclasses="mx-0 bg-blue-600 text-white hover:bg-blue-400"
+                                    >
+                                        Try Challenge Run
+                                    </CommonButton>
+                                ) : null}
                             </div>
                         </div>
                     )}
