@@ -20,6 +20,7 @@ import {
     Gamepad,
     NotepadText,
     Orbit,
+    CaseSensitive,
 } from "lucide-react";
 
 import { CheatSheet } from "./Cheatsheet";
@@ -57,6 +58,15 @@ const Modal: React.FC<Props> = (props: Props) => {
             router.push("/gravity", undefined);
         } catch (e) {
             console.log("Error pushing to gravity page: ", e);
+        }
+    };
+
+    const handleGoKanji = () => {
+        try {
+            persistCurrentPage();
+            router.push("/kanji", undefined);
+        } catch (e) {
+            console.log("Error pushing to kanji page: ", e);
         }
     };
 
@@ -130,6 +140,14 @@ const Modal: React.FC<Props> = (props: Props) => {
                         >
                             <span className='tooltip absolute right-0 bottom-full rounded shadow-lg p-1 bg-black text-white text-sm -mt-8 -mr-8'>Gravity typing game</span>
                             <Orbit className="m-auto h-5 w-5" />
+                        </CommonButton>
+                        <CommonButton
+                            label=""
+                            additionalclasses="ml-auto h-10 w-10 flex flex-row items-center px-0 py-0 has-tooltip relative"
+                            onClick={handleGoKanji}
+                        >
+                            <span className='tooltip absolute right-0 bottom-full rounded shadow-lg p-1 bg-black text-white text-sm -mt-8 -mr-8'>Kanji speed chain</span>
+                            <CaseSensitive className="m-auto h-5 w-5" />
                         </CommonButton>
                         <CommonButton
                             label=""

@@ -4,6 +4,7 @@ import {
   SYS_PROMPT_VOCAB,
   SYS_PROMPT_GRAMMAR,
   SYS_PROMPT_VOCAB_JSON,
+  SYS_PROMPT_KANJI_GAME,
 } from "./system_prompt";
 import { getHtmlStringFromMarkdown } from "./utils/renderMarkdown";
 
@@ -25,6 +26,23 @@ const VocabGameTermSchema = z.object({
 });
 
 const VocabGameSchema = z.array(VocabGameTermSchema);
+
+const KanjiGameTermSchema = z.object({
+  japanese: z.string(),
+  kana: z.string(),
+  english_definition: z.string(),
+  support_words: z.array(
+    z.object({
+      word: z.string(),
+      kana: z.string(),
+      english_definition: z.string(),
+      sentence_template: z.string(),
+    }),
+  ),
+  jlpt_level: z.string().optional(),
+});
+
+const KanjiGameSchema = z.array(KanjiGameTermSchema);
 
 export async function POST(request: Request) {
   try {
@@ -62,7 +80,7 @@ async function handlePrompt(
   const requestedMode = mode ?? "vocab";
   const systemPrompt = getSystemPrompt(requestedMode);
 
-  if (requestedMode === "vocabGame") {
+  if (requestedMode === "vocabGame" || requestedMode === "kanjiGame") {
     //json output
 
     //create prompt
@@ -73,7 +91,8 @@ async function handlePrompt(
         system: systemPrompt,
         prompt,
         output: {
-          schema: VocabGameSchema,
+          schema:
+            requestedMode === "kanjiGame" ? KanjiGameSchema : VocabGameSchema,
         },
       });
 
@@ -108,6 +127,9 @@ function getSystemPrompt(mode: string): string {
   }
   if (mode === "vocabGame") {
     return SYS_PROMPT_VOCAB_JSON;
+  }
+  if (mode === "kanjiGame") {
+    return SYS_PROMPT_KANJI_GAME;
   }
   return SYS_PROMPT_VOCAB;
 }

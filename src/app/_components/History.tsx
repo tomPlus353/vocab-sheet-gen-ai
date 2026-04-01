@@ -2,7 +2,13 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { getAllGameHistories, removeGameHistory } from "@/lib/utils";
-import { Eye, Grid2x2Check, Orbit, Trash2 } from "lucide-react";
+import {
+    CaseSensitive,
+    Eye,
+    Grid2x2Check,
+    Orbit,
+    Trash2,
+} from "lucide-react";
 import { ViewHistoryModal } from "./ViewHistoryModal";
 import { ConfirmActionModal } from "@/components/common/modals/ConfirmActionModal";
 import type { VocabTerm } from "@/lib/types/vocab";
@@ -45,6 +51,15 @@ const History = () => {
             router.push(`/gravity?history=1&historyTerms=${key}`, undefined);
         } catch (e) {
             console.log("Error pushing to gravity page: ", e);
+        }
+    };
+
+    const handleGoKanji = (key: string) => {
+        try {
+            localStorage.setItem(LAST_PAGINATOR_PAGE_KEY, "0");
+            router.push(`/kanji?history=1&historyTerms=${key}`, undefined);
+        } catch (e) {
+            console.log("Error pushing to kanji page: ", e);
         }
     };
 
@@ -152,6 +167,21 @@ const History = () => {
                                                         Study (Gravity)
                                                     </span>
                                                     <Orbit className="mx-auto h-5 w-5"></Orbit>
+                                                </button>
+                                                <button
+                                                    className={
+                                                        ACTION_BUTTON_CLASSES
+                                                    }
+                                                    onClick={() =>
+                                                        handleGoKanji(key)
+                                                    }
+                                                    aria-label="Study with Kanji"
+                                                    title="Study with Kanji"
+                                                >
+                                                    <span className="tooltip absolute bottom-full right-0 -mt-8 rounded bg-black p-1 text-sm text-white shadow-lg">
+                                                        Study (Kanji)
+                                                    </span>
+                                                    <CaseSensitive className="mx-auto h-5 w-5" />
                                                 </button>
                                                 <button
                                                     className={

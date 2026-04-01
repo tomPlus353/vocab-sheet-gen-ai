@@ -3,7 +3,7 @@ import { useRouter } from "next/navigation";
 import Modal from "./Modal";
 import SectionHeader from "../../../components/common/SectionHeader";
 import CommonButton from "@/components/common/CommonButton";
-import { Grid2x2Check, Orbit } from "lucide-react";
+import { CaseSensitive, Grid2x2Check, Orbit } from "lucide-react";
 import { paginate } from "../_methods/paginationArray";
 import { useSettings } from "@/app/SettingsProvider";
 
@@ -85,6 +85,15 @@ const Paginator = ({ allText = [] }: Props) => {
             router.push("/gravity", undefined);
         } catch (e) {
             console.log("Error pushing to gravity page: ", e);
+        }
+    };
+
+    const handleGoKanji = () => {
+        try {
+            localStorage.setItem(LAST_PAGINATOR_PAGE_KEY, String(currentPage));
+            router.push("/kanji", undefined);
+        } catch (e) {
+            console.log("Error pushing to kanji page: ", e);
         }
     };
 
@@ -204,6 +213,20 @@ const Paginator = ({ allText = [] }: Props) => {
                                         <Grid2x2Check className="mx-auto h-5 w-5 md:mr-2"></Grid2x2Check>
                                         <span className="hidden md:inline">
                                             Match
+                                        </span>
+                                    </div>
+                                </button>
+                                <button
+                                    className="has-tooltip relative ml-auto w-auto shrink rounded-xl border-2 border-solid border-blue-100/20 bg-blue-500/20 px-3 py-2 hover:bg-blue-500"
+                                    onClick={handleGoKanji}
+                                >
+                                    <span className="tooltip absolute bottom-full right-0 -mt-8 rounded bg-black p-1 text-sm text-white shadow-lg">
+                                        Kanji speed chain
+                                    </span>
+                                    <div className="flex flex-row">
+                                        <CaseSensitive className="mx-auto h-5 w-5 md:mr-2"></CaseSensitive>
+                                        <span className="hidden md:inline">
+                                            Kanji
                                         </span>
                                     </div>
                                 </button>

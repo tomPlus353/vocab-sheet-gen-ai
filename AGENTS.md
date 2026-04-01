@@ -18,6 +18,13 @@
 - There are some limited jest tests in the **tests** folder. Please run with pnpm test at the end of workflow. It normally includes tests that call the LLM so may incur cost. So if in doubt always ask the user.
 - Workflow tests that you can carry out in a browser environment are in .codex/workflows/\*.md. If you cannot use browser natively you can use the playwright tool.
 
+### Playwright Shutdown
+
+- Closing a Playwright tab is not enough. Agents must also ensure there are no leftover Playwright MCP worker processes after browser testing.
+- Before ending browser-related work, explicitly verify whether any `playwright-mcp`, `@playwright/mcp`, `mcp-chrome`, or Playwright-managed Chrome processes are still running.
+- If they are still running, shut them down so the next agent does not inherit a stale Playwright session.
+- Do not report Playwright as closed unless both the browser session is closed and the related background Playwright processes have been verified as stopped.
+
 ## Commit Management
 
 ### Commit Message Format

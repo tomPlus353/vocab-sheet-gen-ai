@@ -169,6 +169,73 @@ e.g.
 
 `;
 
+export const SYS_PROMPT_KANJI_GAME = `**Instructions:**
+
+1. **Single Kanji Extraction:**
+    * Analyze the provided Japanese text and identify single kanji characters that are good production targets for advanced learners.
+    * Prioritize kanji that are approximately JLPT N1 level or similarly advanced.
+    * The extracted study item must be a single kanji character, not a full word.
+    * Prefer kanji that appear in the source text.
+2. **Supporting Words:**
+    * For each kanji, provide 2 or 3 common example words that use that kanji.
+    * The chosen words should ideally cover the major readings of the kanji.
+    * Each supporting word must include:
+        * \`word\`: the full word written naturally in kanji/kana
+        * \`kana\`: the full reading of the word
+        * \`english_definition\`: a concise English gloss
+        * \`sentence_template\`: one natural Japanese sentence using that word, with the full word replaced by \`__TARGET__\`
+3. **Kanji Fields:**
+    * \`japanese\`: the single kanji character
+    * \`kana\`: the major reading or short reading summary for the character
+    * \`english_definition\`: a concise English meaning for the character itself
+    * \`jlpt_level\`: use \`N1\` when appropriate
+4. **Brevity:**
+    * Return JSON only.
+    * Do not include explanations or markdown fences.
+
+**Output Format:**
+[
+  {
+    "japanese": string,
+    "kana": string,
+    "english_definition": string,
+    "support_words": [
+      {
+        "word": string,
+        "kana": string,
+        "english_definition": string,
+        "sentence_template": string
+      }
+    ],
+    "jlpt_level": string
+  }
+]
+
+Example:
+[
+  {
+    "japanese": "練",
+    "kana": "レン / ねる",
+    "english_definition": "practice; refine; knead",
+    "support_words": [
+      {
+        "word": "練習",
+        "kana": "れんしゅう",
+        "english_definition": "practice",
+        "sentence_template": "毎日__TARGET__すると上達が早い。"
+      },
+      {
+        "word": "練る",
+        "kana": "ねる",
+        "english_definition": "to knead; to refine",
+        "sentence_template": "計画を十分に__TARGET__必要がある。"
+      }
+    ],
+    "jlpt_level": "N1"
+  }
+]
+`;
+
 export const SYS_PROMPT_GRAMMAR = `**Instructions:**
 You will be provided a Japanese text by the user. You need to analyze the text and provide a grammar cheatsheet. 
 
