@@ -4,16 +4,11 @@ import { FavoritesList } from "@/components/common/FavoritesList";
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ViewHistoryModal } from "./ViewHistoryModal";
-import {
-    CaseSensitive,
-    Eye,
-    Grid2x2Check,
-    Orbit,
-    RefreshCcw,
-} from "lucide-react";
+import { Eye, Grid2x2Check, Orbit, RefreshCcw } from "lucide-react";
 
 import type { VocabTerm } from "@/lib/types/vocab";
 import { isVocabTerm } from "@/lib/utils";
+import { HanIcon } from "@/components/icons/HanIcon";
 
 const LAST_PAGINATOR_PAGE_KEY = "lastPaginatorPage";
 
@@ -120,7 +115,7 @@ const Favorites = () => {
                         <span className="tooltip absolute bottom-full right-0 -mt-8 rounded bg-black p-1 text-sm text-white shadow-lg">
                             Study (Kanji)
                         </span>
-                        <CaseSensitive className="h-4 w-4" />
+                        <HanIcon className="h-4 w-4" />
                     </button>
                     <button
                         className={ACTION_BUTTON_CLASSES}

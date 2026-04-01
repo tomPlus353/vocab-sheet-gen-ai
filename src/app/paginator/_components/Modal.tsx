@@ -20,11 +20,11 @@ import {
     Gamepad,
     NotepadText,
     Orbit,
-    CaseSensitive,
 } from "lucide-react";
 
 import { CheatSheet } from "./Cheatsheet";
 import CommonButton from "@/components/common/CommonButton";
+import { HanIcon } from "@/components/icons/HanIcon";
 
 interface Props {
     activeText: string[];
@@ -147,7 +147,7 @@ const Modal: React.FC<Props> = (props: Props) => {
                             onClick={handleGoKanji}
                         >
                             <span className='tooltip absolute right-0 bottom-full rounded shadow-lg p-1 bg-black text-white text-sm -mt-8 -mr-8'>Kanji speed chain</span>
-                            <CaseSensitive className="m-auto h-5 w-5" />
+                            <HanIcon className="m-auto h-5 w-5" />
                         </CommonButton>
                         <CommonButton
                             label=""

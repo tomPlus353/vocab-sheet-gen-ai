@@ -3,9 +3,10 @@ import { useRouter } from "next/navigation";
 import Modal from "./Modal";
 import SectionHeader from "../../../components/common/SectionHeader";
 import CommonButton from "@/components/common/CommonButton";
-import { CaseSensitive, Grid2x2Check, Orbit } from "lucide-react";
+import { Grid2x2Check, Orbit } from "lucide-react";
 import { paginate } from "../_methods/paginationArray";
 import { useSettings } from "@/app/SettingsProvider";
+import { HanIcon } from "@/components/icons/HanIcon";
 
 interface Props {
     allText: string[];
@@ -224,7 +225,7 @@ const Paginator = ({ allText = [] }: Props) => {
                                         Kanji speed chain
                                     </span>
                                     <div className="flex flex-row">
-                                        <CaseSensitive className="mx-auto h-5 w-5 md:mr-2"></CaseSensitive>
+                                        <HanIcon className="mx-auto h-5 w-5 md:mr-2" />
                                         <span className="hidden md:inline">
                                             Kanji
                                         </span>

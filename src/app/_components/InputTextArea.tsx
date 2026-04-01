@@ -18,7 +18,6 @@ import {
     FileText,
     X,
     LayoutList,
-    CaseSensitive,
     BookA,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,6 +25,7 @@ import { getTokenizer } from "kuromojin";
 import { useSettings } from "../SettingsProvider";
 import ImageUploader from "./ImageUploader";
 import { useToast } from "@/hooks/use-toast";
+import { HanIcon } from "@/components/icons/HanIcon";
 
 const InputTextArea = function () {
     const [userText, setUserText] = useState<string>("");
@@ -205,7 +205,7 @@ const InputTextArea = function () {
                         {/* sentence count */}
                         <div className="flex items-center gap-3 rounded-lg border border-slate-700/50 bg-slate-900/60 p-4">
                             <div className="rounded-full bg-amber-600/20 p-2">
-                                <CaseSensitive className="h-5 w-5 text-amber-300" />
+                                <HanIcon className="h-5 w-5 text-amber-300" />
                             </div>
                             <div>
                                 <p className="text-xs text-slate-400">
