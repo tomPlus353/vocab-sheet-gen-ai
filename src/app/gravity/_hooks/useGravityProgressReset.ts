@@ -3,12 +3,14 @@
 import * as React from "react";
 
 import { getTermKey } from "../_lib/gravity-utils";
+import type { FallingTerm } from "../_lib/gravity-utils";
 import type { VocabTerm } from "@/lib/types/vocab";
 
 type ProgressResetInputs = {
     activeTerms: VocabTerm[];
     setActiveTerms: React.Dispatch<React.SetStateAction<VocabTerm[]>>;
     setAllTerms: React.Dispatch<React.SetStateAction<VocabTerm[]>>;
+    setFallingTerms: React.Dispatch<React.SetStateAction<FallingTerm[]>>;
     setTermWrongCounts: React.Dispatch<
         React.SetStateAction<Record<string, number>>
     >;
@@ -18,6 +20,7 @@ type ProgressResetInputs = {
     setCorrectionInput: React.Dispatch<React.SetStateAction<string>>;
     setCorrectionError: React.Dispatch<React.SetStateAction<string>>;
     setAnswer: React.Dispatch<React.SetStateAction<string>>;
+    setCorrectionTerm: React.Dispatch<React.SetStateAction<VocabTerm | null>>;
     toast: (payload: {
         title: string;
         description: string;
@@ -30,6 +33,7 @@ export function useGravityProgressReset({
     activeTerms,
     setActiveTerms,
     setAllTerms,
+    setFallingTerms,
     setTermWrongCounts,
     setIsAllLearntModalOpen,
     setHasShownAllLearntModal,
@@ -37,6 +41,7 @@ export function useGravityProgressReset({
     setCorrectionInput,
     setCorrectionError,
     setAnswer,
+    setCorrectionTerm,
     toast,
 }: ProgressResetInputs) {
     const resetLearningProgress = React.useCallback(() => {
@@ -66,6 +71,8 @@ export function useGravityProgressReset({
         setCorrectionInput("");
         setCorrectionError("");
         setAnswer("");
+        setFallingTerms([]);
+        setCorrectionTerm(null);
         toast({
             title: "Progress reset",
             description: "Learning progress was reset for this term set.",
@@ -83,6 +90,8 @@ export function useGravityProgressReset({
         setCorrectionInput,
         setCorrectionError,
         setAnswer,
+        setCorrectionTerm,
+        setFallingTerms,
         toast,
     ]);
 

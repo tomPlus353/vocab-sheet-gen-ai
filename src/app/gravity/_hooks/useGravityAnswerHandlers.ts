@@ -7,7 +7,8 @@ import type { FallingTerm } from "../_lib/gravity-utils";
 import type { VocabTerm } from "@/lib/types/vocab";
 
 type AnswerHandlerInputs = {
-    activeTerm: FallingTerm | null;
+    fallingTerms: FallingTerm[];
+    setFallingTerms: React.Dispatch<React.SetStateAction<FallingTerm[]>>;
     answer: string;
     setAnswer: React.Dispatch<React.SetStateAction<string>>;
     isGameOver: boolean;
@@ -18,7 +19,6 @@ type AnswerHandlerInputs = {
     remainingQueue: number[];
     activeTerms: VocabTerm[];
     spawnTerm: (queue: number[], sourceTerms: VocabTerm[]) => void;
-    setActiveTerm: React.Dispatch<React.SetStateAction<FallingTerm | null>>;
     setScore: React.Dispatch<React.SetStateAction<number>>;
     updateTermScore: (
         term: VocabTerm,
@@ -26,9 +26,7 @@ type AnswerHandlerInputs = {
         shouldIncrement: boolean,
     ) => void;
     termWrongCounts: Record<string, number>;
-    setTermWrongCounts: React.Dispatch<
-        React.SetStateAction<Record<string, number>>
-    >;
+    setTermWrongCounts: React.Dispatch<React.SetStateAction<Record<string, number>>>;
     setIsGameOver: React.Dispatch<React.SetStateAction<boolean>>;
     setGameOverMessage: React.Dispatch<React.SetStateAction<string>>;
     setIsCorrectionModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -40,10 +38,13 @@ type AnswerHandlerInputs = {
         duration: number;
         variant: "success" | "destructive" | "default";
     }) => void;
+    correctionTerm: VocabTerm | null;
+    setCorrectionTerm: React.Dispatch<React.SetStateAction<VocabTerm | null>>;
 };
 
 export function useGravityAnswerHandlers({
-    activeTerm,
+    fallingTerms,
+    setFallingTerms,
     answer,
     setAnswer,
     isGameOver,
@@ -54,7 +55,6 @@ export function useGravityAnswerHandlers({
     remainingQueue,
     activeTerms,
     spawnTerm,
-    setActiveTerm,
     setScore,
     updateTermScore,
     termWrongCounts,
@@ -65,6 +65,8 @@ export function useGravityAnswerHandlers({
     setCorrectionInput,
     setCorrectionError,
     toast,
+    correctionTerm,
+    setCorrectionTerm,
 }: AnswerHandlerInputs) {
     const handleWrongAttempt = React.useCallback(
         (term: VocabTerm) => {
@@ -78,7 +80,7 @@ export function useGravityAnswerHandlers({
             }));
 
             if (nextCount >= 2) {
-                setActiveTerm(null);
+                setCorrectionTerm(null);
                 setIsGameOver(true);
                 setGameOverMessage(
                     `Game over. "${term.japanese}" was missed twice.`,
@@ -86,6 +88,7 @@ export function useGravityAnswerHandlers({
                 return;
             }
 
+            setCorrectionTerm(term);
             setIsCorrectionModalOpen(true);
             setCorrectionInput(answer);
             setCorrectionError("");
@@ -98,21 +101,17 @@ export function useGravityAnswerHandlers({
             setIsCorrectionModalOpen,
             setIsGameOver,
             setTermWrongCounts,
-            setActiveTerm,
+            setCorrectionTerm,
             termWrongCounts,
         ],
     );
-
-    const activeTermWrongCount = activeTerm
-        ? (termWrongCounts[getTermKey(activeTerm.term)] ?? 0)
-        : 0;
 
     const handleSubmit = React.useCallback(
         (event: React.FormEvent) => {
             event.preventDefault();
 
             if (
-                !activeTerm ||
+                fallingTerms.length === 0 ||
                 isGameOver ||
                 isLoading ||
                 isCorrectionModalOpen
@@ -120,17 +119,31 @@ export function useGravityAnswerHandlers({
                 return;
             }
 
-            if (isAnswerCorrect(answer, activeTerm.term.japanese)) {
-                setScore((prev) => prev + 1);
-                updateTermScore(activeTerm.term, "correct", !showReadingHint);
+            const matches = fallingTerms.filter((falling) =>
+                isAnswerCorrect(answer, falling.term.japanese),
+            );
+
+            if (matches.length > 0) {
+                const matchedIds = new Set(matches.map((match) => match.id));
+                setFallingTerms((prev) =>
+                    prev.filter((term) => !matchedIds.has(term.id)),
+                );
+                matches.forEach((match) => {
+                    updateTermScore(match.term, "correct", !showReadingHint);
+                });
+                setScore((prev) => prev + matches.length);
                 setAnswer("");
+                let toastDescription = `${matches.length} matching terms cleared.`;
+                if (matches.length === 1) {
+                    const singleMatch = matches[0]!;
+                    toastDescription = `${singleMatch.term.english_definition} = ${singleMatch.term.japanese}`;
+                }
                 toast({
                     title: "Correct",
-                    description: `${activeTerm.term.english_definition} = ${activeTerm.term.japanese}`,
+                    description: toastDescription,
                     duration: 800,
                     variant: "success",
                 });
-                spawnTerm(remainingQueue, activeTerms);
                 return;
             }
 
@@ -143,15 +156,12 @@ export function useGravityAnswerHandlers({
             setAnswer("");
         },
         [
-            activeTerm,
+            fallingTerms,
             answer,
             isCorrectionModalOpen,
             isGameOver,
             isLoading,
-            remainingQueue,
             showReadingHint,
-            spawnTerm,
-            activeTerms,
             toast,
             updateTermScore,
             setAnswer,
@@ -163,15 +173,16 @@ export function useGravityAnswerHandlers({
         (event: React.FormEvent<HTMLFormElement>) => {
             event.preventDefault();
 
-            if (!activeTerm) {
+            if (!correctionTerm) {
                 return;
             }
 
-            if (isAnswerCorrect(correctionInput, activeTerm.term.japanese)) {
+            if (isAnswerCorrect(correctionInput, correctionTerm.japanese)) {
                 setIsCorrectionModalOpen(false);
                 setCorrectionInput("");
                 setCorrectionError("");
                 setAnswer("");
+                setCorrectionTerm(null);
                 spawnTerm(remainingQueue, activeTerms);
                 return;
             }
@@ -179,7 +190,7 @@ export function useGravityAnswerHandlers({
             setCorrectionError("That is not the correct Japanese term yet.");
         },
         [
-            activeTerm,
+            correctionTerm,
             correctionInput,
             remainingQueue,
             spawnTerm,
@@ -188,11 +199,11 @@ export function useGravityAnswerHandlers({
             setCorrectionInput,
             setCorrectionError,
             setAnswer,
+            setCorrectionTerm,
         ],
     );
 
     return {
-        activeTermWrongCount,
         handleWrongAttempt,
         handleSubmit,
         handleCorrectionSubmit,

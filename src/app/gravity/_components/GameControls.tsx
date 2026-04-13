@@ -9,7 +9,7 @@ type GameControlProps = {
     loadVocabTerms: () => Promise<void>;
     resetLearningProgress: () => void;
     setIsEditTermsModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
-    activeTermWrongCount: number;
+    isTermAtRisk: boolean;
     showReadingHint: boolean;
     setShowReadingHint: React.Dispatch<React.SetStateAction<boolean>>;
     isFavoritesMode: boolean;
@@ -22,7 +22,7 @@ export function GameControls(props: GameControlProps) {
         loadVocabTerms,
         resetLearningProgress,
         setIsEditTermsModalOpen,
-        activeTermWrongCount,
+    isTermAtRisk,
         showReadingHint,
         setShowReadingHint,
         isFavoritesMode,
@@ -70,9 +70,9 @@ export function GameControls(props: GameControlProps) {
                     />
                 </div>
                 <div className="px-1 text-center text-xs text-gray-200 sm:text-left sm:text-sm">
-                    {activeTermWrongCount > 0 ? (
+                    {isTermAtRisk ? (
                         <span className="font-semibold text-red-400">
-                            Warning: this term ends the game if missed again.
+                            Warning: a missed term ends the game if missed again.
                         </span>
                     ) : (
                         <span className="text-gray-300">

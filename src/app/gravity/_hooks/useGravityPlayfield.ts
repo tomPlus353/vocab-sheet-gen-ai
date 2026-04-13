@@ -2,12 +2,16 @@
 
 import * as React from "react";
 
-import { HORIZONTAL_PADDING_PX } from "../_lib/gravity-utils";
+import {
+    FALLING_CARD_GAP,
+    FALLING_CARD_WIDTH,
+    HORIZONTAL_PADDING_PX,
+} from "../_lib/gravity-utils";
 import type { FallingTerm } from "../_lib/gravity-utils";
 
 type PlayfieldInputs = {
-    activeTerm: FallingTerm | null;
-    setActiveTerm: React.Dispatch<React.SetStateAction<FallingTerm | null>>;
+    fallingTerms: FallingTerm[];
+    setFallingTerms: React.Dispatch<React.SetStateAction<FallingTerm[]>>;
     isLoading: boolean;
     isGameOver: boolean;
     isCorrectionModalOpen: boolean;
@@ -16,8 +20,8 @@ type PlayfieldInputs = {
 };
 
 export function useGravityPlayfield({
-    activeTerm,
-    setActiveTerm,
+    fallingTerms,
+    setFallingTerms,
     isLoading,
     isGameOver,
     isCorrectionModalOpen,
@@ -25,12 +29,10 @@ export function useGravityPlayfield({
     score,
 }: PlayfieldInputs) {
     const playfieldRef = React.useRef<HTMLDivElement>(null);
-    const activeCardRef = React.useRef<HTMLDivElement>(null);
     const [playfieldWidth, setPlayfieldWidth] = React.useState(0);
 
     React.useEffect(() => {
         if (
-            !activeTerm ||
             isLoading ||
             isGameOver ||
             isCorrectionModalOpen ||
@@ -41,26 +43,19 @@ export function useGravityPlayfield({
 
         const speedPerTick = Math.min(5, 1.3 + score * 0.08);
         const interval = setInterval(() => {
-            setActiveTerm((prev) => {
-                if (!prev) {
-                    return prev;
-                }
-                return {
-                    ...prev,
-                    y: prev.y + speedPerTick,
-                };
-            });
+            setFallingTerms((prev) =>
+                prev.map((term) => ({ ...term, y: term.y + speedPerTick })),
+            );
         }, 50);
 
         return () => clearInterval(interval);
     }, [
-        activeTerm,
         isGameOver,
         isLoading,
-        score,
         isCorrectionModalOpen,
         isEditTermsModalOpen,
-        setActiveTerm,
+        score,
+        setFallingTerms,
     ]);
 
     React.useEffect(() => {
@@ -74,60 +69,44 @@ export function useGravityPlayfield({
     }, []);
 
     React.useEffect(() => {
-        if (!activeTerm || activeTerm.isPositioned) {
+        if (!playfieldWidth) {
             return;
         }
 
-        const cardWidth = activeCardRef.current?.offsetWidth ?? 0;
-        if (!playfieldWidth || !cardWidth) {
-            return;
-        }
-
-        const maxLeft = Math.max(
-            HORIZONTAL_PADDING_PX,
-            playfieldWidth - cardWidth - HORIZONTAL_PADDING_PX,
+        const cardWidth = Math.min(
+            FALLING_CARD_WIDTH,
+            Math.max(0, playfieldWidth - HORIZONTAL_PADDING_PX * 2),
         );
-        const randomLeft =
-            HORIZONTAL_PADDING_PX +
-            Math.random() * Math.max(0, maxLeft - HORIZONTAL_PADDING_PX);
-
-        setActiveTerm((prev) =>
-            prev && prev.id === activeTerm.id
-                ? { ...prev, x: randomLeft, isPositioned: true }
-                : prev,
-        );
-    }, [activeTerm, playfieldWidth, setActiveTerm]);
-
-    React.useEffect(() => {
-        if (!activeTerm?.isPositioned) {
-            return;
-        }
-
-        const cardWidth = activeCardRef.current?.offsetWidth ?? 0;
-        if (!playfieldWidth || !cardWidth) {
-            return;
-        }
-
-        const maxLeft = Math.max(
-            HORIZONTAL_PADDING_PX,
-            playfieldWidth - cardWidth - HORIZONTAL_PADDING_PX,
-        );
-        const clampedLeft = Math.min(
-            Math.max(activeTerm.x, HORIZONTAL_PADDING_PX),
-            maxLeft,
+        const laneWidth = cardWidth + FALLING_CARD_GAP;
+        const laneCount = Math.max(
+            1,
+            Math.floor(
+                (playfieldWidth - HORIZONTAL_PADDING_PX * 2 + FALLING_CARD_GAP) /
+                    laneWidth,
+            ),
         );
 
-        if (clampedLeft !== activeTerm.x) {
-            setActiveTerm((prev) =>
-                prev && prev.id === activeTerm.id
-                    ? { ...prev, x: clampedLeft }
-                    : prev,
-            );
-        }
-    }, [activeTerm, playfieldWidth, setActiveTerm]);
+        setFallingTerms((prev) => {
+            let changed = false;
+            const mapped = prev.map((term, index) => {
+                const lane = index % laneCount;
+                const left = HORIZONTAL_PADDING_PX + lane * laneWidth;
+                if (term.laneIndex === lane && term.x === left && term.isPositioned) {
+                    return term;
+                }
+                changed = true;
+                return {
+                    ...term,
+                    x: left,
+                    laneIndex: lane,
+                    isPositioned: true,
+                };
+            });
+            return changed ? mapped : prev;
+        });
+    }, [fallingTerms, playfieldWidth, setFallingTerms]);
 
     return {
         playfieldRef,
-        activeCardRef,
     };
 }

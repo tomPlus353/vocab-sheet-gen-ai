@@ -7,6 +7,8 @@ import { useToast } from "@/hooks/use-toast";
 import {
     type FallingTerm,
     HORIZONTAL_PADDING_PX,
+    MAX_SIMULTANEOUS_TERMS,
+    WORD_SPAWN_INTERVAL_MS,
     getShuffledIndexes,
     PLAYFIELD_HEIGHT_PX,
 } from "../_lib/gravity-utils";
@@ -20,54 +22,37 @@ import { useGravityTermScore } from "./useGravityTermScore";
 import { useGravityTimer } from "./useGravityTimer";
 
 export function useGravityGame() {
-    // Queue of term indexes used to pick the next falling term.
     const [remainingQueue, setRemainingQueue] = React.useState<number[]>([]);
-    // The currently falling term rendered in the playfield.
-    const [activeTerm, setActiveTerm] = React.useState<FallingTerm | null>(
-        null,
-    );
-    // Main answer input value from the bottom input box.
+    const [fallingTerms, setFallingTerms] = React.useState<FallingTerm[]>([]);
     const [answer, setAnswer] = React.useState("");
-    // Total number of correct answers during this run.
     const [score, setScore] = React.useState(0);
-    // Tracks wrong-attempt count per term key to enforce per-term fail rules.
     const [termWrongCounts, setTermWrongCounts] = React.useState<
         Record<string, number>
     >({});
-    // Marks game over state after terminal failure.
     const [isGameOver, setIsGameOver] = React.useState(false);
-    // Human-readable message shown when game is over.
     const [gameOverMessage, setGameOverMessage] = React.useState("");
-    // Toggles kana visibility in game and correction modal.
     const [showReadingHint, setShowReadingHint] = React.useState(false);
-    // Elapsed game time in seconds.
     const [timer, setTimer] = React.useState(0);
-
-    // Input value inside the correction modal form.
     const [correctionInput, setCorrectionInput] = React.useState("");
-    // Inline validation error text for correction modal input.
     const [correctionError, setCorrectionError] = React.useState("");
-    // Prevents repeatedly re-opening the completion modal without state change.
+    const [correctionTerm, setCorrectionTerm] = React.useState<VocabTerm | null>(
+        null,
+    );
     const [hasShownAllLearntModal, setHasShownAllLearntModal] =
         React.useState(false);
-    // Controls visibility of the first-mistake correction modal.
     const [isCorrectionModalOpen, setIsCorrectionModalOpen] =
         React.useState(false);
-    // Controls visibility of the edit terms modal
     const [isEditTermsModalOpen, setIsEditTermsModalOpen] =
         React.useState(false);
-    // Controls visibility of the "all terms learnt" completion modal.
     const [isAllLearntModalOpen, setIsAllLearntModalOpen] =
         React.useState(false);
 
-    // Ref to the main answer input for auto-focus behavior.
     const inputRef = React.useRef<HTMLInputElement>(null);
 
     const { toast } = useToast();
     const { isFavoritesMode, setIsFavoritesMode, isFavoritesModeRef } =
         useGravityFavoritesMode();
 
-    // Spawns the next falling term and refreshes queue when it is exhausted.
     const spawnTerm = React.useCallback(
         (queue: number[], sourceTerms: VocabTerm[]) => {
             let workingQueue = queue;
@@ -78,22 +63,30 @@ export function useGravityGame() {
             const [nextIndex, ...rest] = workingQueue;
             const nextTerm = sourceTerms[nextIndex!];
             if (!nextTerm) {
-                setActiveTerm(null);
                 setIsGameOver(true);
                 setGameOverMessage("Game ended due to invalid term data.");
                 return;
             }
 
             setRemainingQueue(rest);
-            setActiveTerm({
-                id: Date.now(),
-                term: nextTerm,
-                y: 0,
-                x: HORIZONTAL_PADDING_PX,
-                isPositioned: false,
-            });
+            setFallingTerms((prev) => [
+                ...prev,
+                {
+                    id: Date.now(),
+                    term: nextTerm,
+                    y: 0,
+                    x: HORIZONTAL_PADDING_PX,
+                    isPositioned: false,
+                    laneIndex: undefined,
+                },
+            ]);
         },
-        [],
+        [
+            setRemainingQueue,
+            setFallingTerms,
+            setIsGameOver,
+            setGameOverMessage,
+        ],
     );
 
     const {
@@ -107,6 +100,7 @@ export function useGravityGame() {
     } = useGravityTermsLoader({
         isFavoritesModeRef,
         spawnTerm,
+        setFallingTerms,
         setScore,
         setTermWrongCounts,
         setTimer,
@@ -118,6 +112,7 @@ export function useGravityGame() {
         setCorrectionError,
         setIsAllLearntModalOpen,
         setHasShownAllLearntModal,
+        setCorrectionTerm,
     });
 
     const { updateTermScore } = useGravityTermScore({
@@ -134,9 +129,9 @@ export function useGravityGame() {
         isEditTermsModalOpen,
     });
 
-    const { playfieldRef, activeCardRef } = useGravityPlayfield({
-        activeTerm,
-        setActiveTerm,
+    const { playfieldRef } = useGravityPlayfield({
+        fallingTerms,
+        setFallingTerms,
         isLoading,
         isGameOver,
         isCorrectionModalOpen,
@@ -145,12 +140,12 @@ export function useGravityGame() {
     });
 
     const {
-        activeTermWrongCount,
         handleWrongAttempt,
         handleSubmit,
         handleCorrectionSubmit,
     } = useGravityAnswerHandlers({
-        activeTerm,
+        fallingTerms,
+        setFallingTerms,
         answer,
         setAnswer,
         isGameOver,
@@ -161,7 +156,6 @@ export function useGravityGame() {
         remainingQueue,
         activeTerms,
         spawnTerm,
-        setActiveTerm,
         setScore,
         updateTermScore,
         termWrongCounts,
@@ -172,12 +166,15 @@ export function useGravityGame() {
         setCorrectionInput,
         setCorrectionError,
         toast,
+        correctionTerm,
+        setCorrectionTerm,
     });
 
     const { resetLearningProgress } = useGravityProgressReset({
         activeTerms,
         setActiveTerms,
         setAllTerms,
+        setFallingTerms,
         setTermWrongCounts,
         setIsAllLearntModalOpen,
         setHasShownAllLearntModal,
@@ -185,10 +182,10 @@ export function useGravityGame() {
         setCorrectionInput,
         setCorrectionError,
         setAnswer,
+        setCorrectionTerm,
         toast,
     });
 
-    // Loads terms once on mount (and whenever loader callback identity changes).
     React.useEffect(() => {
         loadVocabTerms().catch((err) => {
             console.error("Error loading gravity game:", err);
@@ -196,10 +193,56 @@ export function useGravityGame() {
         });
     }, [loadVocabTerms]);
 
-    // Treats bottom-collision as a wrong attempt and triggers fail flow.
+    const fallingTermsRef = React.useRef<FallingTerm[]>(fallingTerms);
+    React.useEffect(() => {
+        fallingTermsRef.current = fallingTerms;
+    }, [fallingTerms]);
+
+    const remainingQueueRef = React.useRef<number[]>(remainingQueue);
+    React.useEffect(() => {
+        remainingQueueRef.current = remainingQueue;
+    }, [remainingQueue]);
+
+    const activeTermsRef = React.useRef<VocabTerm[]>(activeTerms);
+    React.useEffect(() => {
+        activeTermsRef.current = activeTerms;
+    }, [activeTerms]);
+
     React.useEffect(() => {
         if (
-            !activeTerm ||
+            isGameOver ||
+            isLoading ||
+            isCorrectionModalOpen ||
+            isAllLearntModalOpen ||
+            isEditTermsModalOpen
+        ) {
+            return;
+        }
+
+        const interval = setInterval(() => {
+            if (
+                fallingTermsRef.current.length >= MAX_SIMULTANEOUS_TERMS ||
+                activeTermsRef.current.length === 0
+            ) {
+                return;
+            }
+
+            spawnTerm(remainingQueueRef.current, activeTermsRef.current);
+        }, WORD_SPAWN_INTERVAL_MS);
+
+        return () => clearInterval(interval);
+    }, [
+        isGameOver,
+        isLoading,
+        isCorrectionModalOpen,
+        isAllLearntModalOpen,
+        isEditTermsModalOpen,
+        spawnTerm,
+    ]);
+
+    React.useEffect(() => {
+        if (
+            fallingTerms.length === 0 ||
             isGameOver ||
             isLoading ||
             isCorrectionModalOpen ||
@@ -208,19 +251,23 @@ export function useGravityGame() {
             return;
         }
 
-        if (activeTerm.y >= PLAYFIELD_HEIGHT_PX) {
-            toast({
-                title: "Missed",
-                description: "The term reached the bottom.",
-                duration: 800,
-                variant: "destructive",
-            });
-            // Reaching the floor is treated as a hard miss and resets term mastery.
-            updateTermScore(activeTerm.term, "wrong", false);
-            handleWrongAttempt(activeTerm.term);
-        }
+        fallingTerms.forEach((term) => {
+            if (term.y >= PLAYFIELD_HEIGHT_PX) {
+                toast({
+                    title: "Missed",
+                    description: "The term reached the bottom.",
+                    duration: 800,
+                    variant: "destructive",
+                });
+                updateTermScore(term.term, "wrong", false);
+                setFallingTerms((prev) =>
+                    prev.filter((item) => item.id !== term.id),
+                );
+                handleWrongAttempt(term.term);
+            }
+        });
     }, [
-        activeTerm,
+        fallingTerms,
         handleWrongAttempt,
         isGameOver,
         isLoading,
@@ -230,7 +277,6 @@ export function useGravityGame() {
         updateTermScore,
     ]);
 
-    // Opens completion modal once when every term reaches learnt threshold.
     React.useEffect(() => {
         if (activeTerms.length === 0 || isGameOver) {
             return;
@@ -242,11 +288,10 @@ export function useGravityGame() {
         if (allLearnt && !hasShownAllLearntModal) {
             setHasShownAllLearntModal(true);
             setIsAllLearntModalOpen(true);
-            setActiveTerm(null);
+            setFallingTerms([]);
         }
     }, [hasShownAllLearntModal, isGameOver, activeTerms]);
 
-    // Resets completion-modal guard once any term drops below learnt threshold.
     React.useEffect(() => {
         const hasUnlearntTerm = activeTerms.some(
             (term) => (term.gravity_score ?? 0) < 2,
@@ -256,25 +301,20 @@ export function useGravityGame() {
         }
     }, [hasShownAllLearntModal, activeTerms]);
 
-    // Keeps keyboard focus on the answer input as terms change.
     React.useEffect(() => {
         inputRef.current?.focus();
-    }, [activeTerm]);
+    }, [fallingTerms.length]);
 
-    // Computes how many terms are currently marked as learnt (score >= 2).
     const learntTermsCount = activeTerms.filter(
         (term) => (term.gravity_score ?? 0) >= 2,
     ).length;
-    // Computes how many terms are in learning state (score exactly 1).
     const learningTermsCount = activeTerms.filter(
         (term) => (term.gravity_score ?? 0) === 1,
     ).length;
-    // Computes how many terms are still unlearnt (score 0 or undefined).
     const unlearntTermsCount = activeTerms.filter(
         (term) => (term.gravity_score ?? 0) === 0,
     ).length;
 
-    // Closes completion modal and resumes spawning terms for continued practice.
     const resumeAfterAllLearntModal = React.useCallback(() => {
         setIsAllLearntModalOpen(false);
         if (!isGameOver && activeTerms.length > 0) {
@@ -282,13 +322,15 @@ export function useGravityGame() {
         }
     }, [isGameOver, remainingQueue, spawnTerm, activeTerms]);
 
+    const isTermAtRisk = Object.values(termWrongCounts).some(
+        (count) => count > 0,
+    );
 
     return {
-        activeTerm,
-        activeTermWrongCount,
         answer,
         correctionError,
         correctionInput,
+        correctionTerm,
         gameOverMessage,
         handleCorrectionSubmit,
         handleSubmit,
@@ -301,7 +343,6 @@ export function useGravityGame() {
         learningTermsCount,
         loadVocabTerms,
         playfieldRef,
-        activeCardRef,
         resumeAfterAllLearntModal,
         resetLearningProgress,
         setAnswer,
@@ -317,5 +358,8 @@ export function useGravityGame() {
         setTerms: setAllTerms,
         isEditTermsModalOpen,
         setIsEditTermsModalOpen,
+        fallingTerms,
+        termWrongCounts,
+        isTermAtRisk,
     };
 }

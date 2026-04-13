@@ -11,7 +11,7 @@ import { Loader } from "@/components/common/Loader";
 import { AllLearntModal } from "./_components/AllLearntModal";
 import { CorrectionModal } from "./_components/CorrectionModal";
 import { useGravityGame } from "./_hooks/useGravityGame";
-import { PLAYFIELD_HEIGHT_PX } from "./_lib/gravity-utils";
+import { PLAYFIELD_HEIGHT_PX, getTermKey } from "./_lib/gravity-utils";
 import { EditTermsModal } from "../match/_components/EditTermsModal";
 import { GameControls } from "./_components/GameControls";
 
@@ -23,11 +23,10 @@ export default function GravityPage() {
     );
 
     const {
-        activeTerm,
-        activeTermWrongCount,
         answer,
         correctionError,
         correctionInput,
+        correctionTerm,
         gameOverMessage,
         handleCorrectionSubmit,
         handleSubmit,
@@ -40,7 +39,6 @@ export default function GravityPage() {
         learningTermsCount,
         loadVocabTerms,
         playfieldRef,
-        activeCardRef,
         resumeAfterAllLearntModal,
         resetLearningProgress,
         totalTermsCount,
@@ -56,6 +54,9 @@ export default function GravityPage() {
         setTerms,
         isEditTermsModalOpen,
         setIsEditTermsModalOpen,
+        fallingTerms,
+        termWrongCounts,
+        isTermAtRisk,
     } = useGravityGame();
 
     useEffect(() => {
@@ -82,7 +83,7 @@ export default function GravityPage() {
                 loadVocabTerms={loadVocabTerms}
                 resetLearningProgress={resetLearningProgress}
                 setIsEditTermsModalOpen={setIsEditTermsModalOpen}
-                activeTermWrongCount={activeTermWrongCount}
+                isTermAtRisk={isTermAtRisk}
                 showReadingHint={showReadingHint}
                 setShowReadingHint={setShowReadingHint}
                 isFavoritesMode={isFavoritesMode}
@@ -132,40 +133,53 @@ export default function GravityPage() {
             {isLoading ? (
                 <Loader />
             ) : (
-                <div className="mx-auto mt-6 w-[96%] max-w-6xl px-4">
+                <div className="mt-6 w-full px-4">
                     <div
                         ref={playfieldRef}
-                        className="relative overflow-hidden rounded-xl border border-blue-300/20 bg-slate-900"
+                        className="relative h-[480px] w-full overflow-hidden rounded-xl border border-blue-300/20 bg-slate-900"
                         style={{ height: `${PLAYFIELD_HEIGHT_PX}px` }}
                     >
                         <div className="absolute bottom-0 h-1 w-full bg-red-500/60" />
-                        {activeTerm ? (
-                            <div
-                                ref={activeCardRef}
-                                className={`absolute max-w-[calc(100%-16px)] rounded-lg border px-3 py-2 shadow-lg ${
-                                    activeTermWrongCount > 0
-                                        ? "border-red-300/20 bg-red-500/20 text-red-100"
-                                        : "border-amber-300/20 bg-amber-500/20 text-amber-100"
-                                }`}
-                                style={{
-                                    top: `${activeTerm.y}px`,
-                                    left: `${activeTerm.x}px`,
-                                }}
-                            >
-                                <p className="whitespace-normal break-words font-bold">
-                                    {activeTerm.term.english_definition}
-                                </p>
-                                {showReadingHint && (
-                                    <p className="text-xs text-amber-200/80">
-                                        Hint: {activeTerm.term.kana}
-                                    </p>
-                                )}
-                            </div>
+                    {fallingTerms.length > 0 ? (
+                        fallingTerms.map((term) => {
+                            const termKey = getTermKey(term.term);
+                            const termWrongCount =
+                                termWrongCounts[termKey] ?? 0;
+                                const definition = term.term.english_definition;
+                                const truncated =
+                                    definition.length > 50
+                                        ? `${definition.slice(0, 50)}…`
+                                        : definition;
+                                return (
+                                    <div
+                                        key={term.id}
+                                        className={`absolute max-w-[220px] rounded-lg border px-3 py-2 shadow-lg transition-all duration-200 ${
+                                            termWrongCount > 0
+                                                ? "border-red-300/20 bg-red-500/20 text-red-100"
+                                                : "border-amber-300/20 bg-amber-500/20 text-amber-100"
+                                        }`}
+                                        style={{
+                                            top: `${term.y}px`,
+                                            left: `${term.x}px`,
+                                        }}
+                                        title={definition}
+                                    >
+                                        <p className="whitespace-normal break-words font-bold">
+                                            {truncated}
+                                        </p>
+                                        {showReadingHint && (
+                                            <p className="text-xs text-amber-200/80">
+                                                Hint: {term.term.kana}
+                                            </p>
+                                        )}
+                                    </div>
+                                );
+                            })
                         ) : (
                             <div className="flex h-full items-center justify-center text-gray-400">
                                 {isGameOver
                                     ? gameOverMessage
-                                    : "Preparing next term..."}
+                                    : "Preparing next terms..."}
                             </div>
                         )}
                     </div>
@@ -180,7 +194,7 @@ export default function GravityPage() {
                             disabled={
                                 isGameOver ||
                                 isLoading ||
-                                !activeTerm ||
+                                fallingTerms.length === 0 ||
                                 isCorrectionModalOpen
                             }
                             onChange={(event) => setAnswer(event.target.value)}
@@ -192,7 +206,7 @@ export default function GravityPage() {
                             disabled={
                                 isGameOver ||
                                 isLoading ||
-                                !activeTerm ||
+                                fallingTerms.length === 0 ||
                                 isCorrectionModalOpen
                             }
                         />
@@ -208,7 +222,7 @@ export default function GravityPage() {
 
             <CorrectionModal
                 open={isCorrectionModalOpen && !isGameOver}
-                activeTerm={activeTerm?.term ?? null}
+                activeTerm={correctionTerm ?? null}
                 correctionInput={correctionInput}
                 correctionError={correctionError}
                 onCorrectionInputChange={setCorrectionInput}

@@ -5,6 +5,7 @@ import * as React from "react";
 import { appendGameHistory, getGameHistory } from "@/lib/utils";
 import type { VocabTerm } from "@/lib/types/vocab";
 import { getShuffledIndexes } from "../_lib/gravity-utils";
+import type { FallingTerm } from "../_lib/gravity-utils";
 
 type ProgressSource =
     | { mode: "favorites" }
@@ -14,6 +15,7 @@ type ProgressSource =
 type TermsLoaderInputs = {
     isFavoritesModeRef: React.MutableRefObject<boolean>;
     spawnTerm: (queue: number[], sourceTerms: VocabTerm[]) => void;
+    setFallingTerms: React.Dispatch<React.SetStateAction<FallingTerm[]>>;
     setScore: React.Dispatch<React.SetStateAction<number>>;
     setTermWrongCounts: React.Dispatch<
         React.SetStateAction<Record<string, number>>
@@ -27,6 +29,7 @@ type TermsLoaderInputs = {
     setCorrectionError: React.Dispatch<React.SetStateAction<string>>;
     setIsAllLearntModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
     setHasShownAllLearntModal: React.Dispatch<React.SetStateAction<boolean>>;
+    setCorrectionTerm: React.Dispatch<React.SetStateAction<VocabTerm | null>>;
 };
 
 export function useGravityTermsLoader({
@@ -43,6 +46,8 @@ export function useGravityTermsLoader({
     setCorrectionError,
     setIsAllLearntModalOpen,
     setHasShownAllLearntModal,
+    setFallingTerms,
+    setCorrectionTerm,
 }: TermsLoaderInputs) {
     const [allTerms, setAllTerms] = React.useState<VocabTerm[]>([]);
     const [activeTerms, setActiveTerms] = React.useState<VocabTerm[]>([]);
@@ -182,6 +187,8 @@ export function useGravityTermsLoader({
         setCorrectionError("");
         setIsAllLearntModalOpen(false);
         setHasShownAllLearntModal(false);
+        setFallingTerms([]);
+        setCorrectionTerm(null);
         spawnTerm(queue, filteredTerms);
         setIsLoading(false);
     }, [
@@ -198,6 +205,8 @@ export function useGravityTermsLoader({
         setScore,
         setTermWrongCounts,
         spawnTerm,
+        setFallingTerms,
+        setCorrectionTerm,
     ]);
 
     React.useEffect(() => {
