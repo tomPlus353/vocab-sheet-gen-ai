@@ -13,8 +13,8 @@ export const PLAYFIELD_HEIGHT_PX = 480;
 export const HORIZONTAL_PADDING_PX = 8;
 export const MAX_SIMULTANEOUS_TERMS = 2;
 export const FALLING_CARD_WIDTH = 220;
-export const FALLING_CARD_GAP = 16;
-export const WORD_SPAWN_INTERVAL_MS = 3200;
+export const FALLING_CARD_GAP = 2;
+export const WORD_SPAWN_INTERVAL_MS = 4000;
 
 export function normalizeAnswer(value: string): string {
     return value

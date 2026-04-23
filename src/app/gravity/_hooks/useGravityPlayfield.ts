@@ -3,7 +3,6 @@
 import * as React from "react";
 
 import {
-    FALLING_CARD_GAP,
     FALLING_CARD_WIDTH,
     HORIZONTAL_PADDING_PX,
 } from "../_lib/gravity-utils";
@@ -19,6 +18,22 @@ type PlayfieldInputs = {
     score: number;
 };
 
+function getClampedX(
+    value: number,
+    minLeft: number,
+    maxLeft: number,
+): number {
+    return Math.min(Math.max(value, minLeft), maxLeft);
+}
+
+function getRandomCardX(minLeft: number, maxLeft: number): number {
+    if (maxLeft <= minLeft) {
+        return minLeft;
+    }
+
+    return minLeft + Math.random() * (maxLeft - minLeft);
+}
+
 export function useGravityPlayfield({
     fallingTerms,
     setFallingTerms,
@@ -29,7 +44,6 @@ export function useGravityPlayfield({
     score,
 }: PlayfieldInputs) {
     const playfieldRef = React.useRef<HTMLDivElement>(null);
-    const [playfieldWidth, setPlayfieldWidth] = React.useState(0);
 
     React.useEffect(() => {
         if (
@@ -59,52 +73,47 @@ export function useGravityPlayfield({
     ]);
 
     React.useEffect(() => {
-        const updatePlayfieldWidth = () => {
-            setPlayfieldWidth(playfieldRef.current?.clientWidth ?? 0);
-        };
-
-        updatePlayfieldWidth();
-        window.addEventListener("resize", updatePlayfieldWidth);
-        return () => window.removeEventListener("resize", updatePlayfieldWidth);
-    }, []);
-
-    React.useEffect(() => {
-        if (!playfieldWidth) {
-            return;
-        }
+        const measuredWidth =
+            playfieldRef.current?.clientWidth ??
+            Math.max(0, window.innerWidth - HORIZONTAL_PADDING_PX * 4);
 
         const cardWidth = Math.min(
             FALLING_CARD_WIDTH,
-            Math.max(0, playfieldWidth - HORIZONTAL_PADDING_PX * 2),
+            Math.max(0, measuredWidth - HORIZONTAL_PADDING_PX * 2),
         );
-        const laneWidth = cardWidth + FALLING_CARD_GAP;
-        const laneCount = Math.max(
-            1,
-            Math.floor(
-                (playfieldWidth - HORIZONTAL_PADDING_PX * 2 + FALLING_CARD_GAP) /
-                    laneWidth,
-            ),
+        const minLeft = HORIZONTAL_PADDING_PX;
+        const maxLeft = Math.max(
+            HORIZONTAL_PADDING_PX,
+            measuredWidth - cardWidth - HORIZONTAL_PADDING_PX,
         );
 
         setFallingTerms((prev) => {
             let changed = false;
-            const mapped = prev.map((term, index) => {
-                const lane = index % laneCount;
-                const left = HORIZONTAL_PADDING_PX + lane * laneWidth;
-                if (term.laneIndex === lane && term.x === left && term.isPositioned) {
-                    return term;
+            const mapped = prev.map((term) => {
+                if (term.isPositioned) {
+                    const clampedX = getClampedX(term.x, minLeft, maxLeft);
+                    if (clampedX === term.x) {
+                        return term;
+                    }
+                    changed = true;
+                    return {
+                        ...term,
+                        x: clampedX,
+                    };
                 }
+
+                const nextX = getRandomCardX(minLeft, maxLeft);
                 changed = true;
                 return {
                     ...term,
-                    x: left,
-                    laneIndex: lane,
+                    x: nextX,
+                    laneIndex: undefined,
                     isPositioned: true,
                 };
             });
             return changed ? mapped : prev;
         });
-    }, [fallingTerms, playfieldWidth, setFallingTerms]);
+    }, [fallingTerms, setFallingTerms]);
 
     return {
         playfieldRef,
