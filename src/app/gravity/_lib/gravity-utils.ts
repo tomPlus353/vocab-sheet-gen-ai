@@ -44,3 +44,15 @@ export function getShuffledIndexes(length: number): number[] {
 export function getTermKey(term: VocabTerm): string {
     return `${term.japanese}||${term.english_definition}`;
 }
+
+export function isGravityTermLearnt(term: VocabTerm): boolean {
+    return (term.gravity_score ?? 0) >= 2;
+}
+
+export function getShuffledTermKeys(terms: VocabTerm[]): string[] {
+    const indexes = getShuffledIndexes(terms.length);
+    return indexes
+        .map((index) => terms[index])
+        .filter((term): term is VocabTerm => Boolean(term))
+        .map((term) => getTermKey(term));
+}

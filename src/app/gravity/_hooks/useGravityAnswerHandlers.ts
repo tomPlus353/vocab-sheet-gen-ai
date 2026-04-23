@@ -16,9 +16,9 @@ type AnswerHandlerInputs = {
     isCorrectionModalOpen: boolean;
     showReadingHint: boolean;
     correctionInput: string;
-    remainingQueue: number[];
+    remainingQueue: string[];
     activeTerms: VocabTerm[];
-    spawnTerm: (queue: number[], sourceTerms: VocabTerm[]) => void;
+    spawnTerm: (queue: string[], sourceTerms: VocabTerm[]) => void;
     setScore: React.Dispatch<React.SetStateAction<number>>;
     updateTermScore: (
         term: VocabTerm,

@@ -9,6 +9,7 @@ import type { VocabTerm } from "@/lib/types/vocab";
 type ProgressResetInputs = {
     activeTerms: VocabTerm[];
     setActiveTerms: React.Dispatch<React.SetStateAction<VocabTerm[]>>;
+    setScopedTerms: React.Dispatch<React.SetStateAction<VocabTerm[]>>;
     setAllTerms: React.Dispatch<React.SetStateAction<VocabTerm[]>>;
     setFallingTerms: React.Dispatch<React.SetStateAction<FallingTerm[]>>;
     setTermWrongCounts: React.Dispatch<
@@ -32,6 +33,7 @@ type ProgressResetInputs = {
 export function useGravityProgressReset({
     activeTerms,
     setActiveTerms,
+    setScopedTerms,
     setAllTerms,
     setFallingTerms,
     setTermWrongCounts,
@@ -58,7 +60,8 @@ export function useGravityProgressReset({
             isLearnt: false,
         });
 
-        setActiveTerms((prevTerms) => prevTerms.map(resetTerm));
+        setActiveTerms(activeTerms.map(resetTerm));
+        setScopedTerms(activeTerms.map(resetTerm));
         setAllTerms((prevTerms) =>
             prevTerms.map((term) =>
                 activeTermKeys.has(getTermKey(term)) ? resetTerm(term) : term,
@@ -82,6 +85,7 @@ export function useGravityProgressReset({
     }, [
         activeTerms,
         setActiveTerms,
+        setScopedTerms,
         setAllTerms,
         setTermWrongCounts,
         setIsAllLearntModalOpen,

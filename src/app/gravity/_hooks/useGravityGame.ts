@@ -9,11 +9,14 @@ import {
     HORIZONTAL_PADDING_PX,
     MAX_SIMULTANEOUS_TERMS,
     WORD_SPAWN_INTERVAL_MS,
-    getShuffledIndexes,
+    getShuffledTermKeys,
+    getTermKey,
+    isGravityTermLearnt,
     PLAYFIELD_HEIGHT_PX,
 } from "../_lib/gravity-utils";
 import type { VocabTerm } from "@/lib/types/vocab";
 import { useGravityAnswerHandlers } from "./useGravityAnswerHandlers";
+import { useGravityExtinctionMode } from "./useGravityExtinctionMode";
 import { useGravityFavoritesMode } from "./useGravityFavoritesMode";
 import { useGravityPlayfield } from "./useGravityPlayfield";
 import { useGravityProgressReset } from "./useGravityProgressReset";
@@ -22,7 +25,7 @@ import { useGravityTermScore } from "./useGravityTermScore";
 import { useGravityTimer } from "./useGravityTimer";
 
 export function useGravityGame() {
-    const [remainingQueue, setRemainingQueue] = React.useState<number[]>([]);
+    const [remainingQueue, setRemainingQueue] = React.useState<string[]>([]);
     const [fallingTerms, setFallingTerms] = React.useState<FallingTerm[]>([]);
     const [answer, setAnswer] = React.useState("");
     const [score, setScore] = React.useState(0);
@@ -56,17 +59,31 @@ export function useGravityGame() {
         isFavoritesModeRef,
         isFavoritesModeReady,
     } = useGravityFavoritesMode();
+    const {
+        isExtinctionMode,
+        setIsExtinctionMode,
+        isExtinctionModeRef,
+        isExtinctionModeReady,
+    } = useGravityExtinctionMode();
 
     const spawnTerm = React.useCallback(
-        (queue: number[], sourceTerms: VocabTerm[]) => {
-            let workingQueue = queue;
+        (queue: string[], sourceTerms: VocabTerm[]) => {
+            const sourceTermKeys = new Set(
+                sourceTerms.map((term) => getTermKey(term)),
+            );
+            let workingQueue = queue.filter((key) => sourceTermKeys.has(key));
             if (workingQueue.length === 0) {
-                workingQueue = getShuffledIndexes(sourceTerms.length);
+                workingQueue = getShuffledTermKeys(sourceTerms);
             }
 
-            const [nextIndex, ...rest] = workingQueue;
-            const nextTerm = sourceTerms[nextIndex!];
+            const [nextKey, ...rest] = workingQueue;
+            const nextTerm = sourceTerms.find(
+                (term) => getTermKey(term) === nextKey,
+            );
             if (!nextTerm) {
+                if (sourceTerms.length === 0) {
+                    return;
+                }
                 setIsGameOver(true);
                 setGameOverMessage("Game ended due to invalid term data.");
                 return;
@@ -96,6 +113,8 @@ export function useGravityGame() {
     const {
         allTerms,
         setAllTerms,
+        scopedTerms,
+        setScopedTerms,
         activeTerms,
         setActiveTerms,
         isLoading,
@@ -103,6 +122,7 @@ export function useGravityGame() {
         loadVocabTerms,
     } = useGravityTermsLoader({
         isFavoritesModeRef,
+        isExtinctionModeRef,
         spawnTerm,
         setFallingTerms,
         setScore,
@@ -121,7 +141,9 @@ export function useGravityGame() {
 
     const { updateTermScore } = useGravityTermScore({
         setAllTerms,
+        setScopedTerms,
         setActiveTerms,
+        isExtinctionModeRef,
     });
 
     useGravityTimer({
@@ -175,8 +197,9 @@ export function useGravityGame() {
     });
 
     const { resetLearningProgress } = useGravityProgressReset({
-        activeTerms,
+        activeTerms: scopedTerms,
         setActiveTerms,
+        setScopedTerms,
         setAllTerms,
         setFallingTerms,
         setTermWrongCounts,
@@ -191,7 +214,7 @@ export function useGravityGame() {
     });
 
     React.useEffect(() => {
-        if (!isFavoritesModeReady) {
+        if (!isFavoritesModeReady || !isExtinctionModeReady) {
             return;
         }
 
@@ -199,14 +222,14 @@ export function useGravityGame() {
             console.error("Error loading gravity game:", err);
             setIsLoading(false);
         });
-    }, [isFavoritesModeReady, loadVocabTerms]);
+    }, [isExtinctionModeReady, isFavoritesModeReady, loadVocabTerms]);
 
     const fallingTermsRef = React.useRef<FallingTerm[]>(fallingTerms);
     React.useEffect(() => {
         fallingTermsRef.current = fallingTerms;
     }, [fallingTerms]);
 
-    const remainingQueueRef = React.useRef<number[]>(remainingQueue);
+    const remainingQueueRef = React.useRef<string[]>(remainingQueue);
     React.useEffect(() => {
         remainingQueueRef.current = remainingQueue;
     }, [remainingQueue]);
@@ -214,6 +237,13 @@ export function useGravityGame() {
     const activeTermsRef = React.useRef<VocabTerm[]>(activeTerms);
     React.useEffect(() => {
         activeTermsRef.current = activeTerms;
+    }, [activeTerms]);
+
+    React.useEffect(() => {
+        const activeKeys = new Set(activeTerms.map((term) => getTermKey(term)));
+        setRemainingQueue((prevQueue) =>
+            prevQueue.filter((key) => activeKeys.has(key)),
+        );
     }, [activeTerms]);
 
     React.useEffect(() => {
@@ -285,19 +315,17 @@ export function useGravityGame() {
     ]);
 
     React.useEffect(() => {
-        if (activeTerms.length === 0 || isGameOver) {
+        if (scopedTerms.length === 0 || isGameOver) {
             return;
         }
 
-        const allLearnt = activeTerms.every(
-            (term) => (term.gravity_score ?? 0) >= 2,
-        );
+        const allLearnt = scopedTerms.every((term) => isGravityTermLearnt(term));
         if (allLearnt && !hasShownAllLearntModal) {
             setHasShownAllLearntModal(true);
             setIsAllLearntModalOpen(true);
             setFallingTerms([]);
         }
-    }, [hasShownAllLearntModal, isGameOver, activeTerms]);
+    }, [hasShownAllLearntModal, isGameOver, scopedTerms]);
 
     React.useEffect(() => {
         if (!isGameOver) {
@@ -308,25 +336,25 @@ export function useGravityGame() {
     }, [isGameOver]);
 
     React.useEffect(() => {
-        const hasUnlearntTerm = activeTerms.some(
-            (term) => (term.gravity_score ?? 0) < 2,
+        const hasUnlearntTerm = scopedTerms.some(
+            (term) => !isGravityTermLearnt(term),
         );
         if (hasUnlearntTerm && hasShownAllLearntModal) {
             setHasShownAllLearntModal(false);
         }
-    }, [hasShownAllLearntModal, activeTerms]);
+    }, [hasShownAllLearntModal, scopedTerms]);
 
     React.useEffect(() => {
         inputRef.current?.focus();
     }, [fallingTerms.length]);
 
-    const learntTermsCount = activeTerms.filter(
-        (term) => (term.gravity_score ?? 0) >= 2,
+    const learntTermsCount = scopedTerms.filter((term) =>
+        isGravityTermLearnt(term),
     ).length;
-    const learningTermsCount = activeTerms.filter(
+    const learningTermsCount = scopedTerms.filter(
         (term) => (term.gravity_score ?? 0) === 1,
     ).length;
-    const unlearntTermsCount = activeTerms.filter(
+    const unlearntTermsCount = scopedTerms.filter(
         (term) => (term.gravity_score ?? 0) === 0,
     ).length;
 
@@ -366,7 +394,9 @@ export function useGravityGame() {
         showReadingHint,
         isFavoritesMode,
         setIsFavoritesMode,
-        totalTermsCount: activeTerms.length,
+        isExtinctionMode,
+        setIsExtinctionMode,
+        totalTermsCount: scopedTerms.length,
         timer,
         unlearntTermsCount,
         terms: allTerms,

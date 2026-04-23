@@ -4,7 +4,10 @@ import * as React from "react";
 
 import { appendGameHistory, getGameHistory } from "@/lib/utils";
 import type { VocabTerm } from "@/lib/types/vocab";
-import { getShuffledIndexes } from "../_lib/gravity-utils";
+import {
+    getShuffledTermKeys,
+    isGravityTermLearnt,
+} from "../_lib/gravity-utils";
 import type { FallingTerm } from "../_lib/gravity-utils";
 
 type ProgressSource =
@@ -14,7 +17,8 @@ type ProgressSource =
 
 type TermsLoaderInputs = {
     isFavoritesModeRef: React.MutableRefObject<boolean>;
-    spawnTerm: (queue: number[], sourceTerms: VocabTerm[]) => void;
+    isExtinctionModeRef: React.MutableRefObject<boolean>;
+    spawnTerm: (queue: string[], sourceTerms: VocabTerm[]) => void;
     setFallingTerms: React.Dispatch<React.SetStateAction<FallingTerm[]>>;
     setScore: React.Dispatch<React.SetStateAction<number>>;
     setTermWrongCounts: React.Dispatch<
@@ -34,6 +38,7 @@ type TermsLoaderInputs = {
 
 export function useGravityTermsLoader({
     isFavoritesModeRef,
+    isExtinctionModeRef,
     spawnTerm,
     setScore,
     setTermWrongCounts,
@@ -50,6 +55,7 @@ export function useGravityTermsLoader({
     setCorrectionTerm,
 }: TermsLoaderInputs) {
     const [allTerms, setAllTerms] = React.useState<VocabTerm[]>([]);
+    const [scopedTerms, setScopedTerms] = React.useState<VocabTerm[]>([]);
     const [activeTerms, setActiveTerms] = React.useState<VocabTerm[]>([]);
     const [isLoading, setIsLoading] = React.useState(true);
     const progressSourceRef = React.useRef<ProgressSource | null>(null);
@@ -174,8 +180,12 @@ export function useGravityTermsLoader({
         }
 
         setAllTerms(parsedTerms);
-        setActiveTerms(filteredTerms);
-        const queue = getShuffledIndexes(filteredTerms.length);
+        setScopedTerms(filteredTerms);
+        const nextActiveTerms = isExtinctionModeRef.current
+            ? filteredTerms.filter((term) => !isGravityTermLearnt(term))
+            : filteredTerms;
+        setActiveTerms(nextActiveTerms);
+        const queue = getShuffledTermKeys(nextActiveTerms);
         setScore(0);
         setTermWrongCounts({});
         setTimer(0);
@@ -189,9 +199,12 @@ export function useGravityTermsLoader({
         setHasShownAllLearntModal(false);
         setFallingTerms([]);
         setCorrectionTerm(null);
-        spawnTerm(queue, filteredTerms);
+        if (nextActiveTerms.length > 0) {
+            spawnTerm(queue, nextActiveTerms);
+        }
         setIsLoading(false);
     }, [
+        isExtinctionModeRef,
         isFavoritesModeRef,
         setTimer,
         setAnswer,
@@ -233,6 +246,8 @@ export function useGravityTermsLoader({
     return {
         allTerms,
         setAllTerms,
+        scopedTerms,
+        setScopedTerms,
         activeTerms,
         setActiveTerms,
         isLoading,

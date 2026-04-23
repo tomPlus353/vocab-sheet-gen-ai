@@ -15,6 +15,8 @@ type GameControlProps = {
     setShowReadingHint: React.Dispatch<React.SetStateAction<boolean>>;
     isFavoritesMode: boolean;
     setIsFavoritesMode: React.Dispatch<React.SetStateAction<boolean>>;
+    isExtinctionMode: boolean;
+    setIsExtinctionMode: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 export function GameControls(props: GameControlProps) {
@@ -23,11 +25,13 @@ export function GameControls(props: GameControlProps) {
         loadVocabTerms,
         resetLearningProgress,
         setIsEditTermsModalOpen,
-    isTermAtRisk,
+        isTermAtRisk,
         showReadingHint,
         setShowReadingHint,
         isFavoritesMode,
         setIsFavoritesMode,
+        isExtinctionMode,
+        setIsExtinctionMode,
     } = props;
 
     const [isAllFavoritesReviewMode, setIsAllFavoritesReviewMode] =
@@ -47,6 +51,11 @@ export function GameControls(props: GameControlProps) {
 
     const handleFavoritesModeToggle = () => {
         setIsFavoritesMode(!isFavoritesMode);
+        setIsRestartPromptOpen(true);
+    };
+
+    const handleExtinctionModeToggle = () => {
+        setIsExtinctionMode(!isExtinctionMode);
         setIsRestartPromptOpen(true);
     };
 
@@ -88,7 +97,7 @@ export function GameControls(props: GameControlProps) {
                 </div>
             </div>
             <div className="w-full border border-x-0 border-gray-700 bg-gray-900 px-2 py-1">
-                <div className="flex justify-around gap-6">
+                <div className="flex flex-wrap justify-around gap-4">
                     <label
                         htmlFor="show-reading-hint"
                         className="flex cursor-pointer items-center gap-2"
@@ -121,14 +130,30 @@ export function GameControls(props: GameControlProps) {
                             </span>
                         </label>
                     )}
+                    <label
+                        htmlFor="extinction-mode"
+                        className="flex cursor-pointer items-center gap-2"
+                    >
+                        <Checkbox
+                            className="h-5 w-5 rounded-sm border-gray-500 bg-transparent data-[state=checked]:border-indigo-500 data-[state=checked]:bg-indigo-500"
+                            id="extinction-mode"
+                            checked={isExtinctionMode}
+                            onCheckedChange={handleExtinctionModeToggle}
+                        />
+                        <span className="text-xs font-medium text-gray-200 md:text-sm">
+                            Extinction mode
+                        </span>
+                    </label>
                 </div>
             </div>
             <ConfirmActionModal
                 open={isRestartPromptOpen}
                 title="Restart Gravity?"
-                description={`Favorites mode is now ${
+                description={`Restart to apply mode changes to this gravity run. Favorites only is ${
                     isFavoritesMode ? "on" : "off"
-                }. Restart now to apply this mode to the current gravity run?`}
+                }, and extinction mode is ${
+                    isExtinctionMode ? "on" : "off"
+                }.`}
                 confirmLabel="Restart now"
                 onOpenChange={setIsRestartPromptOpen}
                 onConfirm={handleRestart}

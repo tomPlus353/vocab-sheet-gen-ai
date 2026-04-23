@@ -2,17 +2,21 @@
 
 import * as React from "react";
 
-import { getTermKey } from "../_lib/gravity-utils";
+import { getTermKey, isGravityTermLearnt } from "../_lib/gravity-utils";
 import type { VocabTerm } from "@/lib/types/vocab";
 
 type TermScoreInputs = {
     setAllTerms: React.Dispatch<React.SetStateAction<VocabTerm[]>>;
+    setScopedTerms: React.Dispatch<React.SetStateAction<VocabTerm[]>>;
     setActiveTerms: React.Dispatch<React.SetStateAction<VocabTerm[]>>;
+    isExtinctionModeRef: React.MutableRefObject<boolean>;
 };
 
 export function useGravityTermScore({
     setAllTerms,
+    setScopedTerms,
     setActiveTerms,
+    isExtinctionModeRef,
 }: TermScoreInputs) {
     const updateTermScore = React.useCallback(
         (
@@ -48,9 +52,19 @@ export function useGravityTermScore({
                 });
 
             setAllTerms(applyScoreUpdate);
-            setActiveTerms(applyScoreUpdate);
+            setScopedTerms((prevTerms) => {
+                const updatedTerms = applyScoreUpdate(prevTerms);
+                setActiveTerms(
+                    isExtinctionModeRef.current
+                        ? updatedTerms.filter(
+                              (oneTerm) => !isGravityTermLearnt(oneTerm),
+                          )
+                        : updatedTerms,
+                );
+                return updatedTerms;
+            });
         },
-        [setAllTerms, setActiveTerms],
+        [isExtinctionModeRef, setActiveTerms, setAllTerms, setScopedTerms],
     );
 
     return { updateTermScore };
