@@ -75,6 +75,8 @@ export default function GravityPage() {
         }
     };
 
+    const showGameOverPanel = isGameOver && !isCorrectionModalOpen;
+
     return (
         <div>
             <SectionHeader title="Gravity Typing Game" />
@@ -140,11 +142,48 @@ export default function GravityPage() {
                         style={{ height: `${PLAYFIELD_HEIGHT_PX}px` }}
                     >
                         <div className="absolute bottom-0 h-1 w-full bg-red-500/60" />
-                    {fallingTerms.length > 0 ? (
-                        fallingTerms.map((term) => {
-                            const termKey = getTermKey(term.term);
-                            const termWrongCount =
-                                termWrongCounts[termKey] ?? 0;
+                        {showGameOverPanel ? (
+                            <div className="flex h-full flex-col items-center justify-center gap-4 px-6 text-center">
+                                <div className="space-y-2">
+                                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-red-300/80">
+                                        Round Complete
+                                    </p>
+                                    <h2 className="text-3xl font-black text-white">
+                                        Game Over
+                                    </h2>
+                                    <p className="mx-auto max-w-md text-sm text-slate-300">
+                                        {gameOverMessage}
+                                    </p>
+                                    <p className="text-sm text-slate-400">
+                                        Restart this gravity set or head back to
+                                        choose your next review.
+                                    </p>
+                                </div>
+                                <div className="flex flex-col gap-3 sm:flex-row">
+                                    <CommonButton
+                                        label="Restart Gravity"
+                                        additionalclasses="mx-0"
+                                        onClick={() => {
+                                            loadVocabTerms().catch((err) => {
+                                                console.error(
+                                                    "Error restarting gravity game:",
+                                                    err,
+                                                );
+                                            });
+                                        }}
+                                    />
+                                    <CommonButton
+                                        label="Back to Reader"
+                                        additionalclasses="mx-0 bg-slate-700/80 hover:bg-slate-600 hover:text-white"
+                                        onClick={handleReturnFromGravityPage}
+                                    />
+                                </div>
+                            </div>
+                        ) : fallingTerms.length > 0 ? (
+                            fallingTerms.map((term) => {
+                                const termKey = getTermKey(term.term);
+                                const termWrongCount =
+                                    termWrongCounts[termKey] ?? 0;
                                 const definition = term.term.english_definition;
                                 const truncated =
                                     definition.length > 50
@@ -177,45 +216,39 @@ export default function GravityPage() {
                             })
                         ) : (
                             <div className="flex h-full items-center justify-center text-gray-400">
-                                {isGameOver
-                                    ? gameOverMessage
-                                    : "Preparing next terms..."}
+                                Preparing next terms...
                             </div>
                         )}
                     </div>
 
-                    <form onSubmit={handleSubmit} className="mt-4 flex gap-2">
-                        <input
-                            ref={inputRef}
-                            type="text"
-                            className="w-full rounded-md border border-slate-700 bg-black px-3 py-2 text-white outline-none focus:border-indigo-500"
-                            placeholder="Type the Japanese term"
-                            value={answer}
-                            disabled={
-                                isGameOver ||
-                                isLoading ||
-                                fallingTerms.length === 0 ||
-                                isCorrectionModalOpen
-                            }
-                            onChange={(event) => setAnswer(event.target.value)}
-                        />
-                        <CommonButton
-                            type="submit"
-                            label="Submit"
-                            additionalclasses="mx-0"
-                            disabled={
-                                isGameOver ||
-                                isLoading ||
-                                fallingTerms.length === 0 ||
-                                isCorrectionModalOpen
-                            }
-                        />
-                    </form>
-
-                    {isGameOver && (
-                        <div className="mt-3 rounded-md border border-indigo-500/40 bg-indigo-500/10 p-3 text-sm text-indigo-100">
-                            {gameOverMessage}
-                        </div>
+                    {!showGameOverPanel && (
+                        <form onSubmit={handleSubmit} className="mt-4 flex gap-2">
+                            <input
+                                ref={inputRef}
+                                type="text"
+                                className="w-full rounded-md border border-slate-700 bg-black px-3 py-2 text-white outline-none focus:border-indigo-500"
+                                placeholder="Type the Japanese term"
+                                value={answer}
+                                disabled={
+                                    isGameOver ||
+                                    isLoading ||
+                                    fallingTerms.length === 0 ||
+                                    isCorrectionModalOpen
+                                }
+                                onChange={(event) => setAnswer(event.target.value)}
+                            />
+                            <CommonButton
+                                type="submit"
+                                label="Submit"
+                                additionalclasses="mx-0"
+                                disabled={
+                                    isGameOver ||
+                                    isLoading ||
+                                    fallingTerms.length === 0 ||
+                                    isCorrectionModalOpen
+                                }
+                            />
+                        </form>
                     )}
                 </div>
             )}

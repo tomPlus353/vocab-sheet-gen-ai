@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 import CommonButton from "@/components/common/CommonButton";
+import { ConfirmActionModal } from "@/components/common/modals/ConfirmActionModal";
 import { Checkbox } from "@/components/ui/checkbox";
 
 type GameControlProps = {
@@ -31,11 +32,23 @@ export function GameControls(props: GameControlProps) {
 
     const [isAllFavoritesReviewMode, setIsAllFavoritesReviewMode] =
         useState(false);
+    const [isRestartPromptOpen, setIsRestartPromptOpen] = useState(false);
 
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
         setIsAllFavoritesReviewMode(urlParams.get("favorites") === "1");
     }, []);
+
+    const handleRestart = () => {
+        loadVocabTerms().catch((err) => {
+            console.error("Error restarting gravity game:", err);
+        });
+    };
+
+    const handleFavoritesModeToggle = () => {
+        setIsFavoritesMode(!isFavoritesMode);
+        setIsRestartPromptOpen(true);
+    };
 
     return (
         <div>
@@ -49,14 +62,7 @@ export function GameControls(props: GameControlProps) {
                     <CommonButton
                         label="⟳ Restart"
                         additionalclasses="mx-0 whitespace-nowrap text-xs sm:text-sm"
-                        onClick={() => {
-                            loadVocabTerms().catch((err) => {
-                                console.error(
-                                    "Error restarting gravity game:",
-                                    err,
-                                );
-                            });
-                        }}
+                        onClick={handleRestart}
                     />
                     <CommonButton
                         label="Reset"
@@ -108,9 +114,7 @@ export function GameControls(props: GameControlProps) {
                                 className="h-5 w-5 rounded-sm border-gray-500 bg-transparent data-[state=checked]:border-indigo-500 data-[state=checked]:bg-indigo-500"
                                 id="favorites-only"
                                 checked={isFavoritesMode}
-                                onCheckedChange={() =>
-                                    setIsFavoritesMode(!isFavoritesMode)
-                                }
+                                onCheckedChange={handleFavoritesModeToggle}
                             />
                             <span className="text-xs font-medium text-gray-200 md:text-sm">
                                 Favorites only
@@ -119,6 +123,16 @@ export function GameControls(props: GameControlProps) {
                     )}
                 </div>
             </div>
+            <ConfirmActionModal
+                open={isRestartPromptOpen}
+                title="Restart Gravity?"
+                description={`Favorites mode is now ${
+                    isFavoritesMode ? "on" : "off"
+                }. Restart now to apply this mode to the current gravity run?`}
+                confirmLabel="Restart now"
+                onOpenChange={setIsRestartPromptOpen}
+                onConfirm={handleRestart}
+            />
         </div>
     );
 }

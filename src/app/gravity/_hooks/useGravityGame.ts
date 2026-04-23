@@ -50,8 +50,12 @@ export function useGravityGame() {
     const inputRef = React.useRef<HTMLInputElement>(null);
 
     const { toast } = useToast();
-    const { isFavoritesMode, setIsFavoritesMode, isFavoritesModeRef } =
-        useGravityFavoritesMode();
+    const {
+        isFavoritesMode,
+        setIsFavoritesMode,
+        isFavoritesModeRef,
+        isFavoritesModeReady,
+    } = useGravityFavoritesMode();
 
     const spawnTerm = React.useCallback(
         (queue: number[], sourceTerms: VocabTerm[]) => {
@@ -187,11 +191,15 @@ export function useGravityGame() {
     });
 
     React.useEffect(() => {
+        if (!isFavoritesModeReady) {
+            return;
+        }
+
         loadVocabTerms().catch((err) => {
             console.error("Error loading gravity game:", err);
             setIsLoading(false);
         });
-    }, [loadVocabTerms]);
+    }, [isFavoritesModeReady, loadVocabTerms]);
 
     const fallingTermsRef = React.useRef<FallingTerm[]>(fallingTerms);
     React.useEffect(() => {
@@ -290,6 +298,14 @@ export function useGravityGame() {
             setFallingTerms([]);
         }
     }, [hasShownAllLearntModal, isGameOver, activeTerms]);
+
+    React.useEffect(() => {
+        if (!isGameOver) {
+            return;
+        }
+
+        setFallingTerms([]);
+    }, [isGameOver]);
 
     React.useEffect(() => {
         const hasUnlearntTerm = activeTerms.some(
