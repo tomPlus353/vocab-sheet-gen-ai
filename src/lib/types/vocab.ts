@@ -14,6 +14,16 @@ export type VocabTerm = {
     type?: string;
 };
 
+export type HistoryEntrySource = "generated" | "manual";
+
+export type HistoryEntry = {
+    id: string;
+    title: string;
+    source: HistoryEntrySource;
+    createdAt: string;
+    terms: VocabTerm[];
+};
+
 export type KanjiMasteryStage = "new" | "learning" | "mastered";
 
 export type KanjiSupportWord = {

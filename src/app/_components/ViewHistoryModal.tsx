@@ -13,7 +13,7 @@ import { FavoritesList } from "@/components/common/FavoritesList";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
 
-import { getGameHistory } from "@/lib/utils";
+import { getGameHistoryEntry } from "@/lib/utils";
 
 import type { VocabTerm } from "@/lib/types/vocab";
 interface ViewHistoryModalProps {
@@ -50,12 +50,9 @@ export function ViewHistoryModal({
                     return;
                 }
             }
-            const storedHistory = getGameHistory(historyTermsKey, true);
+            const storedHistory = getGameHistoryEntry(historyTermsKey, true);
             if (storedHistory) {
-                const parsedHistory: VocabTerm[] = JSON.parse(
-                    storedHistory,
-                ) as VocabTerm[];
-                setTerms(parsedHistory);
+                setTerms(storedHistory.terms);
             }
         } catch (e) {
             console.error("Error fetching history terms: ", e);
