@@ -6,6 +6,7 @@ import type { VocabTerm } from "@/lib/types/vocab";
 
 type Props = {
     open: boolean;
+    isGameOver: boolean;
     activeTerm: VocabTerm | null;
     correctionInput: string;
     correctionError: string;
@@ -16,6 +17,7 @@ type Props = {
 export function CorrectionModal(props: Props) {
     const {
         open,
+        isGameOver,
         activeTerm,
         correctionInput,
         correctionError,
@@ -31,10 +33,12 @@ export function CorrectionModal(props: Props) {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
             <div className="w-full max-w-md rounded-xl border border-red-300/30 bg-slate-900 p-5 text-white shadow-2xl">
                 <h3 className="text-xl font-bold text-red-300">
-                    First mistake
+                    {isGameOver ? "Final correction" : "First mistake"}
                 </h3>
                 <p className="mt-2 text-sm text-gray-300">
-                    Type the correct Japanese term to resume.
+                    {isGameOver
+                        ? "Type the correct Japanese term one last time to finish."
+                        : "Type the correct Japanese term to resume."}
                 </p>
                 <p className="mt-3 rounded-md bg-slate-800 p-2 text-sm text-amber-100">
                     Clue: {activeTerm.english_definition}
@@ -66,7 +70,7 @@ export function CorrectionModal(props: Props) {
                     )}
                     <CommonButton
                         type="submit"
-                        label="Resume Game"
+                        label={isGameOver ? "Finish Game" : "Resume Game"}
                         additionalclasses="mx-0 bg-red-600 hover:bg-red-500"
                     />
                 </form>

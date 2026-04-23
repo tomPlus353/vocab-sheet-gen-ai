@@ -76,11 +76,14 @@ export function useGravityAnswerHandlers({
 
             setTermWrongCounts((prev) => ({
                 ...prev,
-                [termKey]: nextCount,
+                [termKey]: (prev[termKey] ?? 0) + 1,
             }));
 
             if (nextCount >= 2) {
-                setCorrectionTerm(null);
+                setCorrectionTerm(term);
+                setIsCorrectionModalOpen(true);
+                setCorrectionInput(answer);
+                setCorrectionError("");
                 setIsGameOver(true);
                 setGameOverMessage(
                     `Game over. "${term.japanese}" was missed twice.`,
@@ -183,6 +186,9 @@ export function useGravityAnswerHandlers({
                 setCorrectionError("");
                 setAnswer("");
                 setCorrectionTerm(null);
+                if (isGameOver) {
+                    return;
+                }
                 spawnTerm(remainingQueue, activeTerms);
                 return;
             }
@@ -192,6 +198,7 @@ export function useGravityAnswerHandlers({
         [
             correctionTerm,
             correctionInput,
+            isGameOver,
             remainingQueue,
             spawnTerm,
             activeTerms,

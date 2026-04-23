@@ -221,7 +221,8 @@ export default function GravityPage() {
             )}
 
             <CorrectionModal
-                open={isCorrectionModalOpen && !isGameOver}
+                open={isCorrectionModalOpen}
+                isGameOver={isGameOver}
                 activeTerm={correctionTerm ?? null}
                 correctionInput={correctionInput}
                 correctionError={correctionError}

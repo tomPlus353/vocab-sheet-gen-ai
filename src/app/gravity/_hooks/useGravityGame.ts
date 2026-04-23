@@ -251,21 +251,20 @@ export function useGravityGame() {
             return;
         }
 
-        fallingTerms.forEach((term) => {
-            if (term.y >= PLAYFIELD_HEIGHT_PX) {
-                toast({
-                    title: "Missed",
-                    description: "The term reached the bottom.",
-                    duration: 800,
-                    variant: "destructive",
-                });
-                updateTermScore(term.term, "wrong", false);
-                setFallingTerms((prev) =>
-                    prev.filter((item) => item.id !== term.id),
-                );
-                handleWrongAttempt(term.term);
-            }
+        const missedTerm = fallingTerms.find((term) => term.y >= PLAYFIELD_HEIGHT_PX);
+        if (!missedTerm) {
+            return;
+        }
+
+        toast({
+            title: "Missed",
+            description: "The term reached the bottom.",
+            duration: 800,
+            variant: "destructive",
         });
+        updateTermScore(missedTerm.term, "wrong", false);
+        setFallingTerms((prev) => prev.filter((item) => item.id !== missedTerm.id));
+        handleWrongAttempt(missedTerm.term);
     }, [
         fallingTerms,
         handleWrongAttempt,
