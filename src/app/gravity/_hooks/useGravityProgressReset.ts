@@ -57,6 +57,7 @@ export function useGravityProgressReset({
         const resetTerm = (term: VocabTerm) => ({
             ...term,
             gravity_score: 0,
+            gravity_reading_score: 0,
             isLearnt: false,
         });
 

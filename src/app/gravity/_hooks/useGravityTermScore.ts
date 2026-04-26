@@ -10,6 +10,7 @@ type TermScoreInputs = {
     setScopedTerms: React.Dispatch<React.SetStateAction<VocabTerm[]>>;
     setActiveTerms: React.Dispatch<React.SetStateAction<VocabTerm[]>>;
     isExtinctionModeRef: React.MutableRefObject<boolean>;
+    isTestReadingRef: React.MutableRefObject<boolean>;
 };
 
 export function useGravityTermScore({
@@ -17,6 +18,7 @@ export function useGravityTermScore({
     setScopedTerms,
     setActiveTerms,
     isExtinctionModeRef,
+    isTestReadingRef,
 }: TermScoreInputs) {
     const updateTermScore = React.useCallback(
         (
@@ -31,10 +33,17 @@ export function useGravityTermScore({
                         return oneTerm;
                     }
 
+                    const scoreField = isTestReadingRef.current
+                        ? ("gravity_reading_score" as const)
+                        : ("gravity_score" as const);
+                    const currentScore = isTestReadingRef.current
+                        ? oneTerm.gravity_reading_score ?? 0
+                        : oneTerm.gravity_score ?? 0;
+
                     if (action === "wrong") {
                         return {
                             ...oneTerm,
-                            gravity_score: 0,
+                            [scoreField]: 0,
                             isLearnt: false,
                         };
                     }
@@ -43,10 +52,10 @@ export function useGravityTermScore({
                         return oneTerm;
                     }
 
-                    const nextScore = (oneTerm.gravity_score ?? 0) + 1;
+                    const nextScore = currentScore + 1;
                     return {
                         ...oneTerm,
-                        gravity_score: nextScore,
+                        [scoreField]: nextScore,
                         isLearnt: nextScore >= 2,
                     };
                 });
@@ -57,7 +66,11 @@ export function useGravityTermScore({
                 setActiveTerms(
                     isExtinctionModeRef.current
                         ? updatedTerms.filter(
-                              (oneTerm) => !isGravityTermLearnt(oneTerm),
+                              (oneTerm) =>
+                                  !isGravityTermLearnt(
+                                      oneTerm,
+                                      isTestReadingRef.current,
+                                  ),
                           )
                         : updatedTerms,
                 );

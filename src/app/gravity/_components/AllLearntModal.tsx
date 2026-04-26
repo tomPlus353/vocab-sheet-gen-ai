@@ -5,12 +5,22 @@ import { useEffect, useState } from "react";
 
 type Props = {
     open: boolean;
+    isTestReading: boolean;
+    showSwitchPractice: boolean;
+    onSwitchPractice: () => void;
     onReturnToReader: () => void;
     onContinuePractice: () => void;
 };
 
 export function AllLearntModal(props: Props) {
-    const { open, onReturnToReader, onContinuePractice } = props;
+    const {
+        open,
+        isTestReading,
+        showSwitchPractice,
+        onSwitchPractice,
+        onReturnToReader,
+        onContinuePractice,
+    } = props;
 
     const [returnTargetLabel, setReturnTargetLabel] = useState<
         "Ereader" | "Home"
@@ -29,6 +39,13 @@ export function AllLearntModal(props: Props) {
         return null;
     }
 
+    const currentModeLabel = isTestReading
+        ? "Reading practice"
+        : "Meaning practice";
+    const otherModeLabel = isTestReading
+        ? "Meaning practice"
+        : "Reading practice";
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
             <div className="w-full max-w-lg rounded-xl border border-green-300/30 bg-slate-900 p-5 shadow-2xl">
@@ -39,9 +56,10 @@ export function AllLearntModal(props: Props) {
                     You got every term correct at least twice in a row.
                 </p>
                 <p className="mt-2 text-sm text-gray-300">
-                    Do you want to return to the ereader and read the text now?
+                    You completed {currentModeLabel}. Would you like to switch
+                    to {otherModeLabel} now?
                 </p>
-                <div className="mt-4 flex gap-2">
+                <div className="mt-4 flex flex-col gap-2 sm:flex-row">
                     <CommonButton
                         label={`Back to ${returnTargetLabel}`}
                         additionalclasses="mx-0 bg-green-700 text-white hover:bg-green-400 hover:font-semibold"
@@ -52,6 +70,13 @@ export function AllLearntModal(props: Props) {
                         additionalclasses="mx-0 bg-slate-500 text-white hover:bg-slate-400 hover:font-semibold"
                         onClick={onContinuePractice}
                     />
+                    {showSwitchPractice && (
+                        <CommonButton
+                            label={`Study ${otherModeLabel}`}
+                            additionalclasses="mx-0 bg-indigo-600 text-white hover:bg-indigo-500 hover:font-semibold"
+                            onClick={onSwitchPractice}
+                        />
+                    )}
                 </div>
             </div>
         </div>

@@ -34,6 +34,7 @@ type TermsLoaderInputs = {
     setIsAllLearntModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
     setHasShownAllLearntModal: React.Dispatch<React.SetStateAction<boolean>>;
     setCorrectionTerm: React.Dispatch<React.SetStateAction<VocabTerm | null>>;
+    isTestReadingRef: React.MutableRefObject<boolean>;
 };
 
 export function useGravityTermsLoader({
@@ -53,6 +54,7 @@ export function useGravityTermsLoader({
     setHasShownAllLearntModal,
     setFallingTerms,
     setCorrectionTerm,
+    isTestReadingRef,
 }: TermsLoaderInputs) {
     const [allTerms, setAllTerms] = React.useState<VocabTerm[]>([]);
     const [scopedTerms, setScopedTerms] = React.useState<VocabTerm[]>([]);
@@ -144,13 +146,19 @@ export function useGravityTermsLoader({
                         typeof item.gravity_score === "number"
                             ? item.gravity_score
                             : undefined;
+                    const readingScore =
+                        typeof item.gravity_reading_score === "number"
+                            ? item.gravity_reading_score
+                            : undefined;
                     return {
                         japanese: item.japanese as string,
                         kana: item.kana as string,
                         english_definition: item.english_definition as string,
                         isFavorite: item.isFavorite as boolean | undefined,
                         gravity_score: score,
-                        isLearnt: typeof score === "number" ? score >= 2 : false,
+                        gravity_reading_score: readingScore,
+                        isLearnt:
+                            (score ?? 0) >= 2 || (readingScore ?? 0) >= 2,
                     };
                 });
         } catch (error) {
@@ -182,7 +190,13 @@ export function useGravityTermsLoader({
         setAllTerms(parsedTerms);
         setScopedTerms(filteredTerms);
         const nextActiveTerms = isExtinctionModeRef.current
-            ? filteredTerms.filter((term) => !isGravityTermLearnt(term))
+            ? filteredTerms.filter(
+                  (term) =>
+                      !isGravityTermLearnt(
+                          term,
+                          isTestReadingRef.current,
+                      ),
+              )
             : filteredTerms;
         setActiveTerms(nextActiveTerms);
         const queue = getShuffledTermKeys(nextActiveTerms);
@@ -220,6 +234,7 @@ export function useGravityTermsLoader({
         spawnTerm,
         setFallingTerms,
         setCorrectionTerm,
+        isTestReadingRef,
     ]);
 
     React.useEffect(() => {

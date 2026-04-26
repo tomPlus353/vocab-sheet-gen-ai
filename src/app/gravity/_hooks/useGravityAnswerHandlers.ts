@@ -68,6 +68,8 @@ export function useGravityAnswerHandlers({
     correctionTerm,
     setCorrectionTerm,
 }: AnswerHandlerInputs) {
+    const getExpectedAnswer = React.useCallback((term: VocabTerm) => term.japanese, []);
+
     const handleWrongAttempt = React.useCallback(
         (term: VocabTerm) => {
             const termKey = getTermKey(term);
@@ -122,9 +124,10 @@ export function useGravityAnswerHandlers({
                 return;
             }
 
-            const matches = fallingTerms.filter((falling) =>
-                isAnswerCorrect(answer, falling.term.japanese),
-            );
+            const matches = fallingTerms.filter((falling) => {
+                const expected = getExpectedAnswer(falling.term);
+                return isAnswerCorrect(answer, expected);
+            });
 
             if (matches.length > 0) {
                 const matchedIds = new Set(matches.map((match) => match.id));
@@ -169,6 +172,7 @@ export function useGravityAnswerHandlers({
             updateTermScore,
             setAnswer,
             setScore,
+            getExpectedAnswer,
         ],
     );
 
@@ -180,7 +184,8 @@ export function useGravityAnswerHandlers({
                 return;
             }
 
-            if (isAnswerCorrect(correctionInput, correctionTerm.japanese)) {
+            const expected = getExpectedAnswer(correctionTerm);
+            if (isAnswerCorrect(correctionInput, expected)) {
                 setIsCorrectionModalOpen(false);
                 setCorrectionInput("");
                 setCorrectionError("");
@@ -193,7 +198,7 @@ export function useGravityAnswerHandlers({
                 return;
             }
 
-            setCorrectionError("That is not the correct Japanese term yet.");
+            setCorrectionError("That is not the correct answer yet.");
         },
         [
             correctionTerm,
@@ -202,6 +207,7 @@ export function useGravityAnswerHandlers({
             remainingQueue,
             spawnTerm,
             activeTerms,
+            getExpectedAnswer,
             setIsCorrectionModalOpen,
             setCorrectionInput,
             setCorrectionError,

@@ -45,8 +45,12 @@ export function getTermKey(term: VocabTerm): string {
     return `${term.japanese}||${term.english_definition}`;
 }
 
-export function isGravityTermLearnt(term: VocabTerm): boolean {
-    return (term.gravity_score ?? 0) >= 2;
+export function getGravityTermScore(term: VocabTerm, isTestReading: boolean): number {
+    return isTestReading ? term.gravity_reading_score ?? 0 : term.gravity_score ?? 0;
+}
+
+export function isGravityTermLearnt(term: VocabTerm, isTestReading = false): boolean {
+    return getGravityTermScore(term, isTestReading) >= 2;
 }
 
 export function getShuffledTermKeys(terms: VocabTerm[]): string[] {

@@ -5,7 +5,7 @@
 - [status: done] Add extinction mode to gravity
   Context: Stop spawning learnt terms so gravity can be finished faster by focusing only on remaining unlearnt terms.
   Page: Gravity
-- [status: pending] Add "test reading" checkbox to gravity.
+- [status: done] Add "test reading" checkbox to gravity.
   Context: Currently vocabTerm's english definition is used as prompt. Instead use the KANJI as prompt and the user has to reproduce that same Kanji by typing it. So the prompt should be like "Write: {$card.kanji}"
   Page: /gravity
 - [status: pending] Add dedicated history page

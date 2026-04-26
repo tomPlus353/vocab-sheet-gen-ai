@@ -138,6 +138,7 @@ function sanitizeVocabTerm(term: VocabTerm): VocabTerm {
   if (term.example_sentences) nextTerm.example_sentences = term.example_sentences;
   if (typeof term.isFavorite === "boolean") nextTerm.isFavorite = term.isFavorite;
   if (typeof term.gravity_score === "number") nextTerm.gravity_score = term.gravity_score;
+  if (typeof term.gravity_reading_score === "number") nextTerm.gravity_reading_score = term.gravity_reading_score;
   if (typeof term.isLearnt === "boolean") nextTerm.isLearnt = term.isLearnt;
   if (typeof term.type === "string") nextTerm.type = term.type;
 

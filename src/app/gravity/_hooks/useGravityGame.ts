@@ -11,6 +11,7 @@ import {
     WORD_SPAWN_INTERVAL_MS,
     getShuffledTermKeys,
     getTermKey,
+    getGravityTermScore,
     isGravityTermLearnt,
     PLAYFIELD_HEIGHT_PX,
 } from "../_lib/gravity-utils";
@@ -24,6 +25,8 @@ import { useGravityTermsLoader } from "./useGravityTermsLoader";
 import { useGravityTermScore } from "./useGravityTermScore";
 import { useGravityTimer } from "./useGravityTimer";
 
+const TEST_READING_STORAGE_KEY = "gravityTestReadingMode";
+
 export function useGravityGame() {
     const [remainingQueue, setRemainingQueue] = React.useState<string[]>([]);
     const [fallingTerms, setFallingTerms] = React.useState<FallingTerm[]>([]);
@@ -35,6 +38,12 @@ export function useGravityGame() {
     const [isGameOver, setIsGameOver] = React.useState(false);
     const [gameOverMessage, setGameOverMessage] = React.useState("");
     const [showReadingHint, setShowReadingHint] = React.useState(false);
+    const [isTestReading, setIsTestReadingState] = React.useState(() => {
+        if (typeof window === "undefined") {
+            return false;
+        }
+        return window.localStorage.getItem(TEST_READING_STORAGE_KEY) === "1";
+    });
     const [timer, setTimer] = React.useState(0);
     const [correctionInput, setCorrectionInput] = React.useState("");
     const [correctionError, setCorrectionError] = React.useState("");
@@ -49,6 +58,29 @@ export function useGravityGame() {
         React.useState(false);
     const [isAllLearntModalOpen, setIsAllLearntModalOpen] =
         React.useState(false);
+
+    const isTestReadingRef = React.useRef(isTestReading);
+    const setIsTestReading = React.useCallback(
+        (value: React.SetStateAction<boolean>) => {
+            const nextValue =
+                typeof value === "function"
+                    ? (value as (prevState: boolean) => boolean)(
+                          isTestReadingRef.current,
+                      )
+                    : value;
+            isTestReadingRef.current = nextValue;
+            setIsTestReadingState(nextValue);
+            try {
+                window.localStorage.setItem(
+                    TEST_READING_STORAGE_KEY,
+                    nextValue ? "1" : "0",
+                );
+            } catch {
+                // ignore storage errors (private mode, quota, etc.)
+            }
+        },
+        [],
+    );
 
     const inputRef = React.useRef<HTMLInputElement>(null);
 
@@ -123,6 +155,7 @@ export function useGravityGame() {
     } = useGravityTermsLoader({
         isFavoritesModeRef,
         isExtinctionModeRef,
+        isTestReadingRef,
         spawnTerm,
         setFallingTerms,
         setScore,
@@ -144,6 +177,7 @@ export function useGravityGame() {
         setScopedTerms,
         setActiveTerms,
         isExtinctionModeRef,
+        isTestReadingRef,
     });
 
     useGravityTimer({
@@ -319,13 +353,15 @@ export function useGravityGame() {
             return;
         }
 
-        const allLearnt = scopedTerms.every((term) => isGravityTermLearnt(term));
+        const allLearnt = scopedTerms.every((term) =>
+            isGravityTermLearnt(term, isTestReading),
+        );
         if (allLearnt && !hasShownAllLearntModal) {
             setHasShownAllLearntModal(true);
             setIsAllLearntModalOpen(true);
             setFallingTerms([]);
         }
-    }, [hasShownAllLearntModal, isGameOver, scopedTerms]);
+    }, [hasShownAllLearntModal, isGameOver, isTestReading, scopedTerms]);
 
     React.useEffect(() => {
         if (!isGameOver) {
@@ -336,26 +372,26 @@ export function useGravityGame() {
     }, [isGameOver]);
 
     React.useEffect(() => {
-        const hasUnlearntTerm = scopedTerms.some(
-            (term) => !isGravityTermLearnt(term),
+        const hasUnlearntTerm = scopedTerms.some((term) =>
+            !isGravityTermLearnt(term, isTestReading),
         );
         if (hasUnlearntTerm && hasShownAllLearntModal) {
             setHasShownAllLearntModal(false);
         }
-    }, [hasShownAllLearntModal, scopedTerms]);
+    }, [hasShownAllLearntModal, isTestReading, scopedTerms]);
 
     React.useEffect(() => {
         inputRef.current?.focus();
     }, [fallingTerms.length]);
 
     const learntTermsCount = scopedTerms.filter((term) =>
-        isGravityTermLearnt(term),
+        isGravityTermLearnt(term, isTestReading),
     ).length;
     const learningTermsCount = scopedTerms.filter(
-        (term) => (term.gravity_score ?? 0) === 1,
+        (term) => getGravityTermScore(term, isTestReading) === 1,
     ).length;
     const unlearntTermsCount = scopedTerms.filter(
-        (term) => (term.gravity_score ?? 0) === 0,
+        (term) => getGravityTermScore(term, isTestReading) === 0,
     ).length;
 
     const resumeAfterAllLearntModal = React.useCallback(() => {
@@ -367,6 +403,9 @@ export function useGravityGame() {
 
     const isTermAtRisk = Object.values(termWrongCounts).some(
         (count) => count > 0,
+    );
+    const oppositeModeHasUnlearntTerms = scopedTerms.some((term) =>
+        !isGravityTermLearnt(term, !isTestReading),
     );
 
     return {
@@ -406,5 +445,8 @@ export function useGravityGame() {
         fallingTerms,
         termWrongCounts,
         isTermAtRisk,
+        isTestReading,
+        setIsTestReading,
+        oppositeModeHasUnlearntTerms,
     };
 }

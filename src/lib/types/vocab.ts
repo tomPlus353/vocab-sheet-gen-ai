@@ -10,6 +10,7 @@ export type VocabTerm = {
     example_sentences?: ExampleSentence[];
     isFavorite?: boolean;
     gravity_score?: number;
+    gravity_reading_score?: number;
     isLearnt?: boolean;
     type?: string;
 };

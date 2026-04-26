@@ -2,7 +2,7 @@ import type { VocabTerm } from "./types/vocab";
 
 const REQUIRED_HEADERS = ["japanese", "kana", "english_definition"] as const;
 
-const HEADER_ALIASES: Record<string, (typeof REQUIRED_HEADERS)[number] | "isFavorite" | "gravity_score"> = {
+const HEADER_ALIASES: Record<string, (typeof REQUIRED_HEADERS)[number] | "isFavorite" | "gravity_score" | "gravity_reading_score"> = {
     japanese: "japanese",
     term: "japanese",
     word: "japanese",
@@ -17,6 +17,10 @@ const HEADER_ALIASES: Record<string, (typeof REQUIRED_HEADERS)[number] | "isFavo
     gravity_score: "gravity_score",
     gravityscore: "gravity_score",
     score: "gravity_score",
+    gravity_reading_score: "gravity_reading_score",
+    gravityreading_score: "gravity_reading_score",
+    gravity_reading: "gravity_reading_score",
+    reading_score: "gravity_reading_score",
 };
 
 function parseDelimitedLine(line: string, delimiter: "," | "\t"): string[] {
@@ -133,6 +137,14 @@ export function parseManualHistoryTerms(input: string): VocabTerm[] {
                 return;
             }
 
+            if (header === "gravity_reading_score") {
+                const parsedNumber = parseNumber(rawValue);
+                if (parsedNumber !== undefined) {
+                    row.gravity_reading_score = parsedNumber;
+                }
+                return;
+            }
+
             row[header] = rawValue;
         });
 
@@ -148,6 +160,7 @@ export function parseManualHistoryTerms(input: string): VocabTerm[] {
             english_definition: row.english_definition,
             isFavorite: row.isFavorite,
             gravity_score: row.gravity_score,
+            gravity_reading_score: row.gravity_reading_score,
         };
     });
 

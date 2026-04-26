@@ -13,6 +13,8 @@ type GameControlProps = {
     isTermAtRisk: boolean;
     showReadingHint: boolean;
     setShowReadingHint: React.Dispatch<React.SetStateAction<boolean>>;
+    isTestReading: boolean;
+    setIsTestReading: React.Dispatch<React.SetStateAction<boolean>>;
     isFavoritesMode: boolean;
     setIsFavoritesMode: React.Dispatch<React.SetStateAction<boolean>>;
     isExtinctionMode: boolean;
@@ -28,6 +30,8 @@ export function GameControls(props: GameControlProps) {
         isTermAtRisk,
         showReadingHint,
         setShowReadingHint,
+        isTestReading,
+        setIsTestReading,
         isFavoritesMode,
         setIsFavoritesMode,
         isExtinctionMode,
@@ -59,6 +63,11 @@ export function GameControls(props: GameControlProps) {
         setIsRestartPromptOpen(true);
     };
 
+    const handleTestReadingToggle = () => {
+        setIsTestReading(!isTestReading);
+        setIsRestartPromptOpen(true);
+    };
+
     return (
         <div>
             <div className="flex flex-col items-center gap-1 border border-x-0 border-gray-700 bg-gray-900 px-1 sm:flex-row sm:items-center sm:justify-around sm:gap-0">
@@ -87,7 +96,8 @@ export function GameControls(props: GameControlProps) {
                 <div className="px-1 text-center text-xs text-gray-200 sm:text-left sm:text-sm">
                     {isTermAtRisk ? (
                         <span className="font-semibold text-red-400">
-                            Warning: a missed term ends the game if missed again.
+                            Warning: a missed term ends the game if missed
+                            again.
                         </span>
                     ) : (
                         <span className="text-gray-300">
@@ -131,6 +141,20 @@ export function GameControls(props: GameControlProps) {
                         </label>
                     )}
                     <label
+                        htmlFor="test-reading"
+                        className="flex cursor-pointer items-center gap-2"
+                    >
+                        <Checkbox
+                            className="h-5 w-5 rounded-sm border-gray-500 bg-transparent data-[state=checked]:border-indigo-500 data-[state=checked]:bg-indigo-500"
+                            id="test-reading"
+                            checked={isTestReading}
+                            onCheckedChange={handleTestReadingToggle}
+                        />
+                        <span className="text-xs font-medium text-gray-200 md:text-sm">
+                            Test reading
+                        </span>
+                    </label>
+                    <label
                         htmlFor="extinction-mode"
                         className="flex cursor-pointer items-center gap-2"
                     >
@@ -151,9 +175,9 @@ export function GameControls(props: GameControlProps) {
                 title="Restart Gravity?"
                 description={`Restart to apply mode changes to this gravity run. Favorites only is ${
                     isFavoritesMode ? "on" : "off"
-                }, and extinction mode is ${
+                }, extinction mode is ${
                     isExtinctionMode ? "on" : "off"
-                }.`}
+                }, and test reading is ${isTestReading ? "on" : "off"}.`}
                 confirmLabel="Restart now"
                 onOpenChange={setIsRestartPromptOpen}
                 onConfirm={handleRestart}

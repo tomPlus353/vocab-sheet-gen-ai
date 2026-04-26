@@ -46,6 +46,8 @@ export default function GravityPage() {
         setCorrectionInput,
         setShowReadingHint,
         showReadingHint,
+        isTestReading,
+        setIsTestReading,
         isFavoritesMode,
         setIsFavoritesMode,
         isExtinctionMode,
@@ -59,6 +61,7 @@ export default function GravityPage() {
         fallingTerms,
         termWrongCounts,
         isTermAtRisk,
+        oppositeModeHasUnlearntTerms,
     } = useGravityGame();
 
     useEffect(() => {
@@ -77,6 +80,13 @@ export default function GravityPage() {
         }
     };
 
+    const handleSwitchPracticeMode = () => {
+        setIsTestReading(!isTestReading);
+        loadVocabTerms().catch((err) => {
+            console.error("Error switching gravity practice mode:", err);
+        });
+    };
+
     const showGameOverPanel = isGameOver && !isCorrectionModalOpen;
 
     return (
@@ -90,6 +100,8 @@ export default function GravityPage() {
                 isTermAtRisk={isTermAtRisk}
                 showReadingHint={showReadingHint}
                 setShowReadingHint={setShowReadingHint}
+                isTestReading={isTestReading}
+                setIsTestReading={setIsTestReading}
                 isFavoritesMode={isFavoritesMode}
                 setIsFavoritesMode={setIsFavoritesMode}
                 isExtinctionMode={isExtinctionMode}
@@ -188,11 +200,14 @@ export default function GravityPage() {
                                 const termKey = getTermKey(term.term);
                                 const termWrongCount =
                                     termWrongCounts[termKey] ?? 0;
-                                const definition = term.term.english_definition;
+                                const isDisplayingReading = isTestReading;
+                                const prompt = isDisplayingReading
+                                    ? `Write: ${term.term.japanese}`
+                                    : term.term.english_definition;
                                 const truncated =
-                                    definition.length > 50
-                                        ? `${definition.slice(0, 50)}…`
-                                        : definition;
+                                    prompt.length > 50
+                                        ? `${prompt.slice(0, 50)}…`
+                                        : prompt;
                                 return (
                                     <div
                                         key={term.id}
@@ -205,7 +220,7 @@ export default function GravityPage() {
                                             top: `${term.y}px`,
                                             left: `${term.x}px`,
                                         }}
-                                        title={definition}
+                                        title={term.term.english_definition}
                                     >
                                         <p className="whitespace-normal break-words font-bold">
                                             {truncated}
@@ -226,7 +241,10 @@ export default function GravityPage() {
                     </div>
 
                     {!showGameOverPanel && (
-                        <form onSubmit={handleSubmit} className="mt-4 flex gap-2">
+                        <form
+                            onSubmit={handleSubmit}
+                            className="mt-4 flex gap-2"
+                        >
                             <input
                                 ref={inputRef}
                                 type="text"
@@ -239,7 +257,9 @@ export default function GravityPage() {
                                     fallingTerms.length === 0 ||
                                     isCorrectionModalOpen
                                 }
-                                onChange={(event) => setAnswer(event.target.value)}
+                                onChange={(event) =>
+                                    setAnswer(event.target.value)
+                                }
                             />
                             <CommonButton
                                 type="submit"
@@ -268,6 +288,9 @@ export default function GravityPage() {
             />
             <AllLearntModal
                 open={isAllLearntModalOpen && !isGameOver}
+                isTestReading={isTestReading}
+                showSwitchPractice={oppositeModeHasUnlearntTerms}
+                onSwitchPractice={handleSwitchPracticeMode}
                 onReturnToReader={handleReturnFromGravityPage}
                 onContinuePractice={resumeAfterAllLearntModal}
             />
