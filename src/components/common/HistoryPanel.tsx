@@ -1,8 +1,15 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
-import { Eye, Grid2x2Check, Orbit, Plus, Trash2 } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import {
+    ArrowRight,
+    Eye,
+    Grid2x2Check,
+    Orbit,
+    Plus,
+    Trash2,
+} from "lucide-react";
 
 import { HanIcon } from "@/components/icons/HanIcon";
 import { useToast } from "@/hooks/use-toast";
@@ -160,6 +167,7 @@ export function HistoryPanel() {
     const [deleteTargetKey, setDeleteTargetKey] = React.useState<string>("");
     const [isImportOpen, setIsImportOpen] = React.useState(false);
     const router = useRouter();
+    const pathname = usePathname();
     const { toast } = useToast();
 
     const loadHistoryEntries = React.useCallback(() => {
@@ -240,15 +248,28 @@ export function HistoryPanel() {
                         Vocabulary grouped by analyzed text or manual imports
                     </p>
                 </div>
-                <CommonButton
-                    additionalclasses="mx-0"
-                    onClick={() => setIsImportOpen(true)}
-                >
-                    <span className="flex items-center gap-2">
-                        <Plus className="h-4 w-4" />
-                        New history
-                    </span>
-                </CommonButton>
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                    {pathname !== "/history" ? (
+                        <CommonButton
+                            additionalclasses="mx-0 bg-slate-700 hover:bg-slate-600"
+                            onClick={() => router.push("/history")}
+                        >
+                            <span className="flex items-center gap-2">
+                                <ArrowRight className="h-4 w-4" />
+                                Open page
+                            </span>
+                        </CommonButton>
+                    ) : null}
+                    <CommonButton
+                        additionalclasses="mx-0"
+                        onClick={() => setIsImportOpen(true)}
+                    >
+                        <span className="flex items-center gap-2">
+                            <Plus className="h-4 w-4" />
+                            New history
+                        </span>
+                    </CommonButton>
+                </div>
             </div>
 
             <ScrollArea className="my-2 max-h-96 flex-1 overflow-y-auto rounded-md border">

@@ -52,6 +52,7 @@ export default function GravityPage() {
         setIsFavoritesMode,
         isExtinctionMode,
         setIsExtinctionMode,
+        isExtinctionModeDisabled,
         timer,
         unlearntTermsCount,
         terms,
@@ -106,6 +107,7 @@ export default function GravityPage() {
                 setIsFavoritesMode={setIsFavoritesMode}
                 isExtinctionMode={isExtinctionMode}
                 setIsExtinctionMode={setIsExtinctionMode}
+                isExtinctionModeDisabled={isExtinctionModeDisabled}
             />
 
             <div className="border border-x-0 border-gray-600 bg-gray-700/50">

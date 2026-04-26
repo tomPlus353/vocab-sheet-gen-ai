@@ -19,6 +19,7 @@ type GameControlProps = {
     setIsFavoritesMode: React.Dispatch<React.SetStateAction<boolean>>;
     isExtinctionMode: boolean;
     setIsExtinctionMode: React.Dispatch<React.SetStateAction<boolean>>;
+    isExtinctionModeDisabled: boolean;
 };
 
 export function GameControls(props: GameControlProps) {
@@ -36,6 +37,7 @@ export function GameControls(props: GameControlProps) {
         setIsFavoritesMode,
         isExtinctionMode,
         setIsExtinctionMode,
+        isExtinctionModeDisabled,
     } = props;
 
     const [isAllFavoritesReviewMode, setIsAllFavoritesReviewMode] =
@@ -59,6 +61,9 @@ export function GameControls(props: GameControlProps) {
     };
 
     const handleExtinctionModeToggle = () => {
+        if (isExtinctionModeDisabled) {
+            return;
+        }
         setIsExtinctionMode(!isExtinctionMode);
         setIsRestartPromptOpen(true);
     };
@@ -156,17 +161,32 @@ export function GameControls(props: GameControlProps) {
                     </label>
                     <label
                         htmlFor="extinction-mode"
-                        className="flex cursor-pointer items-center gap-2"
+                        className={`flex items-center gap-2 ${
+                            isExtinctionModeDisabled
+                                ? "cursor-not-allowed opacity-60"
+                                : "cursor-pointer"
+                        }`}
+                        title={
+                            isExtinctionModeDisabled
+                                ? "Extinction mode is disabled because all terms in this set are already learnt."
+                                : "Hide learnt terms and keep practicing only unlearnt terms."
+                        }
                     >
                         <Checkbox
                             className="h-5 w-5 rounded-sm border-gray-500 bg-transparent data-[state=checked]:border-indigo-500 data-[state=checked]:bg-indigo-500"
                             id="extinction-mode"
                             checked={isExtinctionMode}
                             onCheckedChange={handleExtinctionModeToggle}
+                            disabled={isExtinctionModeDisabled}
                         />
                         <span className="text-xs font-medium text-gray-200 md:text-sm">
                             Extinction mode
                         </span>
+                        {isExtinctionModeDisabled && (
+                            <span className="text-[10px] text-slate-400 md:text-xs">
+                                (disabled: all learnt)
+                            </span>
+                        )}
                     </label>
                 </div>
             </div>

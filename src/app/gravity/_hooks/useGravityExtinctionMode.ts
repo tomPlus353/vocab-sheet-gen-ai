@@ -5,23 +5,34 @@ import * as React from "react";
 const GRAVITY_EXTINCTION_MODE_KEY = "gravityExtinctionMode";
 
 export function useGravityExtinctionMode() {
-    const [isExtinctionMode, setIsExtinctionMode] = React.useState(false);
+    const [isExtinctionMode, setIsExtinctionModeState] =
+        React.useState(false);
     const isExtinctionModeRef = React.useRef(false);
     const [isExtinctionModeReady, setIsExtinctionModeReady] =
         React.useState(false);
+
+    const setIsExtinctionMode = React.useCallback(
+        (value: React.SetStateAction<boolean>) => {
+            const nextValue =
+                typeof value === "function"
+                    ? (value as (prevState: boolean) => boolean)(
+                          isExtinctionModeRef.current,
+                      )
+                    : value;
+            isExtinctionModeRef.current = nextValue;
+            setIsExtinctionModeState(nextValue);
+        },
+        [],
+    );
 
     React.useEffect(() => {
         const persistedMode =
             localStorage.getItem(GRAVITY_EXTINCTION_MODE_KEY) === "true";
 
-        setIsExtinctionMode(persistedMode);
+        setIsExtinctionModeState(persistedMode);
         isExtinctionModeRef.current = persistedMode;
         setIsExtinctionModeReady(true);
     }, []);
-
-    React.useEffect(() => {
-        isExtinctionModeRef.current = isExtinctionMode;
-    }, [isExtinctionMode]);
 
     React.useEffect(() => {
         if (!isExtinctionModeReady) {

@@ -396,10 +396,29 @@ export function useGravityGame() {
 
     const resumeAfterAllLearntModal = React.useCallback(() => {
         setIsAllLearntModalOpen(false);
-        if (!isGameOver && activeTerms.length > 0) {
-            spawnTerm(remainingQueue, activeTerms);
+        if (isGameOver) {
+            return;
         }
-    }, [isGameOver, remainingQueue, spawnTerm, activeTerms]);
+
+        if (activeTerms.length === 0) {
+            if (isExtinctionModeRef.current) {
+                setIsExtinctionMode(false);
+            }
+            loadVocabTerms().catch((err) => {
+                console.error("Error resuming gravity practice:", err);
+            });
+            return;
+        }
+        spawnTerm(remainingQueue, activeTerms);
+    }, [
+        activeTerms,
+        isExtinctionModeRef,
+        isGameOver,
+        loadVocabTerms,
+        remainingQueue,
+        setIsExtinctionMode,
+        spawnTerm,
+    ]);
 
     const isTermAtRisk = Object.values(termWrongCounts).some(
         (count) => count > 0,
@@ -407,6 +426,18 @@ export function useGravityGame() {
     const oppositeModeHasUnlearntTerms = scopedTerms.some((term) =>
         !isGravityTermLearnt(term, !isTestReading),
     );
+
+    const hasUnlearntTermsInScope = scopedTerms.some(
+        (term) => !isGravityTermLearnt(term, isTestReading),
+    );
+    const isExtinctionModeDisabled =
+        scopedTerms.length > 0 && !hasUnlearntTermsInScope;
+
+    React.useEffect(() => {
+        if (isExtinctionMode && isExtinctionModeDisabled) {
+            setIsExtinctionMode(false);
+        }
+    }, [isExtinctionMode, isExtinctionModeDisabled, setIsExtinctionMode]);
 
     return {
         answer,
@@ -435,6 +466,7 @@ export function useGravityGame() {
         setIsFavoritesMode,
         isExtinctionMode,
         setIsExtinctionMode,
+        isExtinctionModeDisabled,
         totalTermsCount: scopedTerms.length,
         timer,
         unlearntTermsCount,
