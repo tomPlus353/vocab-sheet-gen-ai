@@ -1,8 +1,8 @@
 import type { VocabTerm } from "./types/vocab";
 
-const REQUIRED_HEADERS = ["japanese", "kana", "english_definition"] as const;
+const REQUIRED_HEADERS = ["japanese", "kana", "english_definition", "example_japanese", "example_kana"] as const;
 
-const HEADER_ALIASES: Record<string, (typeof REQUIRED_HEADERS)[number] | "isFavorite" | "gravity_score" | "gravity_reading_score"> = {
+const HEADER_ALIASES: Record<string, (typeof REQUIRED_HEADERS)[number] | "isFavorite" | "gravity_score" | "gravity_reading_score" | "example_japanese" | "example_kana"> = {
     japanese: "japanese",
     term: "japanese",
     word: "japanese",
@@ -21,6 +21,11 @@ const HEADER_ALIASES: Record<string, (typeof REQUIRED_HEADERS)[number] | "isFavo
     gravityreading_score: "gravity_reading_score",
     gravity_reading: "gravity_reading_score",
     reading_score: "gravity_reading_score",
+    example_japanese: "example_japanese",
+    example_sentence_japanese: "example_japanese",
+    example_sentence: "example_japanese",
+    example_kana: "example_kana",
+    example_sentence_kana: "example_kana",
 };
 
 function parseDelimitedLine(line: string, delimiter: "," | "\t"): string[] {
@@ -115,7 +120,7 @@ export function parseManualHistoryTerms(input: string): VocabTerm[] {
 
     const terms = lines.slice(1).map((line, index) => {
         const cells = parseDelimitedLine(line, delimiter);
-        const row: Partial<VocabTerm> = {};
+        const row: Partial<VocabTerm> & { example_japanese?: string; example_kana?: string } = {};
 
         mappedHeaders.forEach((header, cellIndex) => {
             if (!header) return;
@@ -145,6 +150,13 @@ export function parseManualHistoryTerms(input: string): VocabTerm[] {
                 return;
             }
 
+            if (header === "example_japanese" || header === "example_kana") {
+                if (rawValue) {
+                    row[header] = rawValue;
+                }
+                return;
+            }
+
             row[header] = rawValue;
         });
 
@@ -154,7 +166,7 @@ export function parseManualHistoryTerms(input: string): VocabTerm[] {
             );
         }
 
-        return {
+        const term: VocabTerm = {
             japanese: row.japanese,
             kana: row.kana,
             english_definition: row.english_definition,
@@ -162,6 +174,18 @@ export function parseManualHistoryTerms(input: string): VocabTerm[] {
             gravity_score: row.gravity_score,
             gravity_reading_score: row.gravity_reading_score,
         };
+
+        // Add example sentences if both japanese and kana are provided
+        if (row.example_japanese && row.example_kana) {
+            term.example_sentences = [
+                {
+                    japanese: row.example_japanese,
+                    kana: row.example_kana,
+                },
+            ];
+        }
+
+        return term;
     });
 
     if (terms.length === 0) {

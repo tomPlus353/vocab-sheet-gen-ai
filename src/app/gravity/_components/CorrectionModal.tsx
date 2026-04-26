@@ -29,6 +29,16 @@ export function CorrectionModal(props: Props) {
         return null;
     }
 
+    const exampleSentence = activeTerm.example_sentences?.[0] ?? null;
+
+    // if (exampleSentence) {
+    //     alert("Example sentence found: " + exampleSentence.japanese);
+    // } else {
+    //     alert(
+    //         "No example sentence found for term: " + JSON.stringify(activeTerm),
+    //     );
+    // }
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
             <div className="w-full max-w-md rounded-xl border border-red-300/30 bg-slate-900 p-5 text-white shadow-2xl">
@@ -43,6 +53,17 @@ export function CorrectionModal(props: Props) {
                 <p className="mt-3 rounded-md bg-slate-800 p-2 text-sm text-amber-100">
                     Clue: {activeTerm.english_definition}
                 </p>
+                {exampleSentence && (
+                    <div className="mt-2 break-words rounded-md bg-slate-800 p-2 text-sm text-slate-100">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-slate-300">
+                            Example sentence
+                        </p>
+                        <p className="mt-1">{exampleSentence.japanese}</p>
+                        <p className="mt-1 text-xs text-slate-300">
+                            {exampleSentence.kana}
+                        </p>
+                    </div>
+                )}
                 <p className="mt-2 rounded-md border border-red-300/30 bg-red-500/10 p-2 text-sm">
                     Correct term:{" "}
                     <span className="font-bold text-red-200">

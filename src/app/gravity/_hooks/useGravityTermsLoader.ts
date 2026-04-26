@@ -154,11 +154,13 @@ export function useGravityTermsLoader({
                         japanese: item.japanese as string,
                         kana: item.kana as string,
                         english_definition: item.english_definition as string,
-                        isFavorite: item.isFavorite as boolean | undefined,
+                        example_sentences: Array.isArray(item.example_sentences) ? item.example_sentences : undefined,
+                        isFavorite: typeof item.isFavorite === "boolean" ? item.isFavorite : undefined,
                         gravity_score: score,
                         gravity_reading_score: readingScore,
                         isLearnt:
                             (score ?? 0) >= 2 || (readingScore ?? 0) >= 2,
+                        type: typeof item.type === "string" ? item.type : undefined,
                     };
                 });
         } catch (error) {
