@@ -12,7 +12,7 @@ const HistoryAndFavorites = async () => {
                 Vocabulary Access
             </h2>
             {/* {session?.user ? ( */}
-            <div className="grid gap-6 sm:grid-cols-2">
+            <div className="grid gap-6 md:grid-cols-2">
                 {/* Favorites Flow */}
                 <Favorites />
 

@@ -1,6 +1,12 @@
 import type { VocabTerm } from "./types/vocab";
 
-const REQUIRED_HEADERS = ["japanese", "kana", "english_definition", "example_japanese", "example_kana"] as const;
+const REQUIRED_HEADERS = ["japanese",
+     "kana", 
+     "english_definition",
+    //  "example_japanese",
+    // "example_kana"
+    // all headers should go here and optional ones should be commented out
+    ] as const;
 
 const HEADER_ALIASES: Record<string, (typeof REQUIRED_HEADERS)[number] | "isFavorite" | "gravity_score" | "gravity_reading_score" | "example_japanese" | "example_kana"> = {
     japanese: "japanese",
@@ -23,6 +29,7 @@ const HEADER_ALIASES: Record<string, (typeof REQUIRED_HEADERS)[number] | "isFavo
     reading_score: "gravity_reading_score",
     example_japanese: "example_japanese",
     example_sentence_japanese: "example_japanese",
+    example_sentences: "example_japanese",
     example_sentence: "example_japanese",
     example_kana: "example_kana",
     example_sentence_kana: "example_kana",
