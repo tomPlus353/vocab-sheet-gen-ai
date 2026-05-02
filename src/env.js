@@ -19,7 +19,7 @@ export const env = createEnv({
             process.env.NODE_ENV === "production"
                 ? z.string()
                 : z.string().optional(),
-        VOCAB_STORAGE_SUPABASE_URL:
+        VOCAB_STORAGE_POSTGRES_PRISMA_URL:
             process.env.NODE_ENV === "production"
                 ? z.string().url()
                 : z.string().optional(),
@@ -45,7 +45,8 @@ export const env = createEnv({
         AUTH_SECRET: process.env.AUTH_SECRET,
         AUTH_DISCORD_ID: process.env.AUTH_DISCORD_ID,
         AUTH_DISCORD_SECRET: process.env.AUTH_DISCORD_SECRET,
-        VOCAB_STORAGE_SUPABASE_URL: process.env.VOCAB_STORAGE_SUPABASE_URL,
+        VOCAB_STORAGE_POSTGRES_PRISMA_URL:
+            process.env.VOCAB_STORAGE_POSTGRES_PRISMA_URL,
         NODE_ENV: process.env.NODE_ENV,
     },
     /**
