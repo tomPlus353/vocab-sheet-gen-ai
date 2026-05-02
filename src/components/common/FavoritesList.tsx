@@ -199,7 +199,9 @@ export function FavoritesList({
             localStorage.getItem(GLOBAL_FAV_LIST_KEY);
         let currentFavorites: VocabTerm[] = [];
         if (currentFavoritesString) {
-            currentFavorites = JSON.parse(currentFavoritesString);
+            currentFavorites = JSON.parse(
+                currentFavoritesString,
+            ) as VocabTerm[];
         }
         // If term is now favorite, add to favorites list
         if (nextTerm.isFavorite) {

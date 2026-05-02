@@ -14,8 +14,8 @@ import { CopyButton } from "@/components/ui/shadcn-io/copy-button";
 import { Label } from "@/components/ui/label";
 import {
     Send,
-    AlignLeft,
-    FileText,
+    // AlignLeft,
+    // FileText,
     X,
     LayoutList,
     BookA,
@@ -84,7 +84,9 @@ const InputTextArea = function () {
         // Retrieve textArray from local storage on component mount
         const previousTextArrayString = localStorage.getItem("textArray");
         if (previousTextArrayString) {
-            const previousTextArray = JSON.parse(previousTextArrayString);
+            const previousTextArray = JSON.parse(
+                previousTextArrayString,
+            ) as string[];
             if (Array.isArray(previousTextArray))
                 setUserText(previousTextArray.join("\n"));
         }

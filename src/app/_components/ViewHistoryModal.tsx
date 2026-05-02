@@ -40,7 +40,7 @@ export function ViewHistoryModal({
                 const cachedJsonString = localStorage.getItem("favoriteTerms");
                 const termsAsJson: VocabTerm[] = JSON.parse(
                     cachedJsonString ?? "[]",
-                );
+                ) as VocabTerm[];
                 setTerms(termsAsJson);
                 return;
             }

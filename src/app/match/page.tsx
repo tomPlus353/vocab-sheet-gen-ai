@@ -5,7 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 
 // import common components and utils
 import CommonButton from "@/components/common/CommonButton";
-import { getHashedCache, appendGameHistory, getGameHistory } from "@/lib/utils";
+import { appendGameHistory, getGameHistory } from "@/lib/utils";
 import SectionHeader from "@/components/common/SectionHeader";
 import { Toaster } from "@/components/ui/toaster";
 import { Loader } from "@/components/common/Loader";
