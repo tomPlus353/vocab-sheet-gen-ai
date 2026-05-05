@@ -96,7 +96,7 @@ export const SYS_PROMPT_VOCAB_JSON = `**Instructions:**
         *   Demonstrate the meaning clearly
         *   Include the selected word
         *   Are natural-sounding and grammatically correct.
-    * Include furigana when there are multiple possible readings.
+        *   Each example sentence has two formats: the original Japanese sentence and the kana reading of that sentence.
 4.  **Brevity:**
     * You are expected to produce a cheatsheet and nothing else.
     * Apart from the cheatsheet to do reply to the user, explain anything say anything else.
