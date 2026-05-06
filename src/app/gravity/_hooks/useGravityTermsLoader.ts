@@ -133,7 +133,7 @@ export function useGravityTermsLoader({
                 return;
             }
 
-            appendGameHistory(activeTextStr, reply);
+            await appendGameHistory(activeTextStr, reply);
             void syncHistoryForKeyBestEffort(activeTextStr, false);
         }
 
@@ -265,11 +265,11 @@ export function useGravityTermsLoader({
             return;
         }
         if (source.mode === "history") {
-            appendGameHistory(source.key, serializedTerms, true);
+            void appendGameHistory(source.key, serializedTerms, true);
             void syncHistoryForKeyBestEffort(source.key, true);
             return;
         }
-        appendGameHistory(source.key, serializedTerms, false);
+        void appendGameHistory(source.key, serializedTerms, false);
         void syncHistoryForKeyBestEffort(source.key, false);
     }, [allTerms]);
 

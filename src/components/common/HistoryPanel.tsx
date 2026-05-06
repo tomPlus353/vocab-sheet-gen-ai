@@ -182,6 +182,17 @@ export function HistoryPanel() {
         loadHistoryEntries();
     }, [loadHistoryEntries]);
 
+    React.useEffect(() => {
+        function handleUpdated() {
+            loadHistoryEntries();
+        }
+
+        window.addEventListener("gameHistoryUpdated", handleUpdated);
+        return () => {
+            window.removeEventListener("gameHistoryUpdated", handleUpdated);
+        };
+    }, [loadHistoryEntries]);
+
     function handleGoMatch(key: string) {
         localStorage.setItem(LAST_PAGINATOR_PAGE_KEY, "0");
         router.push(`/match?history=1&historyTerms=${key}`, undefined);

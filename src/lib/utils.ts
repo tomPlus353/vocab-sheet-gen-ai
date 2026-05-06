@@ -165,17 +165,34 @@ function getHistoryPreviewTitle(terms: VocabTerm[]): string {
   return preview || "Untitled history";
 }
 
-function getGeneratedHistoryTitle(key: string, isKeyHashed: boolean, terms: VocabTerm[]): string {
+async function getGeneratedHistoryTitle(key: string, isKeyHashed: boolean, terms: VocabTerm[]): Promise<string> {
   if (isKeyHashed) {
     return getHistoryPreviewTitle(terms);
   }
 
-  const normalized = key
-    .replace(/\s+/g, " ")
-    .replace(/\n+/g, " ")
-    .trim();
+  try {
+    const response = await fetch("/api/history/title", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: key }),
+    });
+    if (response.ok) {
+      const data = (await response.json()) as { title?: unknown };
+      const title = typeof data.title === "string" ? data.title.trim() : "";
+      if (title) {
+        return title;
+      }
+    }
+  } catch {
+    // ignore errors, fall back to preview
+  }
 
-  return normalized.slice(0, 48) || getHistoryPreviewTitle(terms);
+  return getHistoryPreviewTitle(terms);
+}
+
+function notifyGameHistoryUpdated(): void {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new Event("gameHistoryUpdated"));
 }
 
 function createHistoryEntry(
@@ -258,6 +275,7 @@ function getStoredGameHistoryEntries(): Record<string, HistoryEntry> {
 
 function setStoredGameHistoryEntries(entries: Record<string, HistoryEntry>): void {
   localStorage.setItem(GAME_HISTORY_STORAGE_KEY, JSON.stringify(entries));
+  notifyGameHistoryUpdated();
 }
 
 export function getGameHistoryEntry(key: string, isKeyHashed: boolean): HistoryEntry | null {
@@ -305,13 +323,13 @@ export function createManualGameHistory(
   return entry;
 }
 
-export function appendGameHistory(key: string, content: string, isKeyHashed = false): void {
+export async function appendGameHistory(key: string, content: string, isKeyHashed = false): Promise<void> {
   const historyId = getHistoryId(key, isKeyHashed);
   const entries = getStoredGameHistoryEntries();
   const existingEntry = entries[historyId];
   const terms = parseVocabTermsFromJson(content);
   const source = existingEntry?.source ?? "generated";
-  const title = existingEntry?.title ?? getGeneratedHistoryTitle(key, isKeyHashed, terms);
+  const title = existingEntry?.title ?? (await getGeneratedHistoryTitle(key, isKeyHashed, terms));
   const createdAt = existingEntry?.createdAt ?? new Date().toISOString();
 
   entries[historyId] = createHistoryEntry(

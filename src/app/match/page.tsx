@@ -223,7 +223,7 @@ export default function Match() {
                 return;
             }
             //cache the request using hash of activeText
-            appendGameHistory(activeTextStr, reply);
+            await appendGameHistory(activeTextStr, reply);
             void syncHistoryForKeyBestEffort(activeTextStr, false);
         }
 
