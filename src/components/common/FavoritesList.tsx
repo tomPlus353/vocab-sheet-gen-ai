@@ -16,6 +16,9 @@ import {
 import CommonButton from "./CommonButton";
 import { ConfirmActionModal } from "./modals/ConfirmActionModal";
 import type { VocabTerm } from "@/lib/types/vocab";
+import { setFavoriteTerms } from "@/lib/favorites-storage";
+import { syncHistoryForKeyBestEffort } from "@/lib/storage-sync";
+import { resolveHistoryStorageTarget } from "@/lib/history-storage-target";
 
 const GLOBAL_FAV_LIST_KEY = "favoriteTerms";
 const UNFAVORITE_CONFIRM_SKIP_KEY = "favoritesListSkipUnfavoriteConfirm";
@@ -109,62 +112,38 @@ export function FavoritesList({
 
         // Case 1: Clear global favorites list in localStorage
         if (mode === "favorites") {
-            localStorage.removeItem(GLOBAL_FAV_LIST_KEY);
+            setFavoriteTerms([]);
             refreshTerms?.(); // Refresh the favorites list after clearing
             return;
             // Case 2: Clear favorite status from the current history terms
         } else if (mode === "history") {
-            // If historyTermsKey is provided, update that specific key in the game history cache
-            if (historyTermsKey) {
-                appendGameHistory(
-                    historyTermsKey,
-                    JSON.stringify(updatedTerms),
-                    true,
-                );
-            }
-            // If no specific key is provided, attempt to determine the correct key from URL params or active text
-            if (!historyTermsKey) {
-                // Check the url
-                if (typeof window !== "undefined") {
-                    const urlParams = new URLSearchParams(
-                        window.location.search,
-                    );
-                    const isReviewHistory =
-                        urlParams.get("history") === "1" ? true : false;
+            const search =
+                typeof window !== "undefined" ? window.location.search : "";
+            const activeText =
+                typeof localStorage !== "undefined"
+                    ? localStorage.getItem("activeText")
+                    : null;
 
-                    if (isReviewHistory) {
-                        historyTermsKey = urlParams.get("historyTerms");
-                        appendGameHistory(
-                            historyTermsKey!,
-                            JSON.stringify(updatedTerms),
-                            true,
-                        );
-                        refreshTerms?.(); // Refresh the favorites list after clearing
-                        return;
-                    }
-                }
-                // check the local storage if no key in url and we're in a browser environment
-                if (
-                    typeof localStorage !== "undefined" &&
-                    localStorage.getItem("activeText")
-                ) {
-                    // Fallback to activeText if historyTermsKey is not set and we're in a browser environment
-                    const activeText = localStorage.getItem("activeText");
-                    historyTermsKey = activeText;
-                    appendGameHistory(
-                        historyTermsKey!,
-                        JSON.stringify(updatedTerms),
-                        false,
-                    );
-                    refreshTerms?.(); // Refresh the favorites list after clearing
-                    return;
-                }
+            const target = resolveHistoryStorageTarget({
+                historyTermsKey,
+                search,
+                activeText,
+            });
 
+            if (!target) {
                 console.warn(
-                    "No historyTermsKey provided for clearing favorites in history mode.",
+                    "No historyTermsKey/URL/activeText available for clearing favorites in history mode.",
                 );
                 return;
             }
+
+            appendGameHistory(
+                target.key,
+                JSON.stringify(updatedTerms),
+                target.isKeyHashed,
+            );
+            void syncHistoryForKeyBestEffort(target.key, target.isKeyHashed);
+            refreshTerms?.();
         }
     }
 
@@ -227,10 +206,7 @@ export function FavoritesList({
             );
         }
         // save updated favorites list to localStorage
-        localStorage.setItem(
-            GLOBAL_FAV_LIST_KEY,
-            JSON.stringify(currentFavorites),
-        );
+        setFavoriteTerms(currentFavorites);
     }
 
     function handleFavoriteClickAll(index: number) {
@@ -296,62 +272,34 @@ export function FavoritesList({
 
         // 1. update the list of terms in local storage
         const urlParams = new URLSearchParams(window.location.search);
-        const isReviewHistory = urlParams.get("history") === "1" ? true : false;
         const isReviewFavorites =
             urlParams.get("favorites") === "1" ? true : false;
 
-        // Update the history cache
-        if (historyTermsKey) {
-            // use the provided historyTermsKey, no need to change
-        } else if (isReviewHistory) {
-            // If reviewing history and history terms not set yet
-            // then try to get key from URL params
-            historyTermsKey = urlParams.get("historyTerms");
+        // case 1: reviewing all favorites
+        if (isReviewFavorites) {
+            setFavoriteTerms(updatedTerms);
         } else {
-            // If no key is provided, default to active text
-            const activeText = localStorage.getItem("activeText");
-            historyTermsKey = activeText;
-        }
+            const target = resolveHistoryStorageTarget({
+                historyTermsKey,
+                search: window.location.search,
+                activeText: localStorage.getItem("activeText"),
+            });
 
-        // case 1: no special params review active text terms
-        if (!isReviewHistory && !isReviewFavorites) {
-            console.log("Case 1. Updating history with active text terms. ");
-
-            // If not reviewing history or favorites, update the active text terms
-            const activeText = localStorage.getItem("activeText");
-            if (activeText) {
+            if (!target) {
+                console.warn(
+                    "No valid history target found for updating favorite status.",
+                );
+            } else {
                 appendGameHistory(
-                    activeText,
+                    target.key,
                     JSON.stringify(updatedTerms),
-                    false,
+                    target.isKeyHashed,
+                );
+                void syncHistoryForKeyBestEffort(
+                    target.key,
+                    target.isKeyHashed,
                 );
             }
-            // case 2: past game history review
-        } else if (isReviewHistory && historyTermsKey) {
-            console.log(
-                "Case 2. Updating history terms for key: ",
-                historyTermsKey,
-            );
-            // Cache the updated terms list
-            appendGameHistory(
-                historyTermsKey,
-                JSON.stringify(updatedTerms),
-                true,
-            );
-
-            // case 3: reviewing all favorites
-        } else if (isReviewFavorites) {
-            console.log(
-                "Case 3. Updating favorite terms for key: ",
-                GLOBAL_FAV_LIST_KEY,
-            );
-            //if reviewing favorites, update the favorite terms cache
-            localStorage.setItem(
-                GLOBAL_FAV_LIST_KEY,
-                JSON.stringify(updatedTerms),
-            );
-        } else {
-            console.warn("No valid key found for updating game history terms.");
         }
 
         //2. update state
@@ -381,15 +329,13 @@ export function FavoritesList({
             // If term is unfavorited, remove from favorites list
             currentFavorites = currentFavorites.filter(
                 (favTerm) =>
-                    favTerm.english_definition !== term.english_definition &&
-                    favTerm.japanese !== term.japanese,
+                    !(
+                        favTerm.english_definition === term.english_definition &&
+                        favTerm.japanese === term.japanese
+                    ),
             );
         }
-        // save updated favorites list to localStorage
-        localStorage.setItem(
-            GLOBAL_FAV_LIST_KEY,
-            JSON.stringify(currentFavorites),
-        );
+        setFavoriteTerms(currentFavorites);
     }
     const favoriteClickHandler =
         mode === "favorites"

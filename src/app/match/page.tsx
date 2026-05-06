@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 // import common components and utils
 import CommonButton from "@/components/common/CommonButton";
 import { appendGameHistory, getGameHistory } from "@/lib/utils";
+import { syncHistoryForKeyBestEffort } from "@/lib/storage-sync";
 import SectionHeader from "@/components/common/SectionHeader";
 import { Toaster } from "@/components/ui/toaster";
 import { Loader } from "@/components/common/Loader";
@@ -223,6 +224,7 @@ export default function Match() {
             }
             //cache the request using hash of activeText
             appendGameHistory(activeTextStr, reply);
+            void syncHistoryForKeyBestEffort(activeTextStr, false);
         }
 
         //handle success

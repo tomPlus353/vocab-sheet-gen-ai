@@ -20,6 +20,7 @@ import {
     getAllGameHistoryEntries,
     removeGameHistory,
 } from "@/lib/utils";
+import { deleteHistoryEntryBestEffort, syncHistoryEntryBestEffort } from "@/lib/storage-sync";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { ConfirmActionModal } from "@/components/common/modals/ConfirmActionModal";
 import CommonButton from "@/components/common/CommonButton";
@@ -209,6 +210,7 @@ export function HistoryPanel() {
     function handleConfirmDelete() {
         if (!deleteTargetKey) return;
         removeGameHistory(deleteTargetKey, true);
+        void deleteHistoryEntryBestEffort(deleteTargetKey);
         setDeleteTargetKey("");
         loadHistoryEntries();
     }
@@ -216,7 +218,8 @@ export function HistoryPanel() {
     function handleImportHistory(title: string, rawInput: string) {
         try {
             const terms = parseManualHistoryTerms(rawInput);
-            createManualGameHistory(title, terms);
+            const entry = createManualGameHistory(title, terms);
+            void syncHistoryEntryBestEffort(entry);
             setIsImportOpen(false);
             loadHistoryEntries();
             toast({

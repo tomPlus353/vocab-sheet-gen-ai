@@ -4,6 +4,12 @@ import * as React from "react";
 
 import { appendGameHistory, getGameHistory } from "@/lib/utils";
 import type { VocabTerm } from "@/lib/types/vocab";
+import { setFavoriteTerms } from "@/lib/favorites-storage";
+import { syncHistoryForKeyBestEffort } from "@/lib/storage-sync";
+import {
+    applyLocalTermStatesToTerms,
+    upsertLocalTermStatesFromTerms,
+} from "@/lib/term-state-storage";
 import {
     getShuffledTermKeys,
     isGravityTermLearnt,
@@ -128,6 +134,7 @@ export function useGravityTermsLoader({
             }
 
             appendGameHistory(activeTextStr, reply);
+            void syncHistoryForKeyBestEffort(activeTextStr, false);
         }
 
         let parsedTerms: VocabTerm[] = [];
@@ -175,6 +182,8 @@ export function useGravityTermsLoader({
             setIsLoading(false);
             return;
         }
+
+        parsedTerms = applyLocalTermStatesToTerms(parsedTerms);
 
         const filteredTerms = parsedTerms.filter((term) => {
             if (isFavoritesModeRef.current) {
@@ -248,16 +257,20 @@ export function useGravityTermsLoader({
             return;
         }
 
+        upsertLocalTermStatesFromTerms(allTerms);
+
         const serializedTerms = JSON.stringify(allTerms);
         if (source.mode === "favorites") {
-            localStorage.setItem("favoriteTerms", serializedTerms);
+            setFavoriteTerms(allTerms);
             return;
         }
         if (source.mode === "history") {
             appendGameHistory(source.key, serializedTerms, true);
+            void syncHistoryForKeyBestEffort(source.key, true);
             return;
         }
         appendGameHistory(source.key, serializedTerms, false);
+        void syncHistoryForKeyBestEffort(source.key, false);
     }, [allTerms]);
 
     return {

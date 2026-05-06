@@ -25,6 +25,7 @@ export function FavoritesPanel() {
         "has-tooltip relative rounded border border-blue-100/20 bg-blue-500/50 px-2 py-1 hover:bg-blue-300 hover:text-black";
     const [favoriteTerms, setFavoriteTerms] = React.useState<VocabTerm[]>([]);
     const [isModalOpen, setIsModalOpen] = React.useState(false);
+    const [isSynced, setIsSynced] = React.useState(false);
     const router = useRouter();
     const pathname = usePathname();
 
@@ -54,6 +55,11 @@ export function FavoritesPanel() {
         loadFavoriteTerms();
     }, [loadFavoriteTerms]);
 
+    React.useEffect(() => {
+        const mode = localStorage.getItem("storageMode");
+        setIsSynced(mode === "server");
+    }, []);
+
     function handleGoMatch() {
         localStorage.setItem(LAST_PAGINATOR_PAGE_KEY, "0");
         router.push("/match?favorites=1", undefined);
@@ -81,7 +87,9 @@ export function FavoritesPanel() {
                         ⭐ Favorites
                     </p>
                     <p className="text-sm text-slate-400">
-                        Starred terms saved locally for quick review
+                        {isSynced
+                            ? "Starred terms synced to your account"
+                            : "Starred terms saved locally for quick review"}
                     </p>
                 </div>
 
@@ -175,4 +183,3 @@ export function FavoritesPanel() {
         </div>
     );
 }
-

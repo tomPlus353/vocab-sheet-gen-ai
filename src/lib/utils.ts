@@ -7,6 +7,7 @@ import type {
   KanjiGameTerm,
   VocabTerm,
 } from "./types/vocab";
+import { applyLocalTermStatesToTerms } from "@/lib/term-state-storage";
 
 
 export function cn(...inputs: ClassValue[]) {
@@ -198,18 +199,21 @@ function normalizeStoredHistoryEntry(
   rawValue: unknown,
 ): HistoryEntry | null {
   if (isHistoryEntry(rawValue)) {
+    const mergedTerms = applyLocalTermStatesToTerms(
+      rawValue.terms.filter(isVocabTerm),
+    );
     return createHistoryEntry(
       id,
       rawValue.title,
       rawValue.source,
       rawValue.createdAt,
-      rawValue.terms.filter(isVocabTerm),
+      mergedTerms,
     );
   }
 
   if (typeof rawValue === "string") {
     try {
-      const terms = parseVocabTermsFromJson(rawValue);
+      const terms = applyLocalTermStatesToTerms(parseVocabTermsFromJson(rawValue));
       return createHistoryEntry(
         id,
         getHistoryPreviewTitle(terms),

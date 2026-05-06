@@ -64,6 +64,78 @@ model User {
     accounts      Account[]
     sessions      Session[]
     posts         Post[]
+    storageMigratedAt DateTime?
+
+    favoriteTerms UserFavoriteTerm[]
+    historyEntries UserHistoryEntry[]
+    termStates UserTermState[]
+}
+
+model Term {
+    id               String   @id @default(cuid())
+    japanese         String
+    kana             String
+    englishDefinition String
+    exampleSentences Json?
+    type             String?
+
+    favoritedBy UserFavoriteTerm[]
+    historyRefs UserHistoryEntryTerm[]
+    termStates UserTermState[]
+
+    @@unique([japanese, kana, englishDefinition])
+}
+
+model UserFavoriteTerm {
+    userId    String
+    termId    String
+    createdAt DateTime @default(now())
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+    term Term @relation(fields: [termId], references: [id], onDelete: Cascade)
+
+    @@id([userId, termId])
+}
+
+model UserTermState {
+    userId              String
+    termId              String
+    gravityScore        Int?
+    gravityReadingScore Int?
+    isLearnt            Boolean?
+    updatedAt           DateTime @updatedAt
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+    term Term @relation(fields: [termId], references: [id], onDelete: Cascade)
+
+    @@id([userId, termId])
+}
+
+model UserHistoryEntry {
+    userId    String
+    entryId   String
+    title     String
+    source    String
+    createdAt DateTime
+    updatedAt DateTime @updatedAt
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+    terms UserHistoryEntryTerm[]
+
+    @@id([userId, entryId])
+}
+
+model UserHistoryEntryTerm {
+    userId  String
+    entryId String
+    termId  String
+    position Int
+
+    entry UserHistoryEntry @relation(fields: [userId, entryId], references: [userId, entryId], onDelete: Cascade)
+    term  Term @relation(fields: [termId], references: [id], onDelete: Cascade)
+
+    @@id([userId, entryId, termId])
+    @@index([userId, entryId, position])
 }
 
 model VerificationToken {

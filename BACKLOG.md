@@ -20,7 +20,7 @@
 - [status: done] Add global menu to all pages.
   Context: Start only AFTER history and favorites standalone pages are implemented. Unfoldable menu located within the section header component. Suitable for SP and PC. Includes, home, history and favorites.
   Page: All
-- [status: PENDING] Enable logged in users to store history and favorites in the server DB.
+- [status: DONE] Enable logged in users to store history and favorites in the server DB.
   Context: Currently users can only save data locally. I want
     - unregistered users - same experience up until now. History and Favorites stored in local storage.
     - registered users - history and favorites stored in the server DB. When they log in on a different device, they can see their history and favorites.
@@ -33,5 +33,12 @@
   Context: Currently when the user clicks on the camera icon to upload a photo, a modal pops up. This can be a bit disruptive to the user experience. Instead, I want to change this flow to an accordion or tab that the user can use to toggle between text input and camera upload, with the selected option remembered by the browser. Also when text is uploaded, the user should be able to go directly to the ereader.
   Page: /home
 - [status: PENDING] Add long-term learning SRS style dashboard and gravity game
-
+  - Decide on an SRS algorithm and package to use. I want to use an existing package instead of implementing my own SRS algorithm because it will save me time and I can be confident that the algorithm is well-tested and effective. Some popular SRS packages include Anki's SM-2 algorithm, SuperMemo's SM-18 algorithm, and the Leitner system. We will need to research these algorithms and choose the one that best fits my needs.
+  - For each term, store SRS style stats. Actual implementation will depend on the SRS algorithm we choose, but generally we will need to store the date of the last review, the interval until the next review, the ease factor, and the repetition count for each term.
+  - Create a new table in the database to store the SRS stats for each term, scoped to each user. This table will need to have a foreign key relationship with the terms table and the users table.
+  - Implement the SRS algorithm to calculate the next review date for each term based on the user's performance. Store this data in the database for every time the term is reviewed in gravity.
+  - Create a new dashboard page where users can see their SRS stats for each term, showing a 
   Page: /gravity + /dashboard(new)
+- [status: PENDING] Separate history term favorites from global favorites, allowing users to toggle both in the ui.
+  Context: Currently, the history component on the home page allows users to favorite terms and these terms are saved in two places: the history term favorites and the global favorites. This can be confusing for users because it creates a race condition and can lead to inconsistencies in the data. For example, if a user favorites a term in the history component, it is saved in both the history term favorites and the global favorites. If the user then unfavorites the term in the history component, it is only removed from the history term favorites but remains in the global favorites. This can lead to confusion for users because they may not understand why a term they unfavorited is still showing up in their global favorites. To solve this problem, I want to separate the history term favorites from the global favorites and allow users to toggle both in the UI. This way, when a user favorites a term in the history component, it is only saved in the history term favorites and does not affect the global favorites. Similarly, when a user unfavorites a term in the history component, it is only removed from the history term favorites and does not affect the global favorites.
+  Page: /home + /favorites + /history + /gravity + /match
