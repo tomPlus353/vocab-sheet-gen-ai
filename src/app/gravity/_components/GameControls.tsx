@@ -20,6 +20,7 @@ type GameControlProps = {
     isExtinctionMode: boolean;
     setIsExtinctionMode: React.Dispatch<React.SetStateAction<boolean>>;
     isExtinctionModeDisabled: boolean;
+    isSrsMode: boolean;
 };
 
 export function GameControls(props: GameControlProps) {
@@ -38,6 +39,7 @@ export function GameControls(props: GameControlProps) {
         isExtinctionMode,
         setIsExtinctionMode,
         isExtinctionModeDisabled,
+        isSrsMode,
     } = props;
 
     const [isAllFavoritesReviewMode, setIsAllFavoritesReviewMode] =
@@ -92,11 +94,13 @@ export function GameControls(props: GameControlProps) {
                         additionalclasses="mx-0 whitespace-nowrap bg-red-700 text-xs sm:text-sm hover:bg-red-600"
                         onClick={resetLearningProgress}
                     />
-                    <CommonButton
-                        label={"✎ Edit"}
-                        additionalclasses="mx-0 whitespace-nowrap text-xs sm:text-sm"
-                        onClick={() => setIsEditTermsModalOpen(true)}
-                    />
+                    {!isSrsMode ? (
+                        <CommonButton
+                            label={"✎ Edit"}
+                            additionalclasses="mx-0 whitespace-nowrap text-xs sm:text-sm"
+                            onClick={() => setIsEditTermsModalOpen(true)}
+                        />
+                    ) : null}
                 </div>
                 <div className="px-1 text-center text-xs text-gray-200 sm:text-left sm:text-sm">
                     {isTermAtRisk ? (
@@ -129,7 +133,7 @@ export function GameControls(props: GameControlProps) {
                             Show reading hint (kana)
                         </span>
                     </label>
-                    {!isAllFavoritesReviewMode && (
+                    {!isAllFavoritesReviewMode && !isSrsMode && (
                         <label
                             htmlFor="favorites-only"
                             className="flex cursor-pointer items-center gap-2"
@@ -189,6 +193,11 @@ export function GameControls(props: GameControlProps) {
                         )}
                     </label>
                 </div>
+                {isSrsMode ? (
+                    <div className="mt-1 text-center text-xs text-slate-300">
+                        SRS bucket mode: Favorites and Edit Terms are disabled.
+                    </div>
+                ) : null}
             </div>
             <ConfirmActionModal
                 open={isRestartPromptOpen}

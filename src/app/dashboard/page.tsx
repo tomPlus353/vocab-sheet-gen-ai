@@ -7,6 +7,7 @@ import {
     getSrsDashboardTerms,
 } from "@/server/storage/relational";
 import type { SrsDashboardBucket } from "@/lib/types/srs";
+import { SrsBucketStudyButton } from "./_components/SrsBucketStudyButton";
 
 type DashboardPageProps = {
     searchParams?: {
@@ -94,6 +95,11 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                     label="Upcoming"
                 />
             </div>
+            {bucket ? (
+                <div className="mx-auto mt-4 flex w-full max-w-6xl">
+                    <SrsBucketStudyButton bucket={bucket} />
+                </div>
+            ) : null}
 
             <div className="mx-auto mt-4 w-full max-w-6xl overflow-x-auto rounded-xl border border-slate-700 bg-slate-900">
                 {rows.length === 0 ? (

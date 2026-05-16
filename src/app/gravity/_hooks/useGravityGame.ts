@@ -90,6 +90,7 @@ export function useGravityGame() {
         setIsFavoritesMode,
         isFavoritesModeRef,
         isFavoritesModeReady,
+        isSrsMode,
     } = useGravityFavoritesMode();
     const {
         isExtinctionMode,
@@ -463,6 +464,7 @@ export function useGravityGame() {
         setShowReadingHint,
         showReadingHint,
         isFavoritesMode,
+        isSrsMode,
         setIsFavoritesMode,
         isExtinctionMode,
         setIsExtinctionMode,

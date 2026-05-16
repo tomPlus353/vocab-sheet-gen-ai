@@ -49,6 +49,7 @@ export default function GravityPage() {
         isTestReading,
         setIsTestReading,
         isFavoritesMode,
+        isSrsMode,
         setIsFavoritesMode,
         isExtinctionMode,
         setIsExtinctionMode,
@@ -67,10 +68,13 @@ export default function GravityPage() {
 
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
-        setEditTermsMode(
-            urlParams.get("favorites") === "1" ? "favorites" : "history",
-        );
-    }, []);
+            setEditTermsMode(
+                urlParams.get("favorites") === "1" ? "favorites" : "history",
+            );
+            if (urlParams.get("srsMode") === "1") {
+                setIsEditTermsModalOpen(false);
+            }
+        }, []);
 
     const handleReturnFromGravityPage = () => {
         const page = localStorage.getItem(LAST_PAGINATOR_PAGE_KEY) ?? "1";
@@ -108,6 +112,7 @@ export default function GravityPage() {
                 isExtinctionMode={isExtinctionMode}
                 setIsExtinctionMode={setIsExtinctionMode}
                 isExtinctionModeDisabled={isExtinctionModeDisabled}
+                isSrsMode={isSrsMode}
             />
 
             <div className="border border-x-0 border-gray-600 bg-gray-700/50">
@@ -296,13 +301,15 @@ export default function GravityPage() {
                 onReturnToReader={handleReturnFromGravityPage}
                 onContinuePractice={resumeAfterAllLearntModal}
             />
-            <EditTermsModal
-                open={isEditTermsModalOpen}
-                onOpenChange={setIsEditTermsModalOpen}
-                terms={terms}
-                setTerms={setTerms}
-                mode={editTermsMode}
-            />
+            {!isSrsMode ? (
+                <EditTermsModal
+                    open={isEditTermsModalOpen}
+                    onOpenChange={setIsEditTermsModalOpen}
+                    terms={terms}
+                    setTerms={setTerms}
+                    mode={editTermsMode}
+                />
+            ) : null}
 
             <Toaster />
         </div>
