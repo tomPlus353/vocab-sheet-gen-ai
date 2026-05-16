@@ -4,8 +4,7 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 // import common components and utils
-import CommonButton from "@/components/common/CommonButton";
-import { appendGameHistory, getGameHistory } from "@/lib/utils";
+import { appendGameHistory, cn, getGameHistory } from "@/lib/utils";
 import { syncHistoryForKeyBestEffort } from "@/lib/storage-sync";
 import SectionHeader from "@/components/common/SectionHeader";
 import { Toaster } from "@/components/ui/toaster";
@@ -426,6 +425,15 @@ export default function Match() {
         return latestCorrectAnw.length !== 0;
     }
 
+    function computeTileClass(id: number): string {
+        return cn(
+            "focus:outline-none flex h-16 w-full items-center rounded-none border border-blue-100/20 bg-blue-500/50 px-3 text-left text-sm leading-snug shadow-sm transition-colors hover:bg-blue-300 hover:text-black sm:h-20 sm:text-base",
+            computeSelectStyle(id),
+            computeIsDisabled() &&
+                "cursor-not-allowed opacity-50 hover:bg-blue-500/50 hover:text-black",
+        );
+    }
+
     //start the game when the page loads
     useEffect(() => {
         startGame().catch((err) => {
@@ -557,17 +565,16 @@ export default function Match() {
                                 (_, id) => id + 1,
                             ).map((oneIndex, zeroIndex) =>
                                 gameVocabJson[zeroIndex]?.type === "front" ? (
-                                    <CommonButton
+                                    <button
                                         key={zeroIndex}
-                                        label={computeLabel(zeroIndex)} //get the label from the json object which starts at 0
-                                        additionalclasses={
-                                            computeSelectStyle(oneIndex) ?? ""
-                                        } //plus one to target the term
-                                        isTempDisabled={computeIsDisabled()}
+                                        className={computeTileClass(oneIndex)}
+                                        disabled={computeIsDisabled()}
                                         onClick={() =>
                                             handleSelection(oneIndex)
                                         } //plus one to target the term
-                                    />
+                                    >
+                                        {computeLabel(zeroIndex)}
+                                    </button>
                                 ) : (
                                     ""
                                 ),
@@ -582,17 +589,16 @@ export default function Match() {
                                 (_, id) => id + 1,
                             ).map((oneIndex, zeroIndex) =>
                                 gameVocabJson[zeroIndex]?.type === "back" ? (
-                                    <CommonButton
+                                    <button
                                         key={zeroIndex}
-                                        label={computeLabel(zeroIndex)} //get the label from the json object which starts at 0
-                                        additionalclasses={
-                                            computeSelectStyle(oneIndex) ?? ""
-                                        } //plus one to target the term
-                                        isTempDisabled={computeIsDisabled()}
+                                        className={computeTileClass(oneIndex)}
+                                        disabled={computeIsDisabled()}
                                         onClick={() =>
                                             handleSelection(oneIndex)
                                         } //plus one to target the term
-                                    />
+                                    >
+                                        {computeLabel(zeroIndex)}
+                                    </button>
                                 ) : (
                                     ""
                                 ),
