@@ -80,6 +80,13 @@ export default function SectionHeader(props: SectionHeaderProps) {
                                     >
                                         Favorites
                                     </MenuItem>
+                                    <MenuItem
+                                        href="/dashboard"
+                                        active={pathname?.startsWith("/dashboard") ?? false}
+                                        onNavigate={() => setMenuOpen(false)}
+                                    >
+                                        Dashboard
+                                    </MenuItem>
                                 </nav>
                             </div>
                         ) : null}

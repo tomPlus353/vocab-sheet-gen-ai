@@ -1,6 +1,7 @@
 "use client";
 
 import type { HistoryEntry, VocabTerm } from "@/lib/types/vocab";
+import type { SrsReviewRating } from "@/lib/types/srs";
 import { getAllGameHistoryEntries, getGameHistoryEntry } from "@/lib/utils";
 import { getLocalFavoriteTerms } from "@/lib/favorites-storage";
 
@@ -49,3 +50,9 @@ export async function syncFavoritesBestEffort(terms?: VocabTerm[]): Promise<void
     }
 }
 
+export async function syncSrsReviewBestEffort(
+    term: VocabTerm,
+    rating: SrsReviewRating,
+): Promise<void> {
+    await postJson("/api/srs/review", { term, rating });
+}

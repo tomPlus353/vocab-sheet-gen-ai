@@ -1,5 +1,16 @@
 import type { HistoryEntry, VocabTerm } from "@/lib/types/vocab";
+import type { PrismaClient } from "@prisma/client";
+import type {
+    SrsCardState,
+    SrsDashboardBucket,
+    SrsDashboardSummary,
+    SrsDashboardTermRow,
+    SrsReviewRating,
+} from "@/lib/types/srs";
 import { db } from "@/server/db";
+import { createInitialSrsCard, reviewSrsCard } from "@/server/storage/srs";
+
+const prisma = db as PrismaClient;
 
 type TermKey = string;
 
@@ -274,4 +285,188 @@ export async function upsertUserTermStates(
             });
         }
     });
+}
+
+function getStartOfDay(value: Date): Date {
+    return new Date(value.getFullYear(), value.getMonth(), value.getDate());
+}
+
+function getStartOfTomorrow(value: Date): Date {
+    const day = getStartOfDay(value);
+    day.setDate(day.getDate() + 1);
+    return day;
+}
+
+export async function getSrsDashboardSummary(
+    userId: string,
+    now = new Date(),
+): Promise<SrsDashboardSummary> {
+    const startOfToday = getStartOfDay(now);
+    const startOfTomorrow = getStartOfTomorrow(now);
+
+    const [overdue, dueToday, upcoming, totalTracked] = await Promise.all([
+        prisma.userTermSrsState.count({
+            where: { userId, due: { lt: startOfToday } },
+        }),
+        prisma.userTermSrsState.count({
+            where: { userId, due: { gte: startOfToday, lt: startOfTomorrow } },
+        }),
+        prisma.userTermSrsState.count({
+            where: { userId, due: { gte: startOfTomorrow } },
+        }),
+        prisma.userTermSrsState.count({ where: { userId } }),
+    ]);
+
+    return { overdue, dueToday, upcoming, totalTracked };
+}
+
+function buildSrsBucketFilter(
+    bucket: SrsDashboardBucket,
+    now: Date,
+): { lt?: Date; gte?: Date } {
+    const startOfToday = getStartOfDay(now);
+    const startOfTomorrow = getStartOfTomorrow(now);
+    if (bucket === "overdue") {
+        return { lt: startOfToday };
+    }
+    if (bucket === "due_today") {
+        return { gte: startOfToday, lt: startOfTomorrow };
+    }
+    return { gte: startOfTomorrow };
+}
+
+export async function getSrsDashboardTerms(
+    userId: string,
+    options?: {
+        bucket?: SrsDashboardBucket;
+        limit?: number;
+        offset?: number;
+        now?: Date;
+    },
+): Promise<{ rows: SrsDashboardTermRow[]; total: number }> {
+    const now = options?.now ?? new Date();
+    const limit = Math.max(1, Math.min(options?.limit ?? 100, 200));
+    const offset = Math.max(0, options?.offset ?? 0);
+    const where = {
+        userId,
+        ...(options?.bucket
+            ? { due: buildSrsBucketFilter(options.bucket, now) }
+            : {}),
+    };
+
+    const [rows, total] = await Promise.all([
+        prisma.userTermSrsState.findMany({
+            where,
+            include: {
+                term: {
+                    select: {
+                        japanese: true,
+                        kana: true,
+                        englishDefinition: true,
+                    },
+                },
+            },
+            orderBy: { due: "asc" },
+            skip: offset,
+            take: limit,
+        }),
+        prisma.userTermSrsState.count({ where }),
+    ]);
+
+    return {
+        rows: rows.map((row) => ({
+            japanese: row.term.japanese,
+            kana: row.term.kana,
+            englishDefinition: row.term.englishDefinition,
+            due: row.due.toISOString(),
+            lastReview: row.lastReview?.toISOString(),
+            stability: row.stability,
+            difficulty: row.difficulty,
+            repetitions: row.repetitions,
+            lapses: row.lapses,
+            state: row.state,
+            retrievability: row.retrievability ?? undefined,
+            lastRating: row.lastRating ?? undefined,
+        })),
+        total,
+    };
+}
+
+export async function recordUserTermSrsReview(params: {
+    userId: string;
+    term: Pick<VocabTerm, "japanese" | "kana" | "english_definition">;
+    rating: SrsReviewRating;
+    reviewedAt?: Date;
+}): Promise<SrsCardState> {
+    const reviewedAt = params.reviewedAt ?? new Date();
+    const termIdMap = await upsertTermIds([
+        {
+            japanese: params.term.japanese,
+            kana: params.term.kana,
+            english_definition: params.term.english_definition,
+        },
+    ]);
+    const termId =
+        termIdMap.get(
+            `${params.term.japanese}\u0000${params.term.kana}\u0000${params.term.english_definition}`,
+        ) ?? "";
+    if (!termId) {
+        throw new Error("Failed to resolve term id for SRS review.");
+    }
+
+    const current = await prisma.userTermSrsState.findUnique({
+        where: { userId_termId: { userId: params.userId, termId } },
+    });
+
+    const currentCard: SrsCardState | null = current
+        ? {
+              due: current.due.toISOString(),
+              stability: current.stability,
+              difficulty: current.difficulty,
+              repetitions: current.repetitions,
+              lapses: current.lapses,
+              state: current.state,
+              lastReview: current.lastReview?.toISOString(),
+              scheduledDays: current.scheduledDays,
+              learningSteps: current.learningSteps,
+              retrievability: current.retrievability ?? undefined,
+              lastRating: current.lastRating ?? undefined,
+          }
+        : createInitialSrsCard(reviewedAt);
+
+    const next = reviewSrsCard(currentCard, params.rating, reviewedAt);
+
+    await prisma.userTermSrsState.upsert({
+        where: { userId_termId: { userId: params.userId, termId } },
+        create: {
+            userId: params.userId,
+            termId,
+            due: new Date(next.due),
+            stability: next.stability,
+            difficulty: next.difficulty,
+            repetitions: next.repetitions,
+            lapses: next.lapses,
+            state: next.state,
+            lastReview: next.lastReview ? new Date(next.lastReview) : null,
+            scheduledDays: next.scheduledDays,
+            learningSteps: next.learningSteps,
+            retrievability: next.retrievability,
+            lastRating: next.lastRating,
+        },
+        update: {
+            due: new Date(next.due),
+            stability: next.stability,
+            difficulty: next.difficulty,
+            repetitions: next.repetitions,
+            lapses: next.lapses,
+            state: next.state,
+            lastReview: next.lastReview ? new Date(next.lastReview) : null,
+            scheduledDays: next.scheduledDays,
+            learningSteps: next.learningSteps,
+            retrievability: next.retrievability,
+            lastRating: next.lastRating,
+        },
+    });
+
+    return next;
 }

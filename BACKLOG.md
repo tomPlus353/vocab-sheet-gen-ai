@@ -32,7 +32,7 @@
 - [status: PENDING] Change camera upload flow from modal to accordion/tab
   Context: Currently when the user clicks on the camera icon to upload a photo, a modal pops up. This can be a bit disruptive to the user experience. Instead, I want to change this flow to an accordion or tab that the user can use to toggle between text input and camera upload, with the selected option remembered by the browser. Also when text is uploaded, the user should be able to go directly to the ereader.
   Page: /home
-- [status: PENDING] Add long-term learning SRS style dashboard and gravity game
+- [status: done] Add long-term learning SRS style dashboard and gravity game
   - Decide on an SRS algorithm and package to use. I want to use an existing package instead of implementing my own SRS algorithm because it will save me time and I can be confident that the algorithm is well-tested and effective. Some popular SRS packages include Anki's SM-2 algorithm, SuperMemo's SM-18 algorithm, and the Leitner system. We will need to research these algorithms and choose the one that best fits my needs.
   - For each term, store SRS style stats. Actual implementation will depend on the SRS algorithm we choose, but generally we will need to store the date of the last review, the interval until the next review, the ease factor, and the repetition count for each term.
   - Create a new table in the database to store the SRS stats for each term, scoped to each user. This table will need to have a foreign key relationship with the terms table and the users table.

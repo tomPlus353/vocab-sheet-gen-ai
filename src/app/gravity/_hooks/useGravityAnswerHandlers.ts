@@ -5,6 +5,7 @@ import * as React from "react";
 import { isAnswerCorrect, getTermKey } from "../_lib/gravity-utils";
 import type { FallingTerm } from "../_lib/gravity-utils";
 import type { VocabTerm } from "@/lib/types/vocab";
+import { syncSrsReviewBestEffort } from "@/lib/storage-sync";
 
 type AnswerHandlerInputs = {
     fallingTerms: FallingTerm[];
@@ -82,6 +83,7 @@ export function useGravityAnswerHandlers({
             }));
 
             if (nextCount >= 2) {
+                void syncSrsReviewBestEffort(term, "again");
                 setCorrectionTerm(term);
                 setIsCorrectionModalOpen(true);
                 setCorrectionInput(answer);
@@ -93,6 +95,7 @@ export function useGravityAnswerHandlers({
                 return;
             }
 
+            void syncSrsReviewBestEffort(term, "again");
             setCorrectionTerm(term);
             setIsCorrectionModalOpen(true);
             setCorrectionInput(answer);
@@ -136,6 +139,10 @@ export function useGravityAnswerHandlers({
                 );
                 matches.forEach((match) => {
                     updateTermScore(match.term, "correct", !showReadingHint);
+                    void syncSrsReviewBestEffort(
+                        match.term,
+                        showReadingHint ? "hard" : "good",
+                    );
                 });
                 setScore((prev) => prev + matches.length);
                 setAnswer("");
