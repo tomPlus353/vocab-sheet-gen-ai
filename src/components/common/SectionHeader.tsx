@@ -87,6 +87,13 @@ export default function SectionHeader(props: SectionHeaderProps) {
                                     >
                                         Dashboard
                                     </MenuItem>
+                                    <MenuItem
+                                        href="/login"
+                                        active={pathname?.startsWith("/login") ?? false}
+                                        onNavigate={() => setMenuOpen(false)}
+                                    >
+                                        Login
+                                    </MenuItem>
                                 </nav>
                             </div>
                         ) : null}
