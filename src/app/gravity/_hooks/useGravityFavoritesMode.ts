@@ -21,9 +21,12 @@ export function useGravityFavoritesMode() {
         setIsSrsMode(srsEnabled);
         const persistedMode =
             localStorage.getItem(GRAVITY_FAVORITES_MODE_KEY) === "true";
+        const isHistoryFavoritesMode = urlParams.get("historyFavorites") === "1";
         const nextMode =
             !srsEnabled &&
-            (urlParams.get("favorites") === "1" || persistedMode);
+            (urlParams.get("favorites") === "1" ||
+                isHistoryFavoritesMode ||
+                persistedMode);
 
         setIsFavoritesMode(nextMode);
         isFavoritesModeRef.current = nextMode;

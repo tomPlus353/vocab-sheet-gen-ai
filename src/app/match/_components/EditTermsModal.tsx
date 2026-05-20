@@ -8,6 +8,7 @@ import {
     DialogDescription,
 } from "@/components/ui/dialog";
 import { FavoritesList } from "@/components/common/FavoritesList";
+import { StudyFavoritesButton } from "@/components/common/StudyFavoritesButton";
 import type { VocabTerm } from "@/lib/types/vocab";
 
 interface EditTermsModalProps {
@@ -25,6 +26,8 @@ export function EditTermsModal({
     setTerms,
     mode = "history",
 }: EditTermsModalProps) {
+    const favoriteCount = terms ? terms.filter((t) => t.isFavorite).length : 0;
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="flex max-h-[80svh] flex-col bg-slate-900 text-white sm:max-w-xl">
@@ -38,14 +41,18 @@ export function EditTermsModal({
                         on later. <br />
                     </DialogDescription>
                 </DialogHeader>
-                <div className="text-md flex justify-between font-bold">
-                    <span className="text-violet-300/80">
-                        Terms: {terms ? terms.length : 0}
-                    </span>
-                    <span className="text-right text-red-500">
-                        Favorites:{" "}
-                        {terms ? terms.filter((t) => t.isFavorite).length : 0}
-                    </span>
+                <div className="flex flex-col gap-3 border-b border-slate-700/70 pb-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex flex-wrap items-center gap-2 text-sm font-semibold">
+                        <span className="rounded-full border border-violet-400/40 bg-violet-500/10 px-3 py-1 text-violet-200">
+                            Terms: {terms ? terms.length : 0}
+                        </span>
+                        <span className="rounded-full border border-red-400/40 bg-red-500/10 px-3 py-1 text-red-300">
+                            Favorites: {favoriteCount}
+                        </span>
+                    </div>
+                    {mode === "history" ? (
+                        <StudyFavoritesButton favoriteCount={favoriteCount} />
+                    ) : null}
                 </div>
                 {!terms ? (
                     <pre className="font-body whitespace-pre-wrap p-4 text-sm text-foreground text-white">

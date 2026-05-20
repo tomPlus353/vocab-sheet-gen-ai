@@ -134,20 +134,20 @@ export function useGravityTermsLoader({
                 return;
             }
 
-            if (isReviewFavorites) {
-                cachedJsonString = localStorage.getItem("favoriteTerms");
-                progressSourceRef.current = { mode: "favorites" };
-                if (!cachedJsonString) {
-                    alert("No favorite terms found.");
-                    setIsLoading(false);
-                    return;
-                }
-            } else if (isReviewHistory) {
+            if (isReviewHistory) {
                 const historyHash = urlParams.get("historyTerms") ?? "";
                 cachedJsonString = getGameHistory(historyHash, true);
                 progressSourceRef.current = { mode: "history", key: historyHash };
                 if (!cachedJsonString) {
                     alert("No history terms found for key: " + historyHash);
+                    setIsLoading(false);
+                    return;
+                }
+            } else if (isReviewFavorites) {
+                cachedJsonString = localStorage.getItem("favoriteTerms");
+                progressSourceRef.current = { mode: "favorites" };
+                if (!cachedJsonString) {
+                    alert("No favorite terms found.");
                     setIsLoading(false);
                     return;
                 }

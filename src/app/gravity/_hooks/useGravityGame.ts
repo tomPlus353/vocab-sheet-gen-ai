@@ -324,7 +324,8 @@ export function useGravityGame() {
             return;
         }
 
-        const missedTerm = fallingTerms.find((term) => term.y >= PLAYFIELD_HEIGHT_PX);
+        const playfieldHeight = playfieldRef.current?.clientHeight ?? PLAYFIELD_HEIGHT_PX;
+        const missedTerm = fallingTerms.find((term) => term.y > playfieldHeight);
         if (!missedTerm) {
             return;
         }
@@ -345,6 +346,7 @@ export function useGravityGame() {
         isLoading,
         isCorrectionModalOpen,
         isEditTermsModalOpen,
+        playfieldRef,
         toast,
         updateTermScore,
     ]);

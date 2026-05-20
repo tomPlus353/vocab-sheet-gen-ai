@@ -4,14 +4,14 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import CommonButton from "@/components/common/CommonButton";
-import SectionHeader from "@/components/common/SectionHeader";
 import { Toaster } from "@/components/ui/toaster";
 import { Loader } from "@/components/common/Loader";
 
 import { AllLearntModal } from "./_components/AllLearntModal";
 import { CorrectionModal } from "./_components/CorrectionModal";
+import { GameOverModal } from "./_components/GameOverModal";
 import { useGravityGame } from "./_hooks/useGravityGame";
-import { PLAYFIELD_HEIGHT_PX, getTermKey } from "./_lib/gravity-utils";
+import { getTermKey } from "./_lib/gravity-utils";
 import { EditTermsModal } from "../match/_components/EditTermsModal";
 import { GameControls } from "./_components/GameControls";
 
@@ -41,7 +41,6 @@ export default function GravityPage() {
         playfieldRef,
         resumeAfterAllLearntModal,
         resetLearningProgress,
-        totalTermsCount,
         setAnswer,
         setCorrectionInput,
         setShowReadingHint,
@@ -92,12 +91,27 @@ export default function GravityPage() {
         });
     };
 
-    const showGameOverPanel = isGameOver && !isCorrectionModalOpen;
+    const isCorrectionModalVisible =
+        isCorrectionModalOpen && correctionTerm !== null;
+    const showGameOverPanel = isGameOver && !isCorrectionModalVisible;
+    const atRiskTermsCount = Object.values(termWrongCounts).filter(
+        (count) => count > 0,
+    ).length;
+    const getAsteroidStyle = (id: number, isAtRisk: boolean) => {
+        const tilt = ((id * 13) % 18) - 9;
+        const scale = 0.92 + ((id * 7) % 12) / 100;
+        const glowColor = isAtRisk
+            ? "rgba(239, 68, 68, 0.48)"
+            : "rgba(251, 146, 60, 0.42)";
+
+        return {
+            transform: `rotate(${tilt}deg) scale(${scale})`,
+            boxShadow: `0 0 36px ${glowColor}, inset 0 1px 0 rgba(255,255,255,0.18)`,
+        };
+    };
 
     return (
-        <div>
-            <SectionHeader title="Gravity Typing Game" />
-
+        <div className="flex h-[100dvh] flex-col overflow-hidden bg-[#030611] text-slate-100">
             <GameControls
                 loadVocabTerms={loadVocabTerms}
                 resetLearningProgress={resetLearningProgress}
@@ -113,96 +127,26 @@ export default function GravityPage() {
                 setIsExtinctionMode={setIsExtinctionMode}
                 isExtinctionModeDisabled={isExtinctionModeDisabled}
                 isSrsMode={isSrsMode}
+                learningTermsCount={learningTermsCount}
+                unlearntTermsCount={unlearntTermsCount}
+                atRiskTermsCount={atRiskTermsCount}
+                learntTermsCount={learntTermsCount}
+                timer={timer}
             />
-
-            <div className="border border-x-0 border-gray-600 bg-gray-700/50">
-                <div className="mx-auto grid w-[96%] max-w-6xl grid-cols-4 gap-4 text-center">
-                    <div className="py-2">
-                        <span className="text-sm uppercase tracking-wider text-indigo-400">
-                            Learning
-                        </span>
-                        <div className="text-3xl font-extrabold text-indigo-400">
-                            {learningTermsCount}
-                        </div>
-                    </div>
-                    <div className="py-2">
-                        <span className="text-sm uppercase tracking-wider text-indigo-400">
-                            Unlearnt
-                        </span>
-                        <div className="text-3xl font-extrabold text-indigo-400">
-                            {unlearntTermsCount}
-                        </div>
-                    </div>
-                    <div className="py-2">
-                        <span className="text-sm uppercase tracking-wider text-indigo-400">
-                            Learnt
-                        </span>
-                        <div className="text-3xl font-extrabold text-indigo-400">
-                            <span className="text-green-300">
-                                {learntTermsCount}
-                            </span>
-                            /{totalTermsCount}
-                        </div>
-                    </div>
-                    <div className="py-2">
-                        <span className="text-sm uppercase tracking-wider text-indigo-400">
-                            Time
-                        </span>
-                        <div className="text-3xl font-extrabold text-indigo-400">
-                            {timer}
-                        </div>
-                    </div>
-                </div>
-            </div>
 
             {isLoading ? (
                 <Loader />
             ) : (
-                <div className="mt-6 w-full px-4">
+                <div className="flex min-h-0 w-full flex-1 flex-col px-2 pb-2 pt-2 md:px-3">
                     <div
                         ref={playfieldRef}
-                        className="relative h-[480px] w-full overflow-hidden rounded-xl border border-blue-300/20 bg-slate-900"
-                        style={{ height: `${PLAYFIELD_HEIGHT_PX}px` }}
+                        className="relative min-h-0 w-full flex-1 overflow-hidden rounded-[28px] border border-indigo-200/20 bg-[#040818]"
                     >
-                        <div className="absolute bottom-0 h-1 w-full bg-red-500/60" />
-                        {showGameOverPanel ? (
-                            <div className="flex h-full flex-col items-center justify-center gap-4 px-6 text-center">
-                                <div className="space-y-2">
-                                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-red-300/80">
-                                        Round Complete
-                                    </p>
-                                    <h2 className="text-3xl font-black text-white">
-                                        Game Over
-                                    </h2>
-                                    <p className="mx-auto max-w-md text-sm text-slate-300">
-                                        {gameOverMessage}
-                                    </p>
-                                    <p className="text-sm text-slate-400">
-                                        Restart this gravity set or head back to
-                                        choose your next review.
-                                    </p>
-                                </div>
-                                <div className="flex flex-col gap-3 sm:flex-row">
-                                    <CommonButton
-                                        label="Restart Gravity"
-                                        additionalclasses="mx-0"
-                                        onClick={() => {
-                                            loadVocabTerms().catch((err) => {
-                                                console.error(
-                                                    "Error restarting gravity game:",
-                                                    err,
-                                                );
-                                            });
-                                        }}
-                                    />
-                                    <CommonButton
-                                        label="Back to Reader"
-                                        additionalclasses="mx-0 bg-slate-700/80 hover:bg-slate-600 hover:text-white"
-                                        onClick={handleReturnFromGravityPage}
-                                    />
-                                </div>
-                            </div>
-                        ) : fallingTerms.length > 0 ? (
+                        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_24%_14%,rgba(103,88,255,0.2),transparent_34%),radial-gradient(circle_at_72%_68%,rgba(255,95,31,0.13),transparent_36%),radial-gradient(circle_at_50%_80%,rgba(170,64,255,0.2),transparent_44%),linear-gradient(180deg,#090d2c_0%,#06091d_55%,#050614_100%)]" />
+                        <div className="pointer-events-none absolute inset-0 opacity-[0.18] [background-image:radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.92)_1px,transparent_0)] [background-size:28px_28px]" />
+                        <div className="pointer-events-none absolute inset-0 opacity-[0.24] [background-image:radial-gradient(circle_at_1px_1px,rgba(226,232,240,0.8)_1px,transparent_0)] [background-size:42px_42px]" />
+                        <div className="absolute bottom-0 h-1 w-full bg-gradient-to-r from-red-500/55 via-rose-400/75 to-red-500/55" />
+                        {isCorrectionModalVisible || showGameOverPanel ? null : fallingTerms.length > 0 ? (
                             fallingTerms.map((term) => {
                                 const termKey = getTermKey(term.term);
                                 const termWrongCount =
@@ -218,22 +162,28 @@ export default function GravityPage() {
                                 return (
                                     <div
                                         key={term.id}
-                                        className={`absolute max-w-[220px] rounded-lg border px-3 py-2 shadow-lg transition-all duration-200 ${
+                                        className={`absolute max-w-[220px] rounded-[26px] border px-4 py-3 shadow-lg backdrop-blur-[1px] transition-all duration-200 ${
                                             termWrongCount > 0
-                                                ? "border-red-300/20 bg-red-500/20 text-red-100"
-                                                : "border-amber-300/20 bg-amber-500/20 text-amber-100"
+                                                ? "border-red-500/70 bg-[radial-gradient(circle_at_20%_18%,rgba(190,18,60,0.5),rgba(69,10,10,0.84))] text-red-100"
+                                                : "border-amber-500/65 bg-[radial-gradient(circle_at_28%_20%,rgba(234,88,12,0.5),rgba(67,20,7,0.84))] text-amber-100"
                                         }`}
                                         style={{
                                             top: `${term.y}px`,
                                             left: `${term.x}px`,
+                                            ...getAsteroidStyle(
+                                                term.id,
+                                                termWrongCount > 0,
+                                            ),
                                         }}
                                         title={term.term.english_definition}
                                     >
+                                        <span className="pointer-events-none absolute right-4 top-3 h-3.5 w-3.5 rounded-full bg-black/35" />
+                                        <span className="pointer-events-none absolute bottom-3 left-4 h-2.5 w-2.5 rounded-full bg-black/30" />
                                         <p className="whitespace-normal break-words font-bold">
                                             {truncated}
                                         </p>
                                         {showReadingHint && (
-                                            <p className="text-xs text-amber-200/80">
+                                            <p className="text-xs text-amber-100/80">
                                                 Hint: {term.term.kana}
                                             </p>
                                         )}
@@ -247,15 +197,15 @@ export default function GravityPage() {
                         )}
                     </div>
 
-                    {!showGameOverPanel && (
+                    {!showGameOverPanel && !isGameOver && (
                         <form
                             onSubmit={handleSubmit}
-                            className="mt-4 flex gap-2"
+                            className="mt-2 flex items-center gap-2 rounded-2xl border border-indigo-200/20 bg-[#0b1331]/90 p-2"
                         >
                             <input
                                 ref={inputRef}
                                 type="text"
-                                className="w-full rounded-md border border-slate-700 bg-black px-3 py-2 text-white outline-none focus:border-indigo-500"
+                                className="h-12 w-full rounded-xl border border-indigo-300/25 bg-[#111b3d] px-4 text-2xl text-slate-100 outline-none placeholder:text-slate-400 focus:border-indigo-400"
                                 placeholder="Type the Japanese term"
                                 value={answer}
                                 disabled={
@@ -271,7 +221,7 @@ export default function GravityPage() {
                             <CommonButton
                                 type="submit"
                                 label="Submit"
-                                additionalclasses="mx-0"
+                                additionalclasses="mx-0 h-12 rounded-xl border-0 bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-7 text-xl font-semibold text-white hover:from-indigo-400 hover:to-fuchsia-400"
                                 disabled={
                                     isGameOver ||
                                     isLoading ||
@@ -285,7 +235,7 @@ export default function GravityPage() {
             )}
 
             <CorrectionModal
-                open={isCorrectionModalOpen}
+                open={isCorrectionModalVisible}
                 isGameOver={isGameOver}
                 activeTerm={correctionTerm ?? null}
                 correctionInput={correctionInput}
@@ -300,6 +250,16 @@ export default function GravityPage() {
                 onSwitchPractice={handleSwitchPracticeMode}
                 onReturnToReader={handleReturnFromGravityPage}
                 onContinuePractice={resumeAfterAllLearntModal}
+            />
+            <GameOverModal
+                open={showGameOverPanel}
+                message={gameOverMessage}
+                onRestart={() => {
+                    loadVocabTerms().catch((err) => {
+                        console.error("Error restarting gravity game:", err);
+                    });
+                }}
+                onReturn={handleReturnFromGravityPage}
             />
             {!isSrsMode ? (
                 <EditTermsModal
