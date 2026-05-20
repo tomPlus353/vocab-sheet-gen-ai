@@ -48,3 +48,6 @@
 - [status: done] Monitor correction modal text box for immediate correct match
   Context: Automatically submit and close correction modal when typed text matches the correct term.
   Page: /gravity
+- [status: PENDING] Replace separate reading and meaning modes with a single mode
+  Context: Merge separate reading and meaning options into a single mode. Group terms in batches of max 10 terms. For each term, first test reading, then test meaning once its reading is learnt (gravity reading score of 2 or more).
+  Page: /gravity + /match
