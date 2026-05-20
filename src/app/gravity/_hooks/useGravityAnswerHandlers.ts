@@ -114,22 +114,21 @@ export function useGravityAnswerHandlers({
         ],
     );
 
-    const handleSubmit = React.useCallback(
-        (event: React.FormEvent) => {
-            event.preventDefault();
-
+    const checkAndClearMatches = React.useCallback(
+        (currentAnswer: string): boolean => {
             if (
                 fallingTerms.length === 0 ||
                 isGameOver ||
                 isLoading ||
-                isCorrectionModalOpen
+                isCorrectionModalOpen ||
+                !currentAnswer.trim()
             ) {
-                return;
+                return false;
             }
 
             const matches = fallingTerms.filter((falling) => {
                 const expected = getExpectedAnswer(falling.term);
-                return isAnswerCorrect(answer, expected);
+                return isAnswerCorrect(currentAnswer, expected);
             });
 
             if (matches.length > 0) {
@@ -157,6 +156,42 @@ export function useGravityAnswerHandlers({
                     duration: 800,
                     variant: "success",
                 });
+                return true;
+            }
+
+            return false;
+        },
+        [
+            fallingTerms,
+            isGameOver,
+            isLoading,
+            isCorrectionModalOpen,
+            getExpectedAnswer,
+            setFallingTerms,
+            updateTermScore,
+            showReadingHint,
+            setScore,
+            setAnswer,
+            toast,
+        ],
+    );
+
+    React.useEffect(() => {
+        if (answer.trim()) {
+            checkAndClearMatches(answer);
+        }
+    }, [answer, checkAndClearMatches]);
+
+    const handleSubmit = React.useCallback(
+        (event: React.FormEvent) => {
+            event.preventDefault();
+
+            if (!answer.trim()) {
+                return;
+            }
+
+            const didMatch = checkAndClearMatches(answer);
+            if (didMatch) {
                 return;
             }
 
@@ -169,19 +204,13 @@ export function useGravityAnswerHandlers({
             setAnswer("");
         },
         [
-            fallingTerms,
             answer,
-            isCorrectionModalOpen,
-            isGameOver,
-            isLoading,
-            showReadingHint,
+            checkAndClearMatches,
             toast,
-            updateTermScore,
             setAnswer,
-            setScore,
-            getExpectedAnswer,
         ],
     );
+
 
     const handleCorrectionSubmit = React.useCallback(
         (event: React.FormEvent<HTMLFormElement>) => {
