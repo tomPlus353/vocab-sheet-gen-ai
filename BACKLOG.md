@@ -45,3 +45,6 @@
 - [status: done] Monitor gravity game text box for immediate correct matches
   Context: Monitor text box to immediately mark correct and clear without requiring Enter key press.
   Page: /gravity
+- [status: done] Monitor correction modal text box for immediate correct match
+  Context: Automatically submit and close correction modal when typed text matches the correct term.
+  Page: /gravity

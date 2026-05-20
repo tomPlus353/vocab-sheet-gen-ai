@@ -182,6 +182,39 @@ export function useGravityAnswerHandlers({
         }
     }, [answer, checkAndClearMatches]);
 
+    React.useEffect(() => {
+        if (!correctionTerm || !correctionInput.trim()) {
+            return;
+        }
+
+        const expected = getExpectedAnswer(correctionTerm);
+        if (isAnswerCorrect(correctionInput, expected)) {
+            setIsCorrectionModalOpen(false);
+            setCorrectionInput("");
+            setCorrectionError("");
+            setAnswer("");
+            setCorrectionTerm(null);
+            if (isGameOver) {
+                return;
+            }
+            spawnTerm(remainingQueue, activeTerms);
+        }
+    }, [
+        correctionInput,
+        correctionTerm,
+        isGameOver,
+        remainingQueue,
+        activeTerms,
+        getExpectedAnswer,
+        spawnTerm,
+        setIsCorrectionModalOpen,
+        setCorrectionInput,
+        setCorrectionError,
+        setAnswer,
+        setCorrectionTerm,
+    ]);
+
+
     const handleSubmit = React.useCallback(
         (event: React.FormEvent) => {
             event.preventDefault();
