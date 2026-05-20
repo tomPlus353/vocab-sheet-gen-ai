@@ -40,11 +40,11 @@ export function AllLearntModal(props: Props) {
     }
 
     const currentModeLabel = isTestReading
-        ? "Reading practice"
-        : "Meaning practice";
+        ? "Reading Practice"
+        : "Meaning Practice";
     const otherModeLabel = isTestReading
-        ? "Meaning practice"
-        : "Reading practice";
+        ? "Meaning Practice"
+        : "Reading Practice";
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
@@ -56,8 +56,9 @@ export function AllLearntModal(props: Props) {
                     You got every term correct at least twice in a row.
                 </p>
                 <p className="mt-2 text-sm text-gray-300">
-                    You completed {currentModeLabel}. Would you like to switch
-                    to {otherModeLabel} now?
+                    {showSwitchPractice
+                        ? `You completed {currentModeLabel}. Would you like to switch to {otherModeLabel} now?`
+                        : `You completed both ${currentModeLabel} and ${otherModeLabel}. Great job!`}
                 </p>
                 <div className="mt-4 flex flex-col gap-2 sm:flex-row">
                     <CommonButton

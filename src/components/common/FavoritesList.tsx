@@ -137,7 +137,7 @@ export function FavoritesList({
                 return;
             }
 
-            appendGameHistory(
+            void appendGameHistory(
                 target.key,
                 JSON.stringify(updatedTerms),
                 target.isKeyHashed,
@@ -290,7 +290,7 @@ export function FavoritesList({
                     "No valid history target found for updating favorite status.",
                 );
             } else {
-                appendGameHistory(
+                void appendGameHistory(
                     target.key,
                     JSON.stringify(updatedTerms),
                     target.isKeyHashed,
@@ -330,7 +330,8 @@ export function FavoritesList({
             currentFavorites = currentFavorites.filter(
                 (favTerm) =>
                     !(
-                        favTerm.english_definition === term.english_definition &&
+                        favTerm.english_definition ===
+                            term.english_definition &&
                         favTerm.japanese === term.japanese
                     ),
             );
