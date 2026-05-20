@@ -435,58 +435,64 @@ export function FavoritesList({
                     );
                 })}
             </ul>
-            <ConfirmActionModal
-                open={isClearConfirmOpen}
-                title="Clear all favorites?"
-                description="This removes the favorite selection from all visible terms."
-                confirmLabel="Clear all"
-                onOpenChange={setIsClearConfirmOpen}
-                onConfirm={clearAllFavorites}
-            />
-            <Dialog
-                open={isUnfavoriteConfirmOpen}
-                onOpenChange={(open) => {
-                    setIsUnfavoriteConfirmOpen(open);
-                    if (!open) {
-                        setPendingUnfavoriteIndex(null);
-                        setSkipUnfavoriteConfirmChecked(false);
-                    }
-                }}
-            >
-                <DialogContent className="bg-slate-900 text-white">
-                    <DialogHeader>
-                        <DialogTitle>Remove this favorite?</DialogTitle>
-                        <DialogDescription className="text-slate-300">
-                            This will permanently remove the term from your
-                            favorites list.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <label className="mt-2 flex items-center gap-2 text-sm text-slate-200">
-                        <Checkbox
-                            className="h-4 w-4 rounded-sm border-slate-500 bg-transparent data-[state=checked]:border-red-500 data-[state=checked]:bg-red-500"
-                            checked={skipUnfavoriteConfirmChecked}
-                            onCheckedChange={(checked) =>
-                                setSkipUnfavoriteConfirmChecked(
-                                    checked === true,
-                                )
-                            }
-                        />
-                        Do not ask again
-                    </label>
-                    <DialogFooter>
-                        <CommonButton
-                            label="Cancel"
-                            additionalclasses="mx-0 bg-slate-700 hover:bg-slate-600"
-                            onClick={() => setIsUnfavoriteConfirmOpen(false)}
-                        />
-                        <CommonButton
-                            label="Remove"
-                            additionalclasses="mx-0 bg-red-700 hover:bg-red-600"
-                            onClick={handleConfirmUnfavorite}
-                        />
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            {isClearConfirmOpen ? (
+                <ConfirmActionModal
+                    open={isClearConfirmOpen}
+                    title="Clear all favorites?"
+                    description="This removes the favorite selection from all visible terms."
+                    confirmLabel="Clear all"
+                    onOpenChange={setIsClearConfirmOpen}
+                    onConfirm={clearAllFavorites}
+                />
+            ) : null}
+            {isUnfavoriteConfirmOpen ? (
+                <Dialog
+                    open={isUnfavoriteConfirmOpen}
+                    onOpenChange={(open) => {
+                        setIsUnfavoriteConfirmOpen(open);
+                        if (!open) {
+                            setPendingUnfavoriteIndex(null);
+                            setSkipUnfavoriteConfirmChecked(false);
+                        }
+                    }}
+                >
+                    <DialogContent className="bg-slate-900 text-white">
+                        <DialogHeader>
+                            <DialogTitle>Remove this favorite?</DialogTitle>
+                            <DialogDescription className="text-slate-300">
+                                This will permanently remove the term from your
+                                favorites list.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <label className="mt-2 flex items-center gap-2 text-sm text-slate-200">
+                            <Checkbox
+                                className="h-4 w-4 rounded-sm border-slate-500 bg-transparent data-[state=checked]:border-red-500 data-[state=checked]:bg-red-500"
+                                checked={skipUnfavoriteConfirmChecked}
+                                onCheckedChange={(checked) =>
+                                    setSkipUnfavoriteConfirmChecked(
+                                        checked === true,
+                                    )
+                                }
+                            />
+                            Do not ask again
+                        </label>
+                        <DialogFooter>
+                            <CommonButton
+                                label="Cancel"
+                                additionalclasses="mx-0 bg-slate-700 hover:bg-slate-600"
+                                onClick={() =>
+                                    setIsUnfavoriteConfirmOpen(false)
+                                }
+                            />
+                            <CommonButton
+                                label="Remove"
+                                additionalclasses="mx-0 bg-red-700 hover:bg-red-600"
+                                onClick={handleConfirmUnfavorite}
+                            />
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            ) : null}
         </ScrollArea>
     );
 }
