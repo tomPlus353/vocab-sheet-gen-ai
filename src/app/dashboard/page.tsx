@@ -10,9 +10,9 @@ import type { SrsDashboardBucket } from "@/lib/types/srs";
 import { SrsBucketStudyButton } from "./_components/SrsBucketStudyButton";
 
 type DashboardPageProps = {
-    searchParams?: {
+    searchParams?: Promise<{
         bucket?: string;
-    };
+    }>;
 };
 
 function parseBucket(value: string | undefined): SrsDashboardBucket | undefined {
@@ -59,7 +59,8 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         );
     }
 
-    const bucket = parseBucket(searchParams?.bucket);
+    const resolvedSearchParams = await searchParams;
+    const bucket = parseBucket(resolvedSearchParams?.bucket);
     const [summary, list] = await Promise.all([
         getSrsDashboardSummary(userId),
         getSrsDashboardTerms(userId, { bucket, limit: 200, offset: 0 }),
