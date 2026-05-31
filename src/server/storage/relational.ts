@@ -470,3 +470,29 @@ export async function recordUserTermSrsReview(params: {
 
     return next;
 }
+
+export async function deleteUserTermEverywhere(
+    userId: string,
+    term: { japanese: string; kana: string; englishDefinition: string },
+): Promise<void> {
+    const existingTerm = await db.term.findUnique({
+        where: {
+            japanese_kana_englishDefinition: {
+                japanese: term.japanese,
+                kana: term.kana,
+                englishDefinition: term.englishDefinition,
+            },
+        },
+        select: { id: true },
+    });
+
+    if (!existingTerm) return;
+
+    const termId = existingTerm.id;
+    await db.$transaction(async (tx) => {
+        await tx.userTermSrsState.deleteMany({ where: { userId, termId } });
+        await tx.userTermState.deleteMany({ where: { userId, termId } });
+        await tx.userFavoriteTerm.deleteMany({ where: { userId, termId } });
+        await tx.userHistoryEntryTerm.deleteMany({ where: { userId, termId } });
+    });
+}

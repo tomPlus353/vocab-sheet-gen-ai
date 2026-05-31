@@ -8,6 +8,7 @@ import {
 } from "@/server/storage/relational";
 import type { SrsDashboardBucket } from "@/lib/types/srs";
 import { SrsBucketStudyButton } from "./_components/SrsBucketStudyButton";
+import { SrsDashboardTable } from "./_components/SrsDashboardTable";
 
 type DashboardPageProps = {
     searchParams?: Promise<{
@@ -20,13 +21,6 @@ function parseBucket(value: string | undefined): SrsDashboardBucket | undefined 
         return value;
     }
     return undefined;
-}
-
-function formatDate(value: string | undefined): string {
-    if (!value) return "-";
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return "-";
-    return date.toLocaleDateString();
 }
 
 const bucketLabel: Record<SrsDashboardBucket, string> = {
@@ -110,36 +104,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                             : "No SRS data yet. Play gravity while logged in to start tracking long-term reviews."}
                     </div>
                 ) : (
-                    <table className="w-full min-w-[960px] text-sm">
-                        <thead className="bg-slate-800 text-slate-200">
-                            <tr>
-                                <th className="px-3 py-2 text-left">Term</th>
-                                <th className="px-3 py-2 text-left">Reading</th>
-                                <th className="px-3 py-2 text-left">Meaning</th>
-                                <th className="px-3 py-2 text-left">Next Review</th>
-                                <th className="px-3 py-2 text-left">Last Review</th>
-                                <th className="px-3 py-2 text-right">Stability</th>
-                                <th className="px-3 py-2 text-right">Difficulty</th>
-                                <th className="px-3 py-2 text-right">Reps</th>
-                                <th className="px-3 py-2 text-right">Lapses</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {rows.map((row) => (
-                                <tr key={`${row.japanese}\u0000${row.kana}\u0000${row.englishDefinition}`} className="border-t border-slate-800 text-slate-100">
-                                    <td className="px-3 py-2 font-semibold">{row.japanese}</td>
-                                    <td className="px-3 py-2">{row.kana}</td>
-                                    <td className="px-3 py-2 text-slate-300">{row.englishDefinition}</td>
-                                    <td className="px-3 py-2">{formatDate(row.due)}</td>
-                                    <td className="px-3 py-2">{formatDate(row.lastReview)}</td>
-                                    <td className="px-3 py-2 text-right">{row.stability.toFixed(2)}</td>
-                                    <td className="px-3 py-2 text-right">{row.difficulty.toFixed(2)}</td>
-                                    <td className="px-3 py-2 text-right">{row.repetitions}</td>
-                                    <td className="px-3 py-2 text-right">{row.lapses}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                    <SrsDashboardTable initialRows={rows} />
                 )}
             </div>
         </div>

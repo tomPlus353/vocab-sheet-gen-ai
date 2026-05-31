@@ -19,6 +19,7 @@ import type { VocabTerm } from "@/lib/types/vocab";
 import { setFavoriteTerms } from "@/lib/favorites-storage";
 import { syncHistoryForKeyBestEffort } from "@/lib/storage-sync";
 import { resolveHistoryStorageTarget } from "@/lib/history-storage-target";
+import { removeTermFromLocalStorage } from "@/lib/term-deletion";
 
 const GLOBAL_FAV_LIST_KEY = "favoriteTerms";
 const UNFAVORITE_CONFIRM_SKIP_KEY = "favoritesListSkipUnfavoriteConfirm";
@@ -83,6 +84,10 @@ export function FavoritesList({
     const [pendingUnfavoriteIndex, setPendingUnfavoriteIndex] = React.useState<
         number | null
     >(null);
+    const [deletingTermKey, setDeletingTermKey] = React.useState("");
+    const [selectedTerm, setSelectedTerm] = React.useState<VocabTerm | null>(
+        null,
+    );
     const favoriteCount = terms
         ? terms.filter((term) => term.isFavorite).length
         : 0;
@@ -343,6 +348,54 @@ export function FavoritesList({
             ? handleFavoriteClickAll
             : handleFavoriteClickCurrent;
 
+    async function handleDeleteTerm(index: number) {
+        const term = terms[index];
+        if (!term) return;
+
+        const termKey = `${term.japanese}\u0000${term.kana}\u0000${term.english_definition}`;
+        if (deletingTermKey) return;
+        setDeletingTermKey(termKey);
+
+        try {
+            removeTermFromLocalStorage({
+                japanese: term.japanese,
+                kana: term.kana,
+                english_definition: term.english_definition,
+            });
+
+            const response = await fetch("/api/srs/term/delete", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    japanese: term.japanese,
+                    kana: term.kana,
+                    englishDefinition: term.english_definition,
+                }),
+            });
+
+            if (!response.ok && response.status !== 401) {
+                throw new Error("Failed to delete term");
+            }
+
+            setTerms((current) =>
+                current.filter(
+                    (item) =>
+                        !(
+                            item.japanese === term.japanese &&
+                            item.kana === term.kana &&
+                            item.english_definition === term.english_definition
+                        ),
+                ),
+            );
+            refreshTerms?.();
+        } catch (error) {
+            console.error("Failed to delete term", error);
+            window.alert("Could not delete this term. Please try again.");
+        } finally {
+            setDeletingTermKey("");
+        }
+    }
+
     return (
         <ScrollArea className="my-2 max-h-96 flex-1 overflow-y-auto rounded-md border">
             {/* header section */}
@@ -394,6 +447,8 @@ export function FavoritesList({
                     const learningStatus = getLearningStatus(
                         termObj.gravity_score,
                     );
+                    const termKey = `${termObj.japanese}\u0000${termObj.kana}\u0000${termObj.english_definition}`;
+                    const isDeleting = deletingTermKey === termKey;
 
                     return (
                         <li
@@ -401,9 +456,14 @@ export function FavoritesList({
                             className={`mb-1 flex items-center justify-between rounded-md border border-l-4 border-slate-700 bg-black px-2 py-1.5 last:mb-0 ${learningStatus.accentClassName}`}
                         >
                             <div className="flex min-w-0 items-center gap-2">
-                                <span className="truncate font-medium text-slate-100">
+                                <button
+                                    type="button"
+                                    className="truncate rounded px-1 text-left font-medium text-slate-100 hover:bg-slate-800 hover:text-slate-50"
+                                    onClick={() => setSelectedTerm(termObj)}
+                                    title="View term details"
+                                >
                                     {termObj.japanese}
-                                </span>
+                                </button>
                                 <span
                                     className={`inline-flex h-5 items-center rounded-full border px-1.5 text-[10px] font-semibold tracking-wide ${learningStatus.badgeClassName}`}
                                     title={`${learningStatus.label} (gravity score: ${termObj.gravity_score ?? 0})`}
@@ -411,26 +471,36 @@ export function FavoritesList({
                                     {learningStatus.icon} {learningStatus.label}
                                 </span>
                             </div>
-                            {/* Favorite button */}
-                            <button
-                                className="ml-3 rounded-md px-1 py-1 text-sm text-red-500 hover:bg-slate-800"
-                                onClick={() => favoriteClickHandler(index)}
-                                title={
-                                    termObj.isFavorite
-                                        ? "Remove favorite"
-                                        : "Add favorite"
-                                }
-                            >
-                                {termObj.isFavorite ? (
-                                    // Filled heart icon for favorite
-                                    <Heart
-                                        className="inline-block h-6 w-6"
-                                        fill="red"
-                                    />
-                                ) : (
-                                    <Heart className="inline-block h-6 w-6" />
-                                )}
-                            </button>
+                            <div className="ml-3 flex items-center gap-1">
+                                <button
+                                    className="rounded-md px-1 py-1 text-sm text-red-500 hover:bg-slate-800"
+                                    onClick={() => favoriteClickHandler(index)}
+                                    title={
+                                        termObj.isFavorite
+                                            ? "Remove favorite"
+                                            : "Add favorite"
+                                    }
+                                >
+                                    {termObj.isFavorite ? (
+                                        <Heart
+                                            className="inline-block h-6 w-6"
+                                            fill="red"
+                                        />
+                                    ) : (
+                                        <Heart className="inline-block h-6 w-6" />
+                                    )}
+                                </button>
+                                <button
+                                    type="button"
+                                    className="rounded-md p-1 text-red-300 hover:bg-red-500/20 hover:text-red-200 disabled:cursor-not-allowed disabled:opacity-60"
+                                    onClick={() => void handleDeleteTerm(index)}
+                                    disabled={isDeleting}
+                                    aria-label="Delete term"
+                                    title="Delete term"
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                </button>
+                            </div>
                         </li>
                     );
                 })}
@@ -490,6 +560,127 @@ export function FavoritesList({
                                 onClick={handleConfirmUnfavorite}
                             />
                         </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            ) : null}
+            {selectedTerm ? (
+                <Dialog
+                    open={selectedTerm !== null}
+                    onOpenChange={(open) => {
+                        if (!open) setSelectedTerm(null);
+                    }}
+                >
+                    <DialogContent className="max-h-[80vh] overflow-y-auto bg-slate-900 text-white">
+                        <DialogHeader>
+                            <DialogTitle>Term details</DialogTitle>
+                            <DialogDescription className="text-slate-300">
+                                Full data for the selected term.
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        <div className="space-y-3 text-sm">
+                            <div className="rounded-md border border-slate-700 bg-slate-800/60 p-3">
+                                <div className="text-xs text-slate-400">
+                                    Japanese
+                                </div>
+                                <div className="mt-1 text-base font-semibold text-slate-100">
+                                    {selectedTerm.japanese}
+                                </div>
+                            </div>
+                            <div className="rounded-md border border-slate-700 bg-slate-800/60 p-3">
+                                <div className="text-xs text-slate-400">
+                                    Kana
+                                </div>
+                                <div className="mt-1 text-base text-slate-100">
+                                    {selectedTerm.kana}
+                                </div>
+                            </div>
+                            <div className="rounded-md border border-slate-700 bg-slate-800/60 p-3">
+                                <div className="text-xs text-slate-400">
+                                    Meaning
+                                </div>
+                                <div className="mt-1 text-base text-slate-100">
+                                    {selectedTerm.english_definition}
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2">
+                                <div className="rounded-md border border-slate-700 bg-slate-800/60 p-3">
+                                    <div className="text-xs text-slate-400">
+                                        Gravity score
+                                    </div>
+                                    <div className="mt-1 text-slate-100">
+                                        {selectedTerm.gravity_score ?? 0}
+                                    </div>
+                                </div>
+                                <div className="rounded-md border border-slate-700 bg-slate-800/60 p-3">
+                                    <div className="text-xs text-slate-400">
+                                        Reading score
+                                    </div>
+                                    <div className="mt-1 text-slate-100">
+                                        {selectedTerm.gravity_reading_score ??
+                                            0}
+                                    </div>
+                                </div>
+                                <div className="rounded-md border border-slate-700 bg-slate-800/60 p-3">
+                                    <div className="text-xs text-slate-400">
+                                        Favorite
+                                    </div>
+                                    <div className="mt-1 text-slate-100">
+                                        {selectedTerm.isFavorite
+                                            ? "Yes"
+                                            : "No"}
+                                    </div>
+                                </div>
+                                <div className="rounded-md border border-slate-700 bg-slate-800/60 p-3">
+                                    <div className="text-xs text-slate-400">
+                                        Learnt
+                                    </div>
+                                    <div className="mt-1 text-slate-100">
+                                        {selectedTerm.isLearnt ? "Yes" : "No"}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="rounded-md border border-slate-700 bg-slate-800/60 p-3">
+                                <div className="text-xs text-slate-400">
+                                    Type
+                                </div>
+                                <div className="mt-1 text-slate-100">
+                                    {selectedTerm.type ?? "-"}
+                                </div>
+                            </div>
+
+                            <div className="rounded-md border border-slate-700 bg-slate-800/60 p-3">
+                                <div className="text-xs text-slate-400">
+                                    Example sentences
+                                </div>
+                                {selectedTerm.example_sentences &&
+                                selectedTerm.example_sentences.length > 0 ? (
+                                    <ul className="mt-2 space-y-2">
+                                        {selectedTerm.example_sentences.map(
+                                            (sentence, sentenceIndex) => (
+                                                <li
+                                                    key={`${sentence.japanese}-${sentenceIndex}`}
+                                                    className="rounded border border-slate-700 bg-slate-900 p-2"
+                                                >
+                                                    <div className="text-slate-100">
+                                                        {sentence.japanese}
+                                                    </div>
+                                                    <div className="text-xs text-slate-400">
+                                                        {sentence.kana}
+                                                    </div>
+                                                </li>
+                                            ),
+                                        )}
+                                    </ul>
+                                ) : (
+                                    <div className="mt-1 text-slate-300">
+                                        No example sentences.
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </DialogContent>
                 </Dialog>
             ) : null}
