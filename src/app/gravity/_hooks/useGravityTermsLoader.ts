@@ -234,14 +234,6 @@ export function useGravityTermsLoader({
         }
 
         parsedTerms = applyLocalTermStatesToTerms(parsedTerms);
-        if (isSrsMode) {
-            parsedTerms = parsedTerms.map((term) => ({
-                ...term,
-                gravity_score: 0,
-                gravity_reading_score: 0,
-                isLearnt: false,
-            }));
-        }
 
         const filteredTerms = parsedTerms.filter((term) => {
             if (isSrsMode) {
