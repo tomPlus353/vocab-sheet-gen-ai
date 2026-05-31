@@ -57,7 +57,7 @@ export function AllLearntModal(props: Props) {
                 </p>
                 <p className="mt-2 text-sm text-gray-300">
                     {showSwitchPractice
-                        ? `You completed {currentModeLabel}. Would you like to switch to {otherModeLabel} now?`
+                        ? `You completed ${currentModeLabel}. Would you like to switch to ${otherModeLabel} now?`
                         : `You completed both ${currentModeLabel} and ${otherModeLabel}. Great job!`}
                 </p>
                 <div className="mt-4 flex flex-col gap-2 sm:flex-row">
