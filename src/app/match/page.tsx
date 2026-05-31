@@ -5,7 +5,10 @@ import { useToast } from "@/hooks/use-toast";
 
 // import common components and utils
 import { appendGameHistory, cn, getGameHistory } from "@/lib/utils";
-import { syncHistoryForKeyBestEffort, syncSrsReviewBestEffort } from "@/lib/storage-sync";
+import {
+    syncHistoryForKeyBestEffort,
+    syncSrsReviewBestEffort,
+} from "@/lib/storage-sync";
 import SectionHeader from "@/components/common/SectionHeader";
 import { Toaster } from "@/components/ui/toaster";
 import { Loader } from "@/components/common/Loader";
@@ -470,7 +473,8 @@ export default function Match() {
                 });
 
                 // Record SRS data for correct match, but skip the last match
-                const isLastMatch = answered.length + 2 === gameVocabJson.length;
+                const isLastMatch =
+                    answered.length + 2 === gameVocabJson.length;
                 if (!isLastMatch && selectedObj1) {
                     void syncSrsReviewBestEffort(selectedObj1, "good");
                 }
@@ -495,7 +499,8 @@ export default function Match() {
                 });
 
                 // Record SRS data for incorrect match, but skip the last match
-                const isLastMatch = answered.length + 2 === gameVocabJson.length;
+                const isLastMatch =
+                    answered.length + 2 === gameVocabJson.length;
                 if (!isLastMatch && selectedObj1) {
                     void syncSrsReviewBestEffort(selectedObj1, "again");
                 }
@@ -504,7 +509,7 @@ export default function Match() {
                 setSelected2(0);
             }
         }
-    }, [selected1, selected2, answered, gameVocabJson]);
+    }, [selected1, selected2]);
 
     //track answered with use effect to check if game is over
     useEffect(() => {
