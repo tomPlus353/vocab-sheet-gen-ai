@@ -85,9 +85,11 @@ export function FavoritesList({
         number | null
     >(null);
     const [deletingTermKey, setDeletingTermKey] = React.useState("");
-    const [selectedTerm, setSelectedTerm] = React.useState<VocabTerm | null>(
-        null,
-    );
+    const [selectedTermIndex, setSelectedTermIndex] = React.useState<
+        number | null
+    >(null);
+    const [isEditingTerm, setIsEditingTerm] = React.useState(false);
+    const [termDraft, setTermDraft] = React.useState<VocabTerm | null>(null);
     const favoriteCount = terms
         ? terms.filter((term) => term.isFavorite).length
         : 0;
@@ -396,6 +398,103 @@ export function FavoritesList({
         }
     }
 
+    function openTermDetails(index: number) {
+        const term = terms[index];
+        if (!term) return;
+        setSelectedTermIndex(index);
+        setTermDraft({ ...term });
+        setIsEditingTerm(false);
+    }
+
+    function closeTermDetails() {
+        setSelectedTermIndex(null);
+        setTermDraft(null);
+        setIsEditingTerm(false);
+    }
+
+    function handleTermDraftChange(
+        field: "japanese" | "kana" | "english_definition",
+        value: string,
+    ) {
+        setTermDraft((current) => {
+            if (!current) return current;
+            return { ...current, [field]: value };
+        });
+    }
+
+    function saveTermEdits() {
+        if (selectedTermIndex === null || !termDraft) return;
+
+        const updatedTerms = [...terms];
+        const previousTerm = updatedTerms[selectedTermIndex];
+        if (!previousTerm) return;
+        const nextTerm: VocabTerm = {
+            ...previousTerm,
+            japanese: termDraft.japanese.trim(),
+            kana: termDraft.kana.trim(),
+            english_definition: termDraft.english_definition.trim(),
+            example_sentences: termDraft.example_sentences,
+            gravity_score: termDraft.gravity_score,
+            gravity_reading_score: termDraft.gravity_reading_score,
+            isFavorite: termDraft.isFavorite,
+            isLearnt: termDraft.isLearnt,
+            type: termDraft.type,
+        };
+        updatedTerms[selectedTermIndex] = nextTerm;
+        setTerms(updatedTerms);
+
+        if (mode === "favorites") {
+            setFavoriteTerms(updatedTerms.filter((term) => term.isFavorite));
+        } else {
+            const urlParams = new URLSearchParams(window.location.search);
+            const isReviewFavorites =
+                urlParams.get("favorites") === "1" ? true : false;
+
+            if (isReviewFavorites) {
+                setFavoriteTerms(updatedTerms.filter((term) => term.isFavorite));
+            } else {
+                const target = resolveHistoryStorageTarget({
+                    historyTermsKey,
+                    search: window.location.search,
+                    activeText: localStorage.getItem("activeText"),
+                });
+
+                if (target) {
+                    void appendGameHistory(
+                        target.key,
+                        JSON.stringify(updatedTerms),
+                        target.isKeyHashed,
+                    );
+                    void syncHistoryForKeyBestEffort(
+                        target.key,
+                        target.isKeyHashed,
+                    );
+                }
+            }
+        }
+
+        const globalFavoritesString = localStorage.getItem(GLOBAL_FAV_LIST_KEY);
+        const globalFavorites = globalFavoritesString
+            ? (JSON.parse(globalFavoritesString) as VocabTerm[])
+            : [];
+        const nextGlobalFavorites = globalFavorites.map((term) =>
+            term.japanese === previousTerm.japanese &&
+            term.kana === previousTerm.kana &&
+            term.english_definition === previousTerm.english_definition
+                ? { ...term, ...nextTerm }
+                : term,
+        );
+        setFavoriteTerms(nextGlobalFavorites);
+
+        setSelectedTermIndex(selectedTermIndex);
+        setTermDraft({ ...nextTerm });
+        setIsEditingTerm(false);
+        refreshTerms?.();
+    }
+
+    const selectedTerm =
+        selectedTermIndex !== null ? terms[selectedTermIndex] : null;
+
     return (
         <ScrollArea className="my-2 max-h-96 flex-1 overflow-y-auto rounded-md border">
             {/* header section */}
@@ -459,7 +558,7 @@ export function FavoritesList({
                                 <button
                                     type="button"
                                     className="truncate rounded px-1 text-left font-medium text-slate-100 hover:bg-slate-800 hover:text-slate-50"
-                                    onClick={() => setSelectedTerm(termObj)}
+                                    onClick={() => openTermDetails(index)}
                                     title="View term details"
                                 >
                                     {termObj.japanese}
@@ -563,11 +662,11 @@ export function FavoritesList({
                     </DialogContent>
                 </Dialog>
             ) : null}
-            {selectedTerm ? (
+            {selectedTerm && termDraft ? (
                 <Dialog
                     open={selectedTerm !== null}
                     onOpenChange={(open) => {
-                        if (!open) setSelectedTerm(null);
+                        if (!open) closeTermDetails();
                     }}
                 >
                     <DialogContent className="max-h-[80vh] overflow-y-auto bg-slate-900 text-white">
@@ -583,25 +682,64 @@ export function FavoritesList({
                                 <div className="text-xs text-slate-400">
                                     Japanese
                                 </div>
-                                <div className="mt-1 text-base font-semibold text-slate-100">
-                                    {selectedTerm.japanese}
-                                </div>
+                                {isEditingTerm ? (
+                                    <input
+                                        className="mt-1 w-full rounded border border-slate-600 bg-slate-900 px-2 py-1 text-base text-slate-100"
+                                        value={termDraft.japanese}
+                                        onChange={(event) =>
+                                            handleTermDraftChange(
+                                                "japanese",
+                                                event.target.value,
+                                            )
+                                        }
+                                    />
+                                ) : (
+                                    <div className="mt-1 text-base font-semibold text-slate-100">
+                                        {selectedTerm.japanese}
+                                    </div>
+                                )}
                             </div>
                             <div className="rounded-md border border-slate-700 bg-slate-800/60 p-3">
                                 <div className="text-xs text-slate-400">
                                     Kana
                                 </div>
-                                <div className="mt-1 text-base text-slate-100">
-                                    {selectedTerm.kana}
-                                </div>
+                                {isEditingTerm ? (
+                                    <input
+                                        className="mt-1 w-full rounded border border-slate-600 bg-slate-900 px-2 py-1 text-base text-slate-100"
+                                        value={termDraft.kana}
+                                        onChange={(event) =>
+                                            handleTermDraftChange(
+                                                "kana",
+                                                event.target.value,
+                                            )
+                                        }
+                                    />
+                                ) : (
+                                    <div className="mt-1 text-base text-slate-100">
+                                        {selectedTerm.kana}
+                                    </div>
+                                )}
                             </div>
                             <div className="rounded-md border border-slate-700 bg-slate-800/60 p-3">
                                 <div className="text-xs text-slate-400">
                                     Meaning
                                 </div>
-                                <div className="mt-1 text-base text-slate-100">
-                                    {selectedTerm.english_definition}
-                                </div>
+                                {isEditingTerm ? (
+                                    <input
+                                        className="mt-1 w-full rounded border border-slate-600 bg-slate-900 px-2 py-1 text-base text-slate-100"
+                                        value={termDraft.english_definition}
+                                        onChange={(event) =>
+                                            handleTermDraftChange(
+                                                "english_definition",
+                                                event.target.value,
+                                            )
+                                        }
+                                    />
+                                ) : (
+                                    <div className="mt-1 text-base text-slate-100">
+                                        {selectedTerm.english_definition}
+                                    </div>
+                                )}
                             </div>
 
                             <div className="grid grid-cols-2 gap-2">
@@ -681,6 +819,31 @@ export function FavoritesList({
                                 )}
                             </div>
                         </div>
+                        <DialogFooter>
+                            {isEditingTerm ? (
+                                <>
+                                    <CommonButton
+                                        label="Cancel"
+                                        additionalclasses="mx-0 bg-slate-700 hover:bg-slate-600"
+                                        onClick={() => {
+                                            setIsEditingTerm(false);
+                                            setTermDraft({ ...selectedTerm });
+                                        }}
+                                    />
+                                    <CommonButton
+                                        label="Save"
+                                        additionalclasses="mx-0 bg-blue-700 hover:bg-blue-600"
+                                        onClick={saveTermEdits}
+                                    />
+                                </>
+                            ) : (
+                                <CommonButton
+                                    label="Edit"
+                                    additionalclasses="mx-0 bg-blue-700 hover:bg-blue-600"
+                                    onClick={() => setIsEditingTerm(true)}
+                                />
+                            )}
+                        </DialogFooter>
                     </DialogContent>
                 </Dialog>
             ) : null}
