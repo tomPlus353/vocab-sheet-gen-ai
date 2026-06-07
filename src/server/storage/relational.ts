@@ -139,32 +139,37 @@ export async function getUserStorageSnapshot(userId: string): Promise<{
 
 async function upsertTermIds(terms: VocabTerm[]): Promise<Map<TermKey, string>> {
     const map = new Map<TermKey, string>();
-    for (const term of terms) {
-        const key = makeTermKey(term);
-        if (map.has(key)) continue;
-        const upserted = await db.term.upsert({
-            where: {
-                japanese_kana_englishDefinition: {
-                    japanese: term.japanese,
-                    kana: term.kana,
-                    englishDefinition: term.english_definition,
-                },
-            },
-            create: {
+
+    if (terms.length === 0) {
+        return map;
+    }
+
+    await db.term.createMany({
+        data: terms.map((term) => ({
+            japanese: term.japanese,
+            kana: term.kana,
+            englishDefinition: term.english_definition,
+            exampleSentences: term.example_sentences ?? undefined,
+            type: term.type ?? undefined,
+        })),
+        skipDuplicates: true,
+    });
+
+    const storedTerms = await db.term.findMany({
+        where: {
+            OR: terms.map((term) => ({
                 japanese: term.japanese,
                 kana: term.kana,
                 englishDefinition: term.english_definition,
-                exampleSentences: term.example_sentences ?? undefined,
-                type: term.type ?? undefined,
-            },
-            update: {
-                exampleSentences: term.example_sentences ?? undefined,
-                type: term.type ?? undefined,
-            },
-            select: { id: true },
-        });
-        map.set(key, upserted.id);
+            })),
+        },
+        select: { id: true, japanese: true, kana: true, englishDefinition: true },
+    });
+
+    for (const row of storedTerms) {
+        map.set(`${row.japanese}\u0000${row.kana}\u0000${row.englishDefinition}`, row.id);
     }
+
     return map;
 }
 

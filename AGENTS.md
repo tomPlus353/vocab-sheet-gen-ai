@@ -6,6 +6,7 @@
 - Use `pnpm` for scripts and package commands (not `npm`).
 - After you update a feature, always run `pnpm check` and look for errors rather than warnings(This includes both the project linter and the more robust `tsc --noEmit`).
 - If you are worried about a warning you can ask the user for permission to fix. For errors you can fix without permission.
+- For storage writes, prefer bulk or batched database operations over row-by-row loops when the request can touch many terms or history rows; this helps avoid serverless timeouts on live deployments.
 - The repo backlog source of truth is `BACKLOG.md`.
 - If the user asks to "take the latest item from the backlog", select the bottom-most task still marked `[status: pending]`, change it to `[status: in_progress]` before coding, and mark it `[status: done]` after completing the work.
 - Use the backlog entry format `- [status: ...]`, followed by `Context:` and `Page:` lines.
