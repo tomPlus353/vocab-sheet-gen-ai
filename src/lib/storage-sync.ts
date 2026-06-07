@@ -293,6 +293,64 @@ export async function fetchRemoteHistoryEntriesBestEffort(): Promise<HistoryEntr
     return parsedEntries;
 }
 
+export async function fetchRemoteFavoriteTermsBestEffort(): Promise<VocabTerm[] | null> {
+    logHistorySyncEvent("favorites-snapshot-fetch-start");
+    const result = await fetchJson("/api/storage/favorites");
+    if (!result.ok) {
+        logHistorySyncEvent(
+            "favorites-snapshot-fetch-failed",
+            {
+                status: result.status,
+                error: result.error,
+            },
+            "warn",
+        );
+        return null;
+    }
+
+    const json = result.json;
+    if (!json || typeof json !== "object" || Array.isArray(json)) {
+        logHistorySyncEvent(
+            "favorites-snapshot-fetch-failed",
+            {
+                status: result.status,
+                reason: "Invalid server response",
+            },
+            "warn",
+        );
+        return null;
+    }
+
+    const favoriteTerms = (json as { favoriteTerms?: unknown }).favoriteTerms;
+    if (!Array.isArray(favoriteTerms)) {
+        logHistorySyncEvent(
+            "favorites-snapshot-fetch-failed",
+            {
+                status: result.status,
+                reason: "Missing favoriteTerms array",
+            },
+            "warn",
+        );
+        return null;
+    }
+
+    const parsedTerms = favoriteTerms.filter((term): term is VocabTerm => {
+        if (typeof term !== "object" || term === null) return false;
+        const value = term as Record<string, unknown>;
+        return (
+            typeof value.japanese === "string" &&
+            typeof value.kana === "string" &&
+            typeof value.english_definition === "string"
+        );
+    });
+
+    logHistorySyncEvent("favorites-snapshot-fetch-success", {
+        status: result.status,
+        remoteFavoriteCount: parsedTerms.length,
+    });
+    return parsedTerms;
+}
+
 export async function syncMissingHistoryEntriesBestEffort(existingIds: Set<string>): Promise<{
     attempted: number;
     succeeded: number;

@@ -3,9 +3,12 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { runLocalStorageMigrations } from "@/lib/migrations";
 import type { HistoryEntry, VocabTerm } from "@/lib/types/vocab";
 import { getLocalFavoriteTerms } from "@/lib/favorites-storage";
-import { getAllGameHistoryEntries } from "@/lib/utils";
 import { logHistorySyncEvent } from "@/lib/history-sync-logger";
-import { isVocabTerm } from "@/lib/utils";
+import {
+    fetchRemoteFavoriteTermsBestEffort,
+    fetchRemoteHistoryEntriesBestEffort,
+} from "@/lib/storage-sync";
+import { getAllGameHistoryEntries, isVocabTerm } from "@/lib/utils";
 
 type SettingsContextType = {
     perPage: number;
@@ -57,41 +60,34 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
                 }
 
                 localStorage.setItem("storageMode", "server");
-
-                const json = (await response.json()) as {
-                    migrated?: boolean;
-                    favoriteTerms?: unknown;
-                    historyEntries?: unknown;
-                };
-
+                const json = (await response.json()) as { migrated?: boolean };
                 const migrated = json.migrated === true;
-                const favoriteTerms: VocabTerm[] = Array.isArray(json.favoriteTerms)
-                    ? json.favoriteTerms
-                          .filter(isVocabTerm)
-                          .map((term) => ({ ...term, isFavorite: true }))
-                    : [];
 
-                const historyEntries: HistoryEntry[] = Array.isArray(json.historyEntries)
-                    ? (json.historyEntries as HistoryEntry[]).filter((entry) => typeof entry?.id === "string" && Array.isArray(entry?.terms))
-                    : [];
+                const [favoriteTerms, historyEntries] = await Promise.all([
+                    fetchRemoteFavoriteTermsBestEffort(),
+                    fetchRemoteHistoryEntriesBestEffort(),
+                ]);
 
-                if (migrated) {
-                    localStorage.removeItem("favoriteTerms");
-                    localStorage.removeItem("historyTerms");
+                if (favoriteTerms) {
+                    const normalizedFavorites: VocabTerm[] = favoriteTerms
+                        .filter(isVocabTerm)
+                        .map((term) => ({ ...term, isFavorite: true }));
+                    localStorage.setItem("favoriteTerms", JSON.stringify(normalizedFavorites));
                 }
 
-                localStorage.setItem("favoriteTerms", JSON.stringify(favoriteTerms));
-
-                const historyObj: Record<string, HistoryEntry> = {};
-                for (const entry of historyEntries) {
-                    historyObj[entry.id] = entry;
+                if (historyEntries) {
+                    const historyObj: Record<string, HistoryEntry> = {};
+                    for (const entry of historyEntries) {
+                        historyObj[entry.id] = entry;
+                    }
+                    localStorage.setItem("historyTerms", JSON.stringify(historyObj));
                 }
-                localStorage.setItem("historyTerms", JSON.stringify(historyObj));
+
                 logHistorySyncEvent("storage-bootstrap-success", {
                     status: response.status,
                     migrated,
-                    remoteFavoriteCount: favoriteTerms.length,
-                    remoteHistoryEntryCount: historyEntries.length,
+                    remoteFavoriteCount: favoriteTerms?.length ?? 0,
+                    remoteHistoryEntryCount: historyEntries?.length ?? 0,
                 });
             } catch {
                 // ignore (offline / server errors / anonymous sessions)

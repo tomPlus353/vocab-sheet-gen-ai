@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/server/auth";
 import type { HistoryEntry } from "@/lib/types/vocab";
-import { getUserStorageSnapshot, upsertUserHistoryEntry } from "@/server/storage/relational";
+import { upsertUserHistoryEntry } from "@/server/storage/relational";
 
 function isHistoryEntry(value: unknown): value is HistoryEntry {
     if (typeof value !== "object" || value === null) return false;
@@ -29,7 +29,5 @@ export async function POST(request: Request) {
     }
 
     await upsertUserHistoryEntry(userId, entryRaw);
-    const snapshot = await getUserStorageSnapshot(userId);
-    return NextResponse.json(snapshot);
+    return NextResponse.json({ ok: true, entryId: entryRaw.id });
 }
-

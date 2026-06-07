@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/server/auth";
-import { deleteUserHistoryEntry, getUserStorageSnapshot } from "@/server/storage/relational";
+import { deleteUserHistoryEntry } from "@/server/storage/relational";
 
 export async function POST(request: Request) {
     const session = await auth();
@@ -16,7 +16,5 @@ export async function POST(request: Request) {
     }
 
     await deleteUserHistoryEntry(userId, entryId);
-    const snapshot = await getUserStorageSnapshot(userId);
-    return NextResponse.json(snapshot);
+    return NextResponse.json({ ok: true, entryId });
 }
-

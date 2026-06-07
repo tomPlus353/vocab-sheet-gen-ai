@@ -26,10 +26,9 @@ export async function POST(request: Request) {
         select: { storageMigratedAt: true },
     });
 
-    const serverSnapshotBefore = await getUserStorageSnapshot(userId);
-
     const shouldMigrate = !user?.storageMigratedAt;
     if (shouldMigrate) {
+        const serverSnapshotBefore = await getUserStorageSnapshot(userId);
         const mergedFavorites = dedupeTerms([
             ...serverSnapshotBefore.favoriteTerms,
             ...localFavoriteTerms,
@@ -51,6 +50,5 @@ export async function POST(request: Request) {
         });
     }
 
-    const snapshot = await getUserStorageSnapshot(userId);
-    return NextResponse.json({ migrated: shouldMigrate, ...snapshot });
+    return NextResponse.json({ migrated: shouldMigrate });
 }
