@@ -288,6 +288,31 @@ export function getAllGameHistoryEntries(): Record<string, HistoryEntry> {
   return getStoredGameHistoryEntries();
 }
 
+export function mergeMissingGameHistoryEntries(entries: HistoryEntry[]): number {
+  if (typeof localStorage === "undefined") return 0;
+
+  const currentEntries = getStoredGameHistoryEntries();
+  let addedCount = 0;
+
+  for (const entry of entries) {
+    if (currentEntries[entry.id]) continue;
+    currentEntries[entry.id] = createHistoryEntry(
+      entry.id,
+      entry.title,
+      entry.source,
+      entry.createdAt,
+      entry.terms,
+    );
+    addedCount += 1;
+  }
+
+  if (addedCount > 0) {
+    setStoredGameHistoryEntries(currentEntries);
+  }
+
+  return addedCount;
+}
+
 export function updateGameHistoryTerms(
   key: string,
   terms: VocabTerm[],

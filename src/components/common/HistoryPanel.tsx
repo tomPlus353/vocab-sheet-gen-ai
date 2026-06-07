@@ -22,7 +22,8 @@ import {
 } from "@/lib/utils";
 import {
     deleteHistoryEntryBestEffort,
-    fetchRemoteHistoryEntryIdsBestEffort,
+    fetchRemoteHistoryEntriesBestEffort,
+    fetchRemoteHistoryEntryIdsWithStatusBestEffort,
     syncMissingHistoryEntriesBestEffort,
     syncHistoryEntryBestEffort,
 } from "@/lib/storage-sync";
@@ -38,6 +39,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { ViewHistoryModal } from "@/app/_components/ViewHistoryModal";
+import { mergeMissingGameHistoryEntries } from "@/lib/utils";
 
 const LAST_PAGINATOR_PAGE_KEY = "lastPaginatorPage";
 
@@ -172,6 +174,7 @@ export function HistoryPanel() {
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = React.useState(false);
     const [deleteTargetKey, setDeleteTargetKey] = React.useState<string>("");
     const [isImportOpen, setIsImportOpen] = React.useState(false);
+    const reverseSyncRanRef = React.useRef(false);
     const router = useRouter();
     const pathname = usePathname();
     const { toast } = useToast();
@@ -186,6 +189,39 @@ export function HistoryPanel() {
     React.useEffect(() => {
         loadHistoryEntries();
     }, [loadHistoryEntries]);
+
+    React.useEffect(() => {
+        if (reverseSyncRanRef.current) return;
+        reverseSyncRanRef.current = true;
+
+        let cancelled = false;
+
+        async function reverseSyncHistory() {
+            const remoteEntries = await fetchRemoteHistoryEntriesBestEffort();
+            if (!remoteEntries || cancelled) return;
+
+            const localIds = new Set(Object.keys(getAllGameHistoryEntries()));
+            const missingRemoteEntries = remoteEntries.filter((entry) => !localIds.has(entry.id));
+            if (missingRemoteEntries.length === 0) return;
+
+            const addedCount = mergeMissingGameHistoryEntries(missingRemoteEntries);
+            if (addedCount > 0) {
+                loadHistoryEntries();
+                toast({
+                    variant: "success",
+                    title: "History downloaded",
+                    description: `Imported ${addedCount} history sets from the server.`,
+                    duration: 3000,
+                });
+            }
+        }
+
+        void reverseSyncHistory();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [loadHistoryEntries, toast]);
 
     React.useEffect(() => {
         function handleUpdated() {
@@ -267,18 +303,24 @@ export function HistoryPanel() {
             return;
         }
 
-        const remoteIds = await fetchRemoteHistoryEntryIdsBestEffort();
-        if (!remoteIds) {
+        const remoteIdsResult = await fetchRemoteHistoryEntryIdsWithStatusBestEffort();
+        if (!remoteIdsResult.ok) {
+            const fallbackResult = await syncMissingHistoryEntriesBestEffort(new Set());
+            const fallbackDescription =
+                fallbackResult.attempted === 0
+                    ? `The server ID preflight failed (${remoteIdsResult.reason}), and there were no local history entries to upload.`
+                    : `The server ID preflight failed (${remoteIdsResult.reason}), so the button fell back to direct upload. Uploaded ${fallbackResult.succeeded} history sets.`;
+
             toast({
-                title: "Sync failed",
-                description: "Could not fetch the server history IDs first.",
-                variant: "destructive",
+                variant: fallbackResult.failed === 0 ? "success" : "destructive",
+                title: fallbackResult.failed === 0 ? "History synced with fallback" : "Partial sync with fallback",
+                description: fallbackDescription,
                 duration: 4000,
             });
             return;
         }
 
-        const result = await syncMissingHistoryEntriesBestEffort(remoteIds);
+        const result = await syncMissingHistoryEntriesBestEffort(remoteIdsResult.entryIds);
         if (result.attempted === 0) {
             toast({
                 title: "Nothing new to sync",
