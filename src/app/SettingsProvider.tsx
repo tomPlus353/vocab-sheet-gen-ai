@@ -2,6 +2,9 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { runLocalStorageMigrations } from "@/lib/migrations";
 import type { HistoryEntry, VocabTerm } from "@/lib/types/vocab";
+import { getLocalFavoriteTerms } from "@/lib/favorites-storage";
+import { getAllGameHistoryEntries } from "@/lib/utils";
+import { logHistorySyncEvent } from "@/lib/history-sync-logger";
 import { isVocabTerm } from "@/lib/utils";
 
 type SettingsContextType = {
@@ -22,6 +25,10 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
         async function bootstrapStorage() {
             try {
                 localStorage.setItem("storageMode", "local");
+                logHistorySyncEvent("storage-bootstrap-start", {
+                    localFavoriteCount: getLocalFavoriteTerms().length,
+                    localHistoryEntryCount: Object.keys(getAllGameHistoryEntries()).length,
+                });
 
                 const favoriteTermsRaw = localStorage.getItem("favoriteTerms");
                 const historyTermsRaw = localStorage.getItem("historyTerms");
@@ -33,9 +40,19 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
                 });
 
                 if (response.status === 401) {
+                    logHistorySyncEvent(
+                        "storage-bootstrap-unauthorized",
+                        { status: response.status },
+                        "warn",
+                    );
                     return;
                 }
                 if (!response.ok) {
+                    logHistorySyncEvent(
+                        "storage-bootstrap-failed",
+                        { status: response.status },
+                        "warn",
+                    );
                     return;
                 }
 
@@ -70,8 +87,15 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
                     historyObj[entry.id] = entry;
                 }
                 localStorage.setItem("historyTerms", JSON.stringify(historyObj));
+                logHistorySyncEvent("storage-bootstrap-success", {
+                    status: response.status,
+                    migrated,
+                    remoteFavoriteCount: favoriteTerms.length,
+                    remoteHistoryEntryCount: historyEntries.length,
+                });
             } catch {
                 // ignore (offline / server errors / anonymous sessions)
+                logHistorySyncEvent("storage-bootstrap-error", {}, "warn");
             }
         }
 

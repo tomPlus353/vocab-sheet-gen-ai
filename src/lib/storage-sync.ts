@@ -4,31 +4,45 @@ import type { HistoryEntry, VocabTerm } from "@/lib/types/vocab";
 import type { SrsReviewRating } from "@/lib/types/srs";
 import { getAllGameHistoryEntries, getGameHistoryEntry } from "@/lib/utils";
 import { getLocalFavoriteTerms } from "@/lib/favorites-storage";
+import { logHistorySyncEvent, summarizeHistoryEntry } from "@/lib/history-sync-logger";
 
-async function postJson(url: string, body: unknown): Promise<boolean> {
+type PostJsonResult =
+    | {
+          ok: true;
+          status: number;
+      }
+    | {
+          ok: false;
+          status: number | null;
+          error: string;
+      };
+
+async function postJson(url: string, body: unknown): Promise<PostJsonResult> {
     try {
         const response = await fetch(url, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(body),
         });
-        return response.ok;
+        if (!response.ok) {
+            return {
+                ok: false,
+                status: response.status,
+                error: `HTTP ${response.status}`,
+            };
+        }
+
+        return {
+            ok: true,
+            status: response.status,
+        };
     } catch {
         // ignore network errors / unauthorized anonymous sessions
-        return false;
-    }
-}
-
-async function getJson(url: string): Promise<unknown> {
-    try {
-        const response = await fetch(url, {
-            method: "GET",
-            headers: { "Content-Type": "application/json" },
-        });
-        if (!response.ok) return null;
-        return (await response.json()) as unknown;
-    } catch {
-        return null;
+        return {
+            ok: false,
+            status: null,
+            error: "Network error",
+        };
     }
 }
 
@@ -74,7 +88,25 @@ async function fetchJson(url: string): Promise<FetchJsonResult> {
 }
 
 export async function syncHistoryEntryBestEffort(entry: HistoryEntry): Promise<void> {
-    await postJson("/api/storage/history/upsert", { entry });
+    logHistorySyncEvent("history-upload-start", summarizeHistoryEntry(entry));
+    const result = await postJson("/api/storage/history/upsert", { entry });
+    if (result.ok) {
+        logHistorySyncEvent("history-upload-success", {
+            ...summarizeHistoryEntry(entry),
+            status: result.status,
+        });
+        return;
+    }
+
+    logHistorySyncEvent(
+        "history-upload-failed",
+        {
+            ...summarizeHistoryEntry(entry),
+            status: result.status,
+            error: result.error,
+        },
+        "warn",
+    );
 }
 
 export async function syncHistoryEntryByIdBestEffort(entryId: string): Promise<void> {
@@ -90,12 +122,36 @@ export async function syncHistoryForKeyBestEffort(key: string, isKeyHashed: bool
 }
 
 export async function deleteHistoryEntryBestEffort(entryId: string): Promise<void> {
-    await postJson("/api/storage/history/delete", { entryId });
+    logHistorySyncEvent("history-delete-start", { entryId });
+    const result = await postJson("/api/storage/history/delete", { entryId });
+    if (result.ok) {
+        logHistorySyncEvent("history-delete-success", { entryId, status: result.status });
+        return;
+    }
+
+    logHistorySyncEvent(
+        "history-delete-failed",
+        {
+            entryId,
+            status: result.status,
+            error: result.error,
+        },
+        "warn",
+    );
 }
 
 export async function fetchRemoteHistoryEntryIdsBestEffort(): Promise<Set<string> | null> {
+    logHistorySyncEvent("history-id-preflight-start");
     const result = await fetchJson("/api/storage/history/ids");
     if (!result.ok) {
+        logHistorySyncEvent(
+            "history-id-preflight-failed",
+            {
+                status: result.status,
+                error: result.error,
+            },
+            "warn",
+        );
         return null;
     }
 
@@ -106,12 +162,25 @@ export async function fetchRemoteHistoryEntryIdsBestEffort(): Promise<Set<string
 
     const entryIds = (json as { entryIds?: unknown }).entryIds;
     if (!Array.isArray(entryIds)) {
+        logHistorySyncEvent(
+            "history-id-preflight-invalid-response",
+            {
+                status: result.status,
+                reason: "Missing entryIds array",
+            },
+            "warn",
+        );
         return null;
     }
 
-    return new Set(
+    const parsedIds = new Set(
         entryIds.filter((entryId): entryId is string => typeof entryId === "string" && entryId.length > 0),
     );
+    logHistorySyncEvent("history-id-preflight-success", {
+        status: result.status,
+        remoteIdCount: parsedIds.size,
+    });
+    return parsedIds;
 }
 
 export async function fetchRemoteHistoryEntryIdsWithStatusBestEffort(): Promise<
@@ -124,8 +193,17 @@ export async function fetchRemoteHistoryEntryIdsWithStatusBestEffort(): Promise<
           reason: string;
       }
 > {
+    logHistorySyncEvent("history-id-preflight-start");
     const result = await fetchJson("/api/storage/history/ids");
     if (!result.ok) {
+        logHistorySyncEvent(
+            "history-id-preflight-failed",
+            {
+                status: result.status,
+                error: result.error,
+            },
+            "warn",
+        );
         return {
             ok: false,
             reason: result.error,
@@ -142,32 +220,62 @@ export async function fetchRemoteHistoryEntryIdsWithStatusBestEffort(): Promise<
 
     const entryIds = (json as { entryIds?: unknown }).entryIds;
     if (!Array.isArray(entryIds)) {
+        logHistorySyncEvent(
+            "history-id-preflight-invalid-response",
+            {
+                status: result.status,
+                reason: "Missing entryIds array",
+            },
+            "warn",
+        );
         return {
             ok: false,
             reason: "Missing entryIds array",
         };
     }
 
+    const parsedIds = new Set(
+        entryIds.filter((entryId): entryId is string => typeof entryId === "string" && entryId.length > 0),
+    );
+    logHistorySyncEvent("history-id-preflight-success", {
+        status: result.status,
+        remoteIdCount: parsedIds.size,
+    });
     return {
         ok: true,
-        entryIds: new Set(
-            entryIds.filter((entryId): entryId is string => typeof entryId === "string" && entryId.length > 0),
-        ),
+        entryIds: parsedIds,
     };
 }
 
 export async function fetchRemoteHistoryEntriesBestEffort(): Promise<HistoryEntry[] | null> {
-    const json = await getJson("/api/storage/history/snapshot");
-    if (!json || typeof json !== "object" || Array.isArray(json)) {
+    logHistorySyncEvent("history-snapshot-fetch-start");
+    const result = await fetchJson("/api/storage/history/snapshot");
+    if (!result.ok) {
+        logHistorySyncEvent(
+            "history-snapshot-fetch-failed",
+            {
+                status: result.status,
+                error: result.error,
+            },
+            "warn",
+        );
         return null;
     }
 
-    const historyEntries = (json as { historyEntries?: unknown }).historyEntries;
+    const historyEntries = (result.json as { historyEntries?: unknown }).historyEntries;
     if (!Array.isArray(historyEntries)) {
+        logHistorySyncEvent(
+            "history-snapshot-fetch-failed",
+            {
+                status: result.status,
+                reason: "Missing historyEntries array",
+            },
+            "warn",
+        );
         return null;
     }
 
-    return historyEntries.filter((entry): entry is HistoryEntry => {
+    const parsedEntries = historyEntries.filter((entry): entry is HistoryEntry => {
         if (typeof entry !== "object" || entry === null) return false;
         const value = entry as Record<string, unknown>;
         return (
@@ -178,6 +286,11 @@ export async function fetchRemoteHistoryEntriesBestEffort(): Promise<HistoryEntr
             Array.isArray(value.terms)
         );
     });
+    logHistorySyncEvent("history-snapshot-fetch-success", {
+        status: result.status,
+        remoteEntryCount: parsedEntries.length,
+    });
+    return parsedEntries;
 }
 
 export async function syncMissingHistoryEntriesBestEffort(existingIds: Set<string>): Promise<{
@@ -190,19 +303,43 @@ export async function syncMissingHistoryEntriesBestEffort(existingIds: Set<strin
     const missingEntries = entries.filter((entry) => !existingIds.has(entry.id));
     let succeeded = 0;
 
+    logHistorySyncEvent("history-upload-batch-start", {
+        localEntryCount: entries.length,
+        remoteKnownIdCount: existingIds.size,
+        missingEntryCount: missingEntries.length,
+    });
+
     for (const entry of missingEntries) {
-        const ok = await postJson("/api/storage/history/upsert", { entry });
-        if (ok) {
+        logHistorySyncEvent("history-upload-attempt", summarizeHistoryEntry(entry));
+        const result = await postJson("/api/storage/history/upsert", { entry });
+        if (result.ok) {
+            logHistorySyncEvent("history-upload-attempt-success", {
+                ...summarizeHistoryEntry(entry),
+                status: result.status,
+            });
             succeeded += 1;
+            continue;
         }
+
+        logHistorySyncEvent(
+            "history-upload-attempt-failed",
+            {
+                ...summarizeHistoryEntry(entry),
+                status: result.status,
+                error: result.error,
+            },
+            "warn",
+        );
     }
 
-    return {
+    const result = {
         attempted: missingEntries.length,
         succeeded,
         skipped: entries.length - missingEntries.length,
         failed: missingEntries.length - succeeded,
     };
+    logHistorySyncEvent("history-upload-batch-complete", result);
+    return result;
 }
 
 export async function syncFavoritesBestEffort(terms?: VocabTerm[]): Promise<void> {

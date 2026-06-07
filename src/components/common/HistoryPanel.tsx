@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/dialog";
 import { ViewHistoryModal } from "@/app/_components/ViewHistoryModal";
 import { mergeMissingGameHistoryEntries } from "@/lib/utils";
+import { logHistorySyncEvent, summarizeHistoryEntry } from "@/lib/history-sync-logger";
 
 const LAST_PAGINATOR_PAGE_KEY = "lastPaginatorPage";
 
@@ -197,16 +198,38 @@ export function HistoryPanel() {
         let cancelled = false;
 
         async function reverseSyncHistory() {
+            logHistorySyncEvent("history-reverse-sync-start", {
+                localHistoryEntryCount: Object.keys(getAllGameHistoryEntries()).length,
+            });
             const remoteEntries = await fetchRemoteHistoryEntriesBestEffort();
-            if (!remoteEntries || cancelled) return;
+            if (!remoteEntries || cancelled) {
+                logHistorySyncEvent(
+                    "history-reverse-sync-skip",
+                    {
+                        cancelled,
+                        receivedRemoteEntries: Boolean(remoteEntries),
+                    },
+                    "warn",
+                );
+                return;
+            }
 
             const localIds = new Set(Object.keys(getAllGameHistoryEntries()));
             const missingRemoteEntries = remoteEntries.filter((entry) => !localIds.has(entry.id));
+            logHistorySyncEvent("history-reverse-sync-compare", {
+                remoteEntryCount: remoteEntries.length,
+                localEntryCount: localIds.size,
+                missingRemoteEntryCount: missingRemoteEntries.length,
+            });
             if (missingRemoteEntries.length === 0) return;
 
             const addedCount = mergeMissingGameHistoryEntries(missingRemoteEntries);
             if (addedCount > 0) {
                 loadHistoryEntries();
+                logHistorySyncEvent("history-reverse-sync-complete", {
+                    addedCount,
+                    remoteEntryCount: remoteEntries.length,
+                });
                 toast({
                     variant: "success",
                     title: "History downloaded",
@@ -261,6 +284,10 @@ export function HistoryPanel() {
 
     function handleConfirmDelete() {
         if (!deleteTargetKey) return;
+        const deleteEntry = getAllGameHistoryEntries()[deleteTargetKey];
+        if (deleteEntry) {
+            logHistorySyncEvent("history-delete-local", summarizeHistoryEntry(deleteEntry));
+        }
         removeGameHistory(deleteTargetKey, true);
         void deleteHistoryEntryBestEffort(deleteTargetKey);
         setDeleteTargetKey("");
@@ -271,6 +298,7 @@ export function HistoryPanel() {
         try {
             const terms = parseManualHistoryTerms(rawInput);
             const entry = createManualGameHistory(title, terms);
+            logHistorySyncEvent("history-import-created", summarizeHistoryEntry(entry));
             void syncHistoryEntryBestEffort(entry);
             setIsImportOpen(false);
             loadHistoryEntries();
@@ -294,6 +322,9 @@ export function HistoryPanel() {
 
     async function handleSyncAllHistory() {
         const localEntries = Object.values(getAllGameHistoryEntries());
+        logHistorySyncEvent("history-sync-manual-start", {
+            localEntryCount: localEntries.length,
+        });
         if (localEntries.length === 0) {
             toast({
                 title: "Nothing to sync",
@@ -305,6 +336,14 @@ export function HistoryPanel() {
 
         const remoteIdsResult = await fetchRemoteHistoryEntryIdsWithStatusBestEffort();
         if (!remoteIdsResult.ok) {
+            logHistorySyncEvent(
+                "history-sync-manual-fallback",
+                {
+                    localEntryCount: localEntries.length,
+                    reason: remoteIdsResult.reason,
+                },
+                "warn",
+            );
             const fallbackResult = await syncMissingHistoryEntriesBestEffort(new Set());
             const fallbackDescription =
                 fallbackResult.attempted === 0
@@ -322,6 +361,10 @@ export function HistoryPanel() {
 
         const result = await syncMissingHistoryEntriesBestEffort(remoteIdsResult.entryIds);
         if (result.attempted === 0) {
+            logHistorySyncEvent("history-sync-manual-noop", {
+                localEntryCount: localEntries.length,
+                remoteKnownIdCount: remoteIdsResult.entryIds.size,
+            });
             toast({
                 title: "Nothing new to sync",
                 description: "All local history entries already exist on the server.",
@@ -331,6 +374,12 @@ export function HistoryPanel() {
         }
 
         if (result.failed === 0) {
+            logHistorySyncEvent("history-sync-manual-success", {
+                localEntryCount: localEntries.length,
+                remoteKnownIdCount: remoteIdsResult.entryIds.size,
+                uploadedCount: result.succeeded,
+                skippedCount: result.skipped,
+            });
             toast({
                 variant: "success",
                 title: "History synced",
@@ -340,6 +389,17 @@ export function HistoryPanel() {
             return;
         }
 
+        logHistorySyncEvent(
+            "history-sync-manual-partial",
+            {
+                localEntryCount: localEntries.length,
+                remoteKnownIdCount: remoteIdsResult.entryIds.size,
+                uploadedCount: result.succeeded,
+                skippedCount: result.skipped,
+                failedCount: result.failed,
+            },
+            "warn",
+        );
         toast({
             title: "Partial sync",
             description: `Uploaded ${result.succeeded} of ${result.attempted} new history sets. ${result.failed} failed, ${result.skipped} skipped.`,
