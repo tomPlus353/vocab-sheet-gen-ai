@@ -20,7 +20,12 @@ import {
     getAllGameHistoryEntries,
     removeGameHistory,
 } from "@/lib/utils";
-import { deleteHistoryEntryBestEffort, syncHistoryEntryBestEffort } from "@/lib/storage-sync";
+import {
+    deleteHistoryEntryBestEffort,
+    fetchRemoteHistoryEntryIdsBestEffort,
+    syncMissingHistoryEntriesBestEffort,
+    syncHistoryEntryBestEffort,
+} from "@/lib/storage-sync";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { ConfirmActionModal } from "@/components/common/modals/ConfirmActionModal";
 import CommonButton from "@/components/common/CommonButton";
@@ -251,6 +256,56 @@ export function HistoryPanel() {
         }
     }
 
+    async function handleSyncAllHistory() {
+        const localEntries = Object.values(getAllGameHistoryEntries());
+        if (localEntries.length === 0) {
+            toast({
+                title: "Nothing to sync",
+                description: "There are no local history entries to upload.",
+                duration: 2500,
+            });
+            return;
+        }
+
+        const remoteIds = await fetchRemoteHistoryEntryIdsBestEffort();
+        if (!remoteIds) {
+            toast({
+                title: "Sync failed",
+                description: "Could not fetch the server history IDs first.",
+                variant: "destructive",
+                duration: 4000,
+            });
+            return;
+        }
+
+        const result = await syncMissingHistoryEntriesBestEffort(remoteIds);
+        if (result.attempted === 0) {
+            toast({
+                title: "Nothing new to sync",
+                description: "All local history entries already exist on the server.",
+                duration: 3000,
+            });
+            return;
+        }
+
+        if (result.failed === 0) {
+            toast({
+                variant: "success",
+                title: "History synced",
+                description: `Uploaded ${result.succeeded} new history sets and skipped ${result.skipped} existing ones.`,
+                duration: 3000,
+            });
+            return;
+        }
+
+        toast({
+            title: "Partial sync",
+            description: `Uploaded ${result.succeeded} of ${result.attempted} new history sets. ${result.failed} failed, ${result.skipped} skipped.`,
+            variant: "destructive",
+            duration: 4000,
+        });
+    }
+
     return (
         <div className="rounded-xl border border-slate-700 bg-slate-800 p-5">
             <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
@@ -281,6 +336,15 @@ export function HistoryPanel() {
                         <span className="flex items-center gap-2">
                             <Plus className="h-4 w-4" />
                             New history
+                        </span>
+                    </CommonButton>
+                    <CommonButton
+                        additionalclasses="mx-0 bg-slate-700 hover:bg-slate-600"
+                        onClick={() => void handleSyncAllHistory()}
+                    >
+                        <span className="flex items-center gap-2">
+                            <Orbit className="h-4 w-4" />
+                            Sync all
                         </span>
                     </CommonButton>
                 </div>

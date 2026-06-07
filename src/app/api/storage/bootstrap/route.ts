@@ -54,4 +54,3 @@ export async function POST(request: Request) {
     const snapshot = await getUserStorageSnapshot(userId);
     return NextResponse.json({ migrated: shouldMigrate, ...snapshot });
 }
-

@@ -22,6 +22,7 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
         async function bootstrapStorage() {
             try {
                 localStorage.setItem("storageMode", "local");
+
                 const favoriteTermsRaw = localStorage.getItem("favoriteTerms");
                 const historyTermsRaw = localStorage.getItem("historyTerms");
 
@@ -31,8 +32,12 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
                     body: JSON.stringify({ favoriteTermsRaw, historyTermsRaw }),
                 });
 
-                if (response.status === 401) return;
-                if (!response.ok) return;
+                if (response.status === 401) {
+                    return;
+                }
+                if (!response.ok) {
+                    return;
+                }
 
                 localStorage.setItem("storageMode", "server");
 
