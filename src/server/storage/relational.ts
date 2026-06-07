@@ -1,5 +1,5 @@
 import type { HistoryEntry, VocabTerm } from "@/lib/types/vocab";
-import type { PrismaClient } from "@prisma/client";
+import { Prisma, type PrismaClient } from "@prisma/client";
 import type {
     SrsCardState,
     SrsDashboardBucket,
@@ -33,6 +33,11 @@ export function dedupeTerms(terms: VocabTerm[]): VocabTerm[] {
 function parseDate(value: string): number {
     const ms = Date.parse(value);
     return Number.isNaN(ms) ? 0 : ms;
+}
+
+function toCountNumber(value: bigint | number | string | null | undefined): number {
+    if (value == null) return 0;
+    return Number(value);
 }
 
 export function mergeHistoryEntries(serverEntries: HistoryEntry[], localEntries: HistoryEntry[]): HistoryEntry[] {
@@ -271,25 +276,25 @@ export async function upsertUserTermStates(
 
     if (rows.length === 0) return;
 
-    await db.$transaction(async (tx) => {
-        for (const row of rows) {
-            await tx.userTermState.upsert({
-                where: { userId_termId: { userId: row.userId, termId: row.termId } },
-                create: {
-                    userId: row.userId,
-                    termId: row.termId,
-                    gravityScore: row.gravityScore,
-                    gravityReadingScore: row.gravityReadingScore,
-                    isLearnt: row.isLearnt,
-                },
-                update: {
-                    gravityScore: row.gravityScore,
-                    gravityReadingScore: row.gravityReadingScore,
-                    isLearnt: row.isLearnt,
-                },
-            });
-        }
-    });
+    const values = rows.map((row) =>
+        Prisma.sql`(${row.userId}, ${row.termId}, ${row.gravityScore ?? null}, ${row.gravityReadingScore ?? null}, ${row.isLearnt ?? null})`,
+    );
+
+    await db.$executeRaw(Prisma.sql`
+        INSERT INTO "UserTermState" (
+            "userId",
+            "termId",
+            "gravityScore",
+            "gravityReadingScore",
+            "isLearnt"
+        )
+        VALUES ${Prisma.join(values)}
+        ON CONFLICT ("userId", "termId")
+        DO UPDATE SET
+            "gravityScore" = EXCLUDED."gravityScore",
+            "gravityReadingScore" = EXCLUDED."gravityReadingScore",
+            "isLearnt" = EXCLUDED."isLearnt"
+    `);
 }
 
 function getStartOfDay(value: Date): Date {
@@ -309,35 +314,42 @@ export async function getSrsDashboardSummary(
     const startOfToday = getStartOfDay(now);
     const startOfTomorrow = getStartOfTomorrow(now);
 
-    const [overdue, dueToday, upcoming, totalTracked] = await Promise.all([
-        prisma.userTermSrsState.count({
-            where: { userId, due: { lt: startOfToday } },
-        }),
-        prisma.userTermSrsState.count({
-            where: { userId, due: { gte: startOfToday, lt: startOfTomorrow } },
-        }),
-        prisma.userTermSrsState.count({
-            where: { userId, due: { gte: startOfTomorrow } },
-        }),
-        prisma.userTermSrsState.count({ where: { userId } }),
-    ]);
+    const [row] = await db.$queryRaw<Array<{
+        overdue: bigint | number | string;
+        dueToday: bigint | number | string;
+        upcoming: bigint | number | string;
+        totalTracked: bigint | number | string;
+    }>>(Prisma.sql`
+        SELECT
+            COUNT(*) FILTER (WHERE "due" < ${startOfToday}) AS "overdue",
+            COUNT(*) FILTER (
+                WHERE "due" >= ${startOfToday}
+                  AND "due" < ${startOfTomorrow}
+            ) AS "dueToday",
+            COUNT(*) FILTER (WHERE "due" >= ${startOfTomorrow}) AS "upcoming",
+            COUNT(*) AS "totalTracked"
+        FROM "UserTermSrsState"
+        WHERE "userId" = ${userId}
+    `);
 
-    return { overdue, dueToday, upcoming, totalTracked };
+    return {
+        overdue: toCountNumber(row?.overdue),
+        dueToday: toCountNumber(row?.dueToday),
+        upcoming: toCountNumber(row?.upcoming),
+        totalTracked: toCountNumber(row?.totalTracked),
+    };
 }
 
-function buildSrsBucketFilter(
-    bucket: SrsDashboardBucket,
-    now: Date,
-): { lt?: Date; gte?: Date } {
+function buildSrsBucketFilter(bucket: SrsDashboardBucket, now: Date): Prisma.Sql {
     const startOfToday = getStartOfDay(now);
     const startOfTomorrow = getStartOfTomorrow(now);
     if (bucket === "overdue") {
-        return { lt: startOfToday };
+        return Prisma.sql`s."due" < ${startOfToday}`;
     }
     if (bucket === "due_today") {
-        return { gte: startOfToday, lt: startOfTomorrow };
+        return Prisma.sql`s."due" >= ${startOfToday} AND s."due" < ${startOfTomorrow}`;
     }
-    return { gte: startOfTomorrow };
+    return Prisma.sql`s."due" >= ${startOfTomorrow}`;
 }
 
 export async function getSrsDashboardTerms(
@@ -352,39 +364,58 @@ export async function getSrsDashboardTerms(
     const now = options?.now ?? new Date();
     const limit = Math.max(1, Math.min(options?.limit ?? 100, 200));
     const offset = Math.max(0, options?.offset ?? 0);
-    const where = {
-        userId,
-        ...(options?.bucket
-            ? { due: buildSrsBucketFilter(options.bucket, now) }
-            : {}),
-    };
+    const bucketFilter = options?.bucket
+        ? Prisma.sql`AND ${buildSrsBucketFilter(options.bucket, now)}`
+        : Prisma.empty;
 
-    const [rows, total] = await Promise.all([
-        prisma.userTermSrsState.findMany({
-            where,
-            include: {
-                term: {
-                    select: {
-                        japanese: true,
-                        kana: true,
-                        englishDefinition: true,
-                    },
-                },
-            },
-            orderBy: { due: "asc" },
-            skip: offset,
-            take: limit,
-        }),
-        prisma.userTermSrsState.count({ where }),
-    ]);
+    const rows = await db.$queryRaw<Array<{
+        japanese: string;
+        kana: string;
+        englishDefinition: string;
+        due: Date | string;
+        lastReview: Date | string | null;
+        stability: number;
+        difficulty: number;
+        repetitions: number;
+        lapses: number;
+        state: number;
+        retrievability: number | null;
+        lastRating: number | null;
+        totalTracked: bigint | number | string;
+    }>>(Prisma.sql`
+        SELECT
+            t.japanese AS "japanese",
+            t.kana AS "kana",
+            t."englishDefinition" AS "englishDefinition",
+            s."due" AS "due",
+            s."lastReview" AS "lastReview",
+            s."stability" AS "stability",
+            s."difficulty" AS "difficulty",
+            s."repetitions" AS "repetitions",
+            s."lapses" AS "lapses",
+            s."state" AS "state",
+            s."retrievability" AS "retrievability",
+            s."lastRating" AS "lastRating",
+            COUNT(*) OVER() AS "totalTracked"
+        FROM "UserTermSrsState" s
+        INNER JOIN "Term" t ON t.id = s."termId"
+        WHERE s."userId" = ${userId}
+        ${bucketFilter}
+        ORDER BY s."due" ASC
+        LIMIT ${limit}
+        OFFSET ${offset}
+    `);
+
+    const firstRow = rows[0];
+    const total = firstRow ? toCountNumber(firstRow.totalTracked) : 0;
 
     return {
         rows: rows.map((row) => ({
-            japanese: row.term.japanese,
-            kana: row.term.kana,
-            englishDefinition: row.term.englishDefinition,
-            due: row.due.toISOString(),
-            lastReview: row.lastReview?.toISOString(),
+            japanese: row.japanese,
+            kana: row.kana,
+            englishDefinition: row.englishDefinition,
+            due: new Date(row.due).toISOString(),
+            lastReview: row.lastReview ? new Date(row.lastReview).toISOString() : undefined,
             stability: row.stability,
             difficulty: row.difficulty,
             repetitions: row.repetitions,
