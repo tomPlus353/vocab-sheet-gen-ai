@@ -16,23 +16,25 @@ Use this as a short speaking guide while demoing the app.
 flowchart TB
     subgraph C1["Client (browser)"]
         A["User pastes a passage on the Home page"] --> B["Text is stored as activeText"]
-        B --> C["Gravity or Match opens and checks local cache"]
-        C -->|Cache hit| H["Reuse saved JSON term data"]
-        C -->|Cache miss| D["Send POST /api/llm with text and mode: vocabGame"]
+        B --> C["One page of text is stored in localStorage"]
+        C --> D["Convert the text into a hash"]
+        D --> E["Check whether JSON already exists for that hash"]
+        E -->|Cache hit| H["Reuse saved JSON term data"]
+        E -->|Cache miss| F["Send POST /api/llm with text and mode: vocabGame"]
         I["Parse the JSON string from the response"]
         J["Render cards, the edit modal, and game state"]
     end
     subgraph S1["Our API (Next.js server)"]
-        E["Receive the request and pass the prompt to Genkit"]
-        G["Return { jsonMarkdownString: '...'}"]
+        G["Receive the request and pass the prompt to Genkit"]
+        I1["Return { jsonMarkdownString: '...'}"]
     end
     subgraph T1["Third-party service"]
-        F["Gemini generates structured term data"]
+        J1["Gemini generates structured term data"]
     end
-    D --> E
-    E --> F
     F --> G
-    G --> I
+    G --> J1
+    J1 --> I1
+    I1 --> I
     H --> I
     I --> J
 ```
@@ -41,23 +43,25 @@ flowchart TB
 flowchart TB
     subgraph C1["クライアント（ブラウザ）"]
         A["ホーム画面で文章を貼り付ける"] --> B["文章は activeText として保存される"]
-        B --> C["Gravity または Match を開き、ローカルのキャッシュを確認する"]
-        C -->|キャッシュあり| H["保存済みの JSON 単語データを再利用する"]
-        C -->|キャッシュなし| D["text と mode: vocabGame を付けて /api/llm に POST する"]
+        B --> C["1ページ分の文章を localStorage に保存する"]
+        C --> D["文章をハッシュに変換する"]
+        D --> E["そのハッシュに対応する JSON があるか確認する"]
+        E -->|キャッシュあり| H["保存済みの JSON 単語データを再利用する"]
+        E -->|キャッシュなし| F["text と mode: vocabGame を付けて /api/llm に POST する"]
         I["レスポンスの JSON 文字列をパースする"]
         J["カード、編集モーダル、ゲーム状態を画面に表示する"]
     end
     subgraph S1["自分たちの API（Next.js サーバー）"]
-        E["リクエストを受けて Genkit にプロンプトを渡す"]
-        G["{ jsonMarkdownString: '...'} を返す"]
+        G["リクエストを受けて Genkit にプロンプトを渡す"]
+        I1["{ jsonMarkdownString: '...'} を返す"]
     end
     subgraph T1["外部サービス"]
-        F["Gemini が構造化された単語データを生成する"]
+        J1["Gemini が構造化された単語データを生成する"]
     end
-    D --> E
-    E --> F
     F --> G
-    G --> I
+    G --> J1
+    J1 --> I1
+    I1 --> I
     H --> I
     I --> J
 ```
