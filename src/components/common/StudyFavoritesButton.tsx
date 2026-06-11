@@ -7,11 +7,13 @@ import CommonButton from "@/components/common/CommonButton";
 type StudyFavoritesButtonProps = {
     favoriteCount: number;
     historyTermsKey?: string;
+    onClick?: () => void;
 };
 
 export function StudyFavoritesButton({
     favoriteCount,
     historyTermsKey,
+    onClick,
 }: StudyFavoritesButtonProps) {
     const router = useRouter();
     const isDisabled = favoriteCount <= 0;
@@ -24,6 +26,10 @@ export function StudyFavoritesButton({
             isTempDisabled={isDisabled}
             onClick={() => {
                 if (isDisabled) return;
+                if (onClick) {
+                    onClick();
+                    return;
+                }
                 if (historyTermsKey) {
                     const params = new URLSearchParams({
                         history: "1",

@@ -17,6 +17,7 @@ interface EditTermsModalProps {
     terms: VocabTerm[];
     setTerms: React.Dispatch<React.SetStateAction<VocabTerm[]>>;
     mode?: "favorites" | "history";
+    onStudyFavorites?: () => void;
 }
 
 export function EditTermsModal({
@@ -25,6 +26,7 @@ export function EditTermsModal({
     terms,
     setTerms,
     mode = "history",
+    onStudyFavorites,
 }: EditTermsModalProps) {
     const favoriteCount = terms ? terms.filter((t) => t.isFavorite).length : 0;
 
@@ -51,7 +53,10 @@ export function EditTermsModal({
                         </span>
                     </div>
                     {mode === "history" ? (
-                        <StudyFavoritesButton favoriteCount={favoriteCount} />
+                        <StudyFavoritesButton
+                            favoriteCount={favoriteCount}
+                            onClick={onStudyFavorites}
+                        />
                     ) : null}
                 </div>
                 {!terms ? (

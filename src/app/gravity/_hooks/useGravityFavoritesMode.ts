@@ -2,8 +2,6 @@
 
 import * as React from "react";
 
-const GRAVITY_FAVORITES_MODE_KEY = "gravityFavoritesMode";
-
 export function useGravityFavoritesMode() {
     const [isFavoritesMode, setIsFavoritesMode] = React.useState(false);
     const [isSrsMode, setIsSrsMode] = React.useState(false);
@@ -19,14 +17,11 @@ export function useGravityFavoritesMode() {
                 urlParams.get("srsBucket") === "due_today" ||
                 urlParams.get("srsBucket") === "upcoming");
         setIsSrsMode(srsEnabled);
-        const persistedMode =
-            localStorage.getItem(GRAVITY_FAVORITES_MODE_KEY) === "true";
         const isHistoryFavoritesMode = urlParams.get("historyFavorites") === "1";
         const nextMode =
             !srsEnabled &&
             (urlParams.get("favorites") === "1" ||
-                isHistoryFavoritesMode ||
-                persistedMode);
+                isHistoryFavoritesMode);
 
         setIsFavoritesMode(nextMode);
         isFavoritesModeRef.current = nextMode;
@@ -36,17 +31,6 @@ export function useGravityFavoritesMode() {
     React.useEffect(() => {
         isFavoritesModeRef.current = isFavoritesMode;
     }, [isFavoritesMode]);
-
-    React.useEffect(() => {
-        if (!isFavoritesModeReady) {
-            return;
-        }
-
-        localStorage.setItem(
-            GRAVITY_FAVORITES_MODE_KEY,
-            isFavoritesMode ? "true" : "false",
-        );
-    }, [isFavoritesMode, isFavoritesModeReady]);
 
     return {
         isFavoritesMode,

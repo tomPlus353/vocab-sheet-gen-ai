@@ -155,6 +155,8 @@ export function useGravityGame() {
         isLoading,
         setIsLoading,
         loadVocabTerms,
+        isEmptyFavoritesModalOpen,
+        setIsEmptyFavoritesModalOpen,
     } = useGravityTermsLoader({
         isFavoritesModeRef,
         isExtinctionModeRef,
@@ -172,6 +174,7 @@ export function useGravityGame() {
         setCorrectionError,
         setIsAllLearntModalOpen,
         setHasShownAllLearntModal,
+        setIsEditTermsModalOpen,
         setCorrectionTerm,
     });
 
@@ -483,6 +486,8 @@ export function useGravityGame() {
         learntTermsCount,
         learningTermsCount,
         loadVocabTerms,
+        isEmptyFavoritesModalOpen,
+        setIsEmptyFavoritesModalOpen,
         playfieldRef,
         resumeAfterAllLearntModal,
         resetLearningProgress,

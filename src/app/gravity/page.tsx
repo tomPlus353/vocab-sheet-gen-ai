@@ -10,6 +10,7 @@ import { Loader } from "@/components/common/Loader";
 import { AllLearntModal } from "./_components/AllLearntModal";
 import { CorrectionModal } from "./_components/CorrectionModal";
 import { GameOverModal } from "./_components/GameOverModal";
+import { NoFavoriteTermsModal } from "./_components/NoFavoriteTermsModal";
 import { useGravityGame } from "./_hooks/useGravityGame";
 import { getTermKey } from "./_lib/gravity-utils";
 import { EditTermsModal } from "../match/_components/EditTermsModal";
@@ -35,6 +36,8 @@ export default function GravityPage() {
         isCorrectionModalOpen,
         isGameOver,
         isLoading,
+        isEmptyFavoritesModalOpen,
+        setIsEmptyFavoritesModalOpen,
         learntTermsCount,
         learningTermsCount,
         loadVocabTerms,
@@ -67,13 +70,13 @@ export default function GravityPage() {
 
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
-            setEditTermsMode(
-                urlParams.get("favorites") === "1" ? "favorites" : "history",
-            );
-            if (urlParams.get("srsMode") === "1") {
-                setIsEditTermsModalOpen(false);
-            }
-        }, []);
+        setEditTermsMode(
+            urlParams.get("favorites") === "1" ? "favorites" : "history",
+        );
+        if (urlParams.get("srsMode") === "1") {
+            setIsEditTermsModalOpen(false);
+        }
+    }, []);
 
     const handleReturnFromGravityPage = () => {
         const page = localStorage.getItem(LAST_PAGINATOR_PAGE_KEY) ?? "1";
@@ -82,6 +85,48 @@ export default function GravityPage() {
         } else {
             router.push(`/paginator?page=${page}`);
         }
+    };
+
+    const clearFavoritesModeFromUrl = () => {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("favorites");
+        url.searchParams.delete("historyFavorites");
+        const nextUrl = `${url.pathname}${url.search}${url.hash}`;
+        window.history.replaceState(window.history.state, "", nextUrl);
+    };
+
+    const handleSelectFavorites = () => {
+        clearFavoritesModeFromUrl();
+        setIsFavoritesMode(false);
+        setEditTermsMode("history");
+        setIsEmptyFavoritesModalOpen(false);
+        loadVocabTerms({
+            ignoreFavoritesMode: true,
+            openEditTermsAfterLoad: true,
+        }).catch((err) => {
+            console.error("Error loading gravity terms for editing:", err);
+        });
+    };
+
+    const handleStudyCurrentSetFavorites = () => {
+        setIsFavoritesMode(true);
+        setIsEmptyFavoritesModalOpen(false);
+        setIsEditTermsModalOpen(false);
+        loadVocabTerms({
+            forceFavoritesMode: true,
+        }).catch((err) => {
+            console.error("Error loading current set favorites:", err);
+        });
+    };
+
+    const handleStudyAllTerms = () => {
+        clearFavoritesModeFromUrl();
+        setIsFavoritesMode(false);
+        setEditTermsMode("history");
+        setIsEmptyFavoritesModalOpen(false);
+        loadVocabTerms({ ignoreFavoritesMode: true }).catch((err) => {
+            console.error("Error restarting gravity game without favorites:", err);
+        });
     };
 
     const handleSwitchPracticeMode = () => {
@@ -261,6 +306,12 @@ export default function GravityPage() {
                 }}
                 onReturn={handleReturnFromGravityPage}
             />
+            <NoFavoriteTermsModal
+                open={isEmptyFavoritesModalOpen}
+                onOpenChange={setIsEmptyFavoritesModalOpen}
+                onSelectFavorites={handleSelectFavorites}
+                onStudyAllTerms={handleStudyAllTerms}
+            />
             {!isSrsMode ? (
                 <EditTermsModal
                     open={isEditTermsModalOpen}
@@ -268,6 +319,7 @@ export default function GravityPage() {
                     terms={terms}
                     setTerms={setTerms}
                     mode={editTermsMode}
+                    onStudyFavorites={handleStudyCurrentSetFavorites}
                 />
             ) : null}
 

@@ -44,8 +44,15 @@ type TermsLoaderInputs = {
     setCorrectionError: React.Dispatch<React.SetStateAction<string>>;
     setIsAllLearntModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
     setHasShownAllLearntModal: React.Dispatch<React.SetStateAction<boolean>>;
+    setIsEditTermsModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
     setCorrectionTerm: React.Dispatch<React.SetStateAction<VocabTerm | null>>;
     isTestReadingRef: React.MutableRefObject<boolean>;
+};
+
+type LoadVocabTermsOptions = {
+    ignoreFavoritesMode?: boolean;
+    forceFavoritesMode?: boolean;
+    openEditTermsAfterLoad?: boolean;
 };
 
 export function useGravityTermsLoader({
@@ -63,6 +70,7 @@ export function useGravityTermsLoader({
     setCorrectionError,
     setIsAllLearntModalOpen,
     setHasShownAllLearntModal,
+    setIsEditTermsModalOpen,
     setFallingTerms,
     setCorrectionTerm,
     isTestReadingRef,
@@ -71,6 +79,8 @@ export function useGravityTermsLoader({
     const [scopedTerms, setScopedTerms] = React.useState<VocabTerm[]>([]);
     const [activeTerms, setActiveTerms] = React.useState<VocabTerm[]>([]);
     const [isLoading, setIsLoading] = React.useState(true);
+    const [isEmptyFavoritesModalOpen, setIsEmptyFavoritesModalOpen] =
+        React.useState(false);
     const progressSourceRef = React.useRef<ProgressSource | null>(null);
 
     const parseSrsBucket = (
@@ -82,231 +92,268 @@ export function useGravityTermsLoader({
         return undefined;
     };
 
-    const loadVocabTerms = React.useCallback(async () => {
-        setIsLoading(true);
+    const loadVocabTerms = React.useCallback(
+        async (options: LoadVocabTermsOptions = {}) => {
+            const {
+                ignoreFavoritesMode = false,
+                forceFavoritesMode = false,
+                openEditTermsAfterLoad = false,
+            } = options;
+            setIsLoading(true);
+            setIsEmptyFavoritesModalOpen(false);
 
-        let cachedJsonString: string | null = null;
-        let parsedTerms: VocabTerm[] = [];
-        const urlParams = new URLSearchParams(window.location.search);
-        const isSrsMode = urlParams.get("srsMode") === "1";
-        const srsBucket = parseSrsBucket(urlParams.get("srsBucket"));
-        const isReviewFavorites = urlParams.get("favorites") === "1";
-        const isReviewHistory = urlParams.get("history") === "1";
-        if (isSrsMode) {
-            if (!srsBucket) {
-                alert("Invalid SRS bucket. Please return to dashboard and try again.");
-                setIsLoading(false);
-                return;
-            }
-            progressSourceRef.current = { mode: "srs", bucket: srsBucket };
-            try {
-                const response = await fetch(
-                    `/api/srs/dashboard?bucket=${srsBucket}&limit=50&offset=0`,
-                );
-                const jsonResponse = (await response.json()) as {
-                    rows?: SrsDashboardTermRow[];
-                    error?: string;
-                };
-                if (!response.ok) {
+            let cachedJsonString: string | null = null;
+            let parsedTerms: VocabTerm[] = [];
+            const urlParams = new URLSearchParams(window.location.search);
+            const isSrsMode = urlParams.get("srsMode") === "1";
+            const srsBucket = parseSrsBucket(urlParams.get("srsBucket"));
+            const isReviewFavorites =
+                !ignoreFavoritesMode && urlParams.get("favorites") === "1";
+            const isReviewHistory = urlParams.get("history") === "1";
+            if (isSrsMode) {
+                if (!srsBucket) {
                     alert(
-                        jsonResponse.error ??
-                            "Unable to load SRS terms. Please try again.",
+                        "Invalid SRS bucket. Please return to dashboard and try again.",
                     );
                     setIsLoading(false);
                     return;
                 }
-                parsedTerms = (jsonResponse.rows ?? []).map((row) => ({
-                    japanese: row.japanese,
-                    kana: row.kana,
-                    english_definition: row.englishDefinition,
-                    gravity_score: 0,
-                    gravity_reading_score: 0,
-                    isLearnt: false,
-                }));
-            } catch (error) {
-                console.error("Failed to fetch SRS dashboard terms:", error);
-                alert("Unable to load SRS terms. Please try again.");
-                setIsLoading(false);
-                return;
-            }
-        } else {
-            const activeTextStr = localStorage.getItem("activeText");
-            if (!activeTextStr) {
-                alert("No active text found. Please use the ereader first.");
-                setIsLoading(false);
-                return;
-            }
-
-            if (isReviewHistory) {
-                const historyHash = urlParams.get("historyTerms") ?? "";
-                cachedJsonString = getGameHistory(historyHash, true);
-                progressSourceRef.current = { mode: "history", key: historyHash };
-                if (!cachedJsonString) {
-                    alert("No history terms found for key: " + historyHash);
-                    setIsLoading(false);
-                    return;
-                }
-            } else if (isReviewFavorites) {
-                parsedTerms = await loadFavoriteTermsBestEffort();
-                progressSourceRef.current = { mode: "favorites" };
-                if (parsedTerms.length === 0) {
-                    alert("No favorite terms found.");
+                progressSourceRef.current = { mode: "srs", bucket: srsBucket };
+                try {
+                    const response = await fetch(
+                        `/api/srs/dashboard?bucket=${srsBucket}&limit=50&offset=0`,
+                    );
+                    const jsonResponse = (await response.json()) as {
+                        rows?: SrsDashboardTermRow[];
+                        error?: string;
+                    };
+                    if (!response.ok) {
+                        alert(
+                            jsonResponse.error ??
+                                "Unable to load SRS terms. Please try again.",
+                        );
+                        setIsLoading(false);
+                        return;
+                    }
+                    parsedTerms = (jsonResponse.rows ?? []).map((row) => ({
+                        japanese: row.japanese,
+                        kana: row.kana,
+                        english_definition: row.englishDefinition,
+                        gravity_score: 0,
+                        gravity_reading_score: 0,
+                        isLearnt: false,
+                    }));
+                } catch (error) {
+                    console.error("Failed to fetch SRS dashboard terms:", error);
+                    alert("Unable to load SRS terms. Please try again.");
                     setIsLoading(false);
                     return;
                 }
             } else {
-                cachedJsonString = getGameHistory(activeTextStr, false);
-                progressSourceRef.current = { mode: "active", key: activeTextStr };
-            }
-
-            let reply = cachedJsonString ?? "";
-            if (!isReviewFavorites && !reply) {
-                const response = await fetch("/api/llm", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    cache: "force-cache",
-                    body: JSON.stringify({
-                        text: activeTextStr,
-                        mode: "vocabGame",
-                    }),
-                });
-
-                const jsonResponse = (await response.json()) as Record<
-                    string,
-                    string
-                >;
-                const responseCode = response.status;
-                reply = jsonResponse?.jsonMarkdownString ?? "";
-
-                if (responseCode !== 200 || !reply) {
+                const activeTextStr = localStorage.getItem("activeText");
+                if (!activeTextStr) {
+                    alert("No active text found. Please use the ereader first.");
                     setIsLoading(false);
-                    alert("Server Error: LLM could not generate terms.");
                     return;
                 }
 
-                await appendGameHistory(activeTextStr, reply);
-                void syncHistoryForKeyBestEffort(activeTextStr, false);
+                if (isReviewHistory) {
+                    const historyHash = urlParams.get("historyTerms") ?? "";
+                    cachedJsonString = getGameHistory(historyHash, true);
+                    progressSourceRef.current = {
+                        mode: "history",
+                        key: historyHash,
+                    };
+                    if (!cachedJsonString) {
+                        alert("No history terms found for key: " + historyHash);
+                        setIsLoading(false);
+                        return;
+                    }
+                } else if (isReviewFavorites) {
+                    parsedTerms = await loadFavoriteTermsBestEffort();
+                    progressSourceRef.current = { mode: "favorites" };
+                    if (parsedTerms.length === 0) {
+                        setIsEmptyFavoritesModalOpen(true);
+                        setIsLoading(false);
+                        return;
+                    }
+                } else {
+                    cachedJsonString = getGameHistory(activeTextStr, false);
+                    progressSourceRef.current = {
+                        mode: "active",
+                        key: activeTextStr,
+                    };
+                }
+
+                let reply = cachedJsonString ?? "";
+                if (!isReviewFavorites && !reply) {
+                    const response = await fetch("/api/llm", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        cache: "force-cache",
+                        body: JSON.stringify({
+                            text: activeTextStr,
+                            mode: "vocabGame",
+                        }),
+                    });
+
+                    const jsonResponse = (await response.json()) as Record<
+                        string,
+                        string
+                    >;
+                    const responseCode = response.status;
+                    reply = jsonResponse?.jsonMarkdownString ?? "";
+
+                    if (responseCode !== 200 || !reply) {
+                        setIsLoading(false);
+                        alert("Server Error: LLM could not generate terms.");
+                        return;
+                    }
+
+                    await appendGameHistory(activeTextStr, reply);
+                    void syncHistoryForKeyBestEffort(activeTextStr, false);
+                }
+
+                if (!isReviewFavorites) {
+                    try {
+                        const asJson = JSON.parse(reply) as Array<Record<string, unknown>>;
+                        parsedTerms = asJson
+                            .filter((item) => {
+                                return (
+                                    typeof item.japanese === "string" &&
+                                    typeof item.kana === "string" &&
+                                    typeof item.english_definition === "string"
+                                );
+                            })
+                            .map((item) => {
+                                const score =
+                                    typeof item.gravity_score === "number"
+                                        ? item.gravity_score
+                                        : undefined;
+                                const readingScore =
+                                    typeof item.gravity_reading_score === "number"
+                                        ? item.gravity_reading_score
+                                        : undefined;
+                                return {
+                                    japanese: item.japanese as string,
+                                    kana: item.kana as string,
+                                    english_definition:
+                                        item.english_definition as string,
+                                    example_sentences: Array.isArray(
+                                        item.example_sentences,
+                                    )
+                                        ? item.example_sentences
+                                        : undefined,
+                                    isFavorite:
+                                        typeof item.isFavorite === "boolean"
+                                            ? item.isFavorite
+                                            : undefined,
+                                    gravity_score: score,
+                                    gravity_reading_score: readingScore,
+                                    isLearnt:
+                                        (score ?? 0) >= 2 ||
+                                        (readingScore ?? 0) >= 2,
+                                    type:
+                                        typeof item.type === "string"
+                                            ? item.type
+                                            : undefined,
+                                };
+                            });
+                    } catch (error) {
+                        console.error("Failed to parse game terms:", error);
+                        alert("Could not parse terms for gravity game.");
+                        setIsLoading(false);
+                        return;
+                    }
+                }
+            }
+
+            if (parsedTerms.length === 0) {
+                alert("No terms found for this game.");
+                setIsLoading(false);
+                return;
             }
 
             if (!isReviewFavorites) {
-                try {
-                    const asJson = JSON.parse(reply) as Array<Record<string, unknown>>;
-                    parsedTerms = asJson
-                        .filter((item) => {
-                            return (
-                                typeof item.japanese === "string" &&
-                                typeof item.kana === "string" &&
-                                typeof item.english_definition === "string"
-                            );
-                        })
-                        .map((item) => {
-                            const score =
-                                typeof item.gravity_score === "number"
-                                    ? item.gravity_score
-                                    : undefined;
-                            const readingScore =
-                                typeof item.gravity_reading_score === "number"
-                                    ? item.gravity_reading_score
-                                    : undefined;
-                            return {
-                                japanese: item.japanese as string,
-                                kana: item.kana as string,
-                                english_definition: item.english_definition as string,
-                                example_sentences: Array.isArray(item.example_sentences) ? item.example_sentences : undefined,
-                                isFavorite: typeof item.isFavorite === "boolean" ? item.isFavorite : undefined,
-                                gravity_score: score,
-                                gravity_reading_score: readingScore,
-                                isLearnt:
-                                    (score ?? 0) >= 2 || (readingScore ?? 0) >= 2,
-                                type: typeof item.type === "string" ? item.type : undefined,
-                            };
-                        });
-                } catch (error) {
-                    console.error("Failed to parse game terms:", error);
-                    alert("Could not parse terms for gravity game.");
-                    setIsLoading(false);
-                    return;
+                parsedTerms = applyLocalTermStatesToTerms(parsedTerms);
+            }
+
+            const shouldFilterFavorites =
+                !ignoreFavoritesMode &&
+                (forceFavoritesMode || isFavoritesModeRef.current);
+            const filteredTerms = parsedTerms.filter((term) => {
+                if (isSrsMode) {
+                    return true;
                 }
-            }
-        }
-
-        if (parsedTerms.length === 0) {
-            alert("No terms found for this game.");
-            setIsLoading(false);
-            return;
-        }
-
-        if (!isReviewFavorites) {
-            parsedTerms = applyLocalTermStatesToTerms(parsedTerms);
-        }
-
-        const filteredTerms = parsedTerms.filter((term) => {
-            if (isSrsMode) {
+                if (shouldFilterFavorites) {
+                    return term.isFavorite === true;
+                }
                 return true;
-            }
-            if (isFavoritesModeRef.current) {
-                return term.isFavorite === true;
-            }
-            return true;
-        });
+            });
 
-        if (filteredTerms.length === 0) {
-            alert("No favorite terms found.");
+            if (filteredTerms.length === 0) {
+                setIsEmptyFavoritesModalOpen(true);
+                setIsLoading(false);
+                return;
+            }
+
+            setAllTerms(parsedTerms);
+            setScopedTerms(filteredTerms);
+            const nextActiveTerms = isExtinctionModeRef.current
+                ? filteredTerms.filter(
+                      (term) =>
+                          !isGravityTermLearnt(
+                              term,
+                              isTestReadingRef.current,
+                          ),
+                  )
+                : filteredTerms;
+            setActiveTerms(nextActiveTerms);
+            const queue = getShuffledTermKeys(nextActiveTerms);
+            setScore(0);
+            setTermWrongCounts({});
+            setTimer(0);
+            setAnswer("");
+            setIsGameOver(false);
+            setGameOverMessage("");
+            setIsCorrectionModalOpen(false);
+            setCorrectionInput("");
+            setCorrectionError("");
+            setIsAllLearntModalOpen(false);
+            setHasShownAllLearntModal(false);
+            setFallingTerms([]);
+            setCorrectionTerm(null);
+            if (nextActiveTerms.length > 0) {
+                spawnTerm(queue, nextActiveTerms);
+            }
+            if (openEditTermsAfterLoad) {
+                setIsEditTermsModalOpen(true);
+            }
             setIsLoading(false);
-            return;
-        }
-
-        setAllTerms(parsedTerms);
-        setScopedTerms(filteredTerms);
-        const nextActiveTerms = isExtinctionModeRef.current
-            ? filteredTerms.filter(
-                  (term) =>
-                      !isGravityTermLearnt(
-                          term,
-                          isTestReadingRef.current,
-                      ),
-              )
-            : filteredTerms;
-        setActiveTerms(nextActiveTerms);
-        const queue = getShuffledTermKeys(nextActiveTerms);
-        setScore(0);
-        setTermWrongCounts({});
-        setTimer(0);
-        setAnswer("");
-        setIsGameOver(false);
-        setGameOverMessage("");
-        setIsCorrectionModalOpen(false);
-        setCorrectionInput("");
-        setCorrectionError("");
-        setIsAllLearntModalOpen(false);
-        setHasShownAllLearntModal(false);
-        setFallingTerms([]);
-        setCorrectionTerm(null);
-        if (nextActiveTerms.length > 0) {
-            spawnTerm(queue, nextActiveTerms);
-        }
-        setIsLoading(false);
-    }, [
-        isExtinctionModeRef,
-        isFavoritesModeRef,
-        setTimer,
-        setAnswer,
-        setCorrectionError,
-        setCorrectionInput,
-        setGameOverMessage,
-        setHasShownAllLearntModal,
-        setIsAllLearntModalOpen,
-        setIsCorrectionModalOpen,
-        setIsGameOver,
-        setScore,
-        setTermWrongCounts,
-        spawnTerm,
-        setFallingTerms,
-        setCorrectionTerm,
-        isTestReadingRef,
-    ]);
+        },
+        [
+            isExtinctionModeRef,
+            isFavoritesModeRef,
+            setTimer,
+            setAnswer,
+            setCorrectionError,
+            setCorrectionInput,
+            setGameOverMessage,
+            setHasShownAllLearntModal,
+            setIsAllLearntModalOpen,
+            setIsCorrectionModalOpen,
+            setIsGameOver,
+            setScore,
+            setTermWrongCounts,
+            spawnTerm,
+            setFallingTerms,
+            setCorrectionTerm,
+            isTestReadingRef,
+            setIsEditTermsModalOpen,
+        ],
+    );
 
     React.useEffect(() => {
         if (allTerms.length === 0) {
@@ -346,5 +393,7 @@ export function useGravityTermsLoader({
         isLoading,
         setIsLoading,
         loadVocabTerms,
+        isEmptyFavoritesModalOpen,
+        setIsEmptyFavoritesModalOpen,
     };
 }
