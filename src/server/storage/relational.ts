@@ -276,8 +276,9 @@ export async function upsertUserTermStates(
 
     if (rows.length === 0) return;
 
+    const now = new Date();
     const values = rows.map((row) =>
-        Prisma.sql`(${row.userId}, ${row.termId}, ${row.gravityScore ?? null}, ${row.gravityReadingScore ?? null}, ${row.isLearnt ?? null})`,
+        Prisma.sql`(${row.userId}, ${row.termId}, ${row.gravityScore ?? null}, ${row.gravityReadingScore ?? null}, ${row.isLearnt ?? null}, ${now})`,
     );
 
     await db.$executeRaw(Prisma.sql`
@@ -286,14 +287,16 @@ export async function upsertUserTermStates(
             "termId",
             "gravityScore",
             "gravityReadingScore",
-            "isLearnt"
+            "isLearnt",
+            "updatedAt"
         )
         VALUES ${Prisma.join(values)}
         ON CONFLICT ("userId", "termId")
         DO UPDATE SET
             "gravityScore" = EXCLUDED."gravityScore",
             "gravityReadingScore" = EXCLUDED."gravityReadingScore",
-            "isLearnt" = EXCLUDED."isLearnt"
+            "isLearnt" = EXCLUDED."isLearnt",
+            "updatedAt" = EXCLUDED."updatedAt"
     `);
 }
 

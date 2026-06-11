@@ -278,6 +278,23 @@ function setStoredGameHistoryEntries(entries: Record<string, HistoryEntry>): voi
   notifyGameHistoryUpdated();
 }
 
+export function replaceGameHistoryEntries(entries: HistoryEntry[]): void {
+  if (typeof localStorage === "undefined") return;
+
+  const nextEntries: Record<string, HistoryEntry> = {};
+  for (const entry of entries) {
+    nextEntries[entry.id] = createHistoryEntry(
+      entry.id,
+      entry.title,
+      entry.source,
+      entry.createdAt,
+      entry.terms,
+    );
+  }
+
+  setStoredGameHistoryEntries(nextEntries);
+}
+
 export function getGameHistoryEntry(key: string, isKeyHashed: boolean): HistoryEntry | null {
   const historyId = getHistoryId(key, isKeyHashed);
   const entries = getStoredGameHistoryEntries();

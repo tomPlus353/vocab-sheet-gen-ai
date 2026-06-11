@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
 
 import { getGameHistoryEntry } from "@/lib/utils";
+import { loadFavoriteTermsBestEffort } from "@/lib/storage-sync";
 
 import type { VocabTerm } from "@/lib/types/vocab";
 interface ViewHistoryModalProps {
@@ -33,38 +34,60 @@ export function ViewHistoryModal({
     const { toast } = useToast();
 
     const [terms, setTerms] = useState<VocabTerm[]>([]);
+    const [isLoadingTerms, setIsLoadingTerms] = useState(false);
     const favoriteCount = terms ? terms.filter((t) => t.isFavorite).length : 0;
 
     useEffect(() => {
-        // Fetch terms from localStorage using the historyTermsKey
-        try {
-            if (mode === "favorites") {
-                const cachedJsonString = localStorage.getItem("favoriteTerms");
-                const termsAsJson: VocabTerm[] = JSON.parse(
-                    cachedJsonString ?? "[]",
-                ) as VocabTerm[];
-                setTerms(termsAsJson);
-                return;
-            }
+        let cancelled = false;
 
-            if (!historyTermsKey) {
-                if (mode === "history") {
+        async function loadTerms() {
+            setIsLoadingTerms(true);
+
+            try {
+                if (mode === "favorites") {
+                    const favoriteTerms = await loadFavoriteTermsBestEffort();
+                    if (!cancelled) {
+                        setTerms(favoriteTerms.filter((term) => term.isFavorite));
+                    }
                     return;
                 }
+
+                // Fetch terms from localStorage using the historyTermsKey
+                if (!historyTermsKey) {
+                    if (mode === "history") {
+                        return;
+                    }
+                }
+                const storedHistory = getGameHistoryEntry(historyTermsKey, true);
+                if (storedHistory && !cancelled) {
+                    setTerms(storedHistory.terms);
+                }
+            } catch (e) {
+                console.error("Error fetching history terms: ", e);
+                toast({
+                    title: "Error",
+                    description: "There was an error fetching the history terms.",
+                    variant: "destructive",
+                });
+            } finally {
+                if (!cancelled) {
+                    setIsLoadingTerms(false);
+                }
             }
-            const storedHistory = getGameHistoryEntry(historyTermsKey, true);
-            if (storedHistory) {
-                setTerms(storedHistory.terms);
-            }
-        } catch (e) {
-            console.error("Error fetching history terms: ", e);
-            toast({
-                title: "Error",
-                description: "There was an error fetching the history terms.",
-                variant: "destructive",
-            });
         }
-    }, [open, historyTermsKey]);
+
+        void loadTerms();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [open, historyTermsKey, mode, toast]);
+
+    useEffect(() => {
+        if (!open) {
+            setIsLoadingTerms(false);
+        }
+    }, [open]);
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -95,7 +118,11 @@ export function ViewHistoryModal({
                         />
                     ) : null}
                 </div>
-                {!terms ? (
+                {isLoadingTerms ? (
+                    <pre className="font-body whitespace-pre-wrap p-4 text-sm text-foreground text-white">
+                        Loading terms...
+                    </pre>
+                ) : !terms ? (
                     <pre className="font-body whitespace-pre-wrap p-4 text-sm text-foreground text-white">
                         No terms available.
                     </pre>

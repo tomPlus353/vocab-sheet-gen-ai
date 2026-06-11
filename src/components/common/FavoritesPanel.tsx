@@ -17,6 +17,7 @@ import { ViewHistoryModal } from "@/app/_components/ViewHistoryModal";
 
 import type { VocabTerm } from "@/lib/types/vocab";
 import { isVocabTerm } from "@/lib/utils";
+import { loadFavoriteTermsBestEffort } from "@/lib/storage-sync";
 
 const LAST_PAGINATOR_PAGE_KEY = "lastPaginatorPage";
 
@@ -24,35 +25,46 @@ export function FavoritesPanel() {
     const ACTION_BUTTON_CLASSES =
         "has-tooltip relative rounded border border-blue-100/20 bg-blue-500/50 px-2 py-1 hover:bg-blue-300 hover:text-black";
     const [favoriteTerms, setFavoriteTerms] = React.useState<VocabTerm[]>([]);
+    const [isLoadingFavorites, setIsLoadingFavorites] = React.useState(true);
     const [isModalOpen, setIsModalOpen] = React.useState(false);
     const [isSynced, setIsSynced] = React.useState(false);
     const router = useRouter();
     const pathname = usePathname();
 
     const loadFavoriteTerms = React.useCallback(() => {
-        const cachedJsonString = localStorage.getItem("favoriteTerms");
-        try {
-            const parsedTerms: unknown = JSON.parse(cachedJsonString ?? "[]");
-            if (!Array.isArray(parsedTerms)) {
-                setFavoriteTerms([]);
-                return;
-            }
+        let cancelled = false;
+        setIsLoadingFavorites(true);
 
-            const termsAsJson = parsedTerms.filter(isVocabTerm);
-            setFavoriteTerms(
-                termsAsJson.filter((term) => term.isFavorite === true),
-            );
-        } catch (error) {
-            console.error(
-                "Error parsing favorite terms from localStorage: ",
-                error,
-            );
-            setFavoriteTerms([]);
-        }
+        void (async () => {
+            try {
+                const terms = await loadFavoriteTermsBestEffort();
+                if (!cancelled) {
+                    setFavoriteTerms(terms.filter(isVocabTerm));
+                }
+            } catch (error) {
+                if (!cancelled) {
+                    console.error("Error loading favorite terms: ", error);
+                    setFavoriteTerms([]);
+                }
+            } finally {
+                if (!cancelled) {
+                    setIsLoadingFavorites(false);
+                }
+            }
+        })();
+
+        return () => {
+            cancelled = true;
+        };
     }, []);
 
     React.useEffect(() => {
-        loadFavoriteTerms();
+        const cancel = loadFavoriteTerms();
+        return () => {
+            if (typeof cancel === "function") {
+                cancel();
+            }
+        };
     }, [loadFavoriteTerms]);
 
     React.useEffect(() => {
@@ -153,7 +165,7 @@ export function FavoritesPanel() {
                         </button>
                         <button
                             className={ACTION_BUTTON_CLASSES}
-                            onClick={loadFavoriteTerms}
+                            onClick={() => void loadFavoriteTerms()}
                             aria-label="Refresh favorites list"
                             title="Refresh favorites list"
                         >
@@ -167,12 +179,18 @@ export function FavoritesPanel() {
             </div>
 
             <div>
-                <FavoritesList
-                    mode="favorites"
-                    terms={favoriteTerms}
-                    setTerms={setFavoriteTerms}
-                    refreshTerms={loadFavoriteTerms}
-                />
+                {isLoadingFavorites ? (
+                    <div className="rounded-xl border border-slate-700 bg-slate-800 p-5 text-sm text-slate-300">
+                        Loading favorites from the server...
+                    </div>
+                ) : (
+                    <FavoritesList
+                        mode="favorites"
+                        terms={favoriteTerms}
+                        setTerms={setFavoriteTerms}
+                        refreshTerms={() => void loadFavoriteTerms()}
+                    />
+                )}
             </div>
 
             <ViewHistoryModal

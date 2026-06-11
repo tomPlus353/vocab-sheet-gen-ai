@@ -51,3 +51,6 @@
 - [status: PENDING] Replace separate reading and meaning modes with a single mode
   Context: Merge separate reading and meaning options into a single mode. Group terms in batches of max 10 terms. For each term, first test reading, then test meaning once its reading is learnt (gravity reading score of 2 or more).
   Page: /gravity + /match
+- [status: PENDING] Complete server-first hydration for all study flows.
+  Context: History and favorites list elements now hydrate from the server first, but some study flows still have mixed local-first paths. Finish moving logged-in reads to server-first across the app so cross-environment term state stays consistent.
+  Page: All

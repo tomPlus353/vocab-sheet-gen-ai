@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 // import common components and utils
 import { appendGameHistory, cn, getGameHistory } from "@/lib/utils";
 import {
+    loadFavoriteTermsBestEffort,
     syncHistoryForKeyBestEffort,
     syncSrsReviewBestEffort,
 } from "@/lib/storage-sync";
@@ -165,12 +166,13 @@ export default function Match() {
         let cachedJsonString: string | null = null;
 
         if (isReviewFavorites) {
-            cachedJsonString = localStorage.getItem("favoriteTerms");
-            if (!cachedJsonString) {
+            const favoriteTerms = await loadFavoriteTermsBestEffort();
+            if (favoriteTerms.length === 0) {
                 alert("No favorite terms found.");
                 setIsLoading(false);
                 return;
             }
+            reply = JSON.stringify(favoriteTerms);
         } else if (isReviewHistory) {
             const historyHash = urlParams.get("historyTerms");
             cachedJsonString = getGameHistory(historyHash ?? "", true);
@@ -182,7 +184,9 @@ export default function Match() {
         } else {
             cachedJsonString = getGameHistory(activeTextStr, false);
         }
-        if (cachedJsonString) {
+        if (isReviewFavorites) {
+            // reply was already populated from the DB-first favorites loader
+        } else if (cachedJsonString) {
             reply = cachedJsonString;
         } else {
             //prompt the llm

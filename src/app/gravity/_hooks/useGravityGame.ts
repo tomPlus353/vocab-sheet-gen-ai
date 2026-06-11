@@ -24,6 +24,7 @@ import { useGravityProgressReset } from "./useGravityProgressReset";
 import { useGravityTermsLoader } from "./useGravityTermsLoader";
 import { useGravityTermScore } from "./useGravityTermScore";
 import { useGravityTimer } from "./useGravityTimer";
+import { syncGravityTermStatesBestEffort } from "@/lib/storage-sync";
 
 const TEST_READING_STORAGE_KEY = "gravityTestReadingMode";
 
@@ -58,6 +59,7 @@ export function useGravityGame() {
         React.useState(false);
     const [isAllLearntModalOpen, setIsAllLearntModalOpen] =
         React.useState(false);
+    const didFlushCompletionRef = React.useRef(false);
 
     const isTestReadingRef = React.useRef(isTestReading);
     const setIsTestReading = React.useCallback(
@@ -248,11 +250,20 @@ export function useGravityGame() {
         toast,
     });
 
+    const flushGravityProgress = React.useCallback(() => {
+        if (allTerms.length === 0) {
+            return;
+        }
+
+        void syncGravityTermStatesBestEffort(allTerms);
+    }, [allTerms]);
+
     React.useEffect(() => {
         if (!isFavoritesModeReady || !isExtinctionModeReady) {
             return;
         }
 
+        didFlushCompletionRef.current = false;
         loadVocabTerms().catch((err) => {
             console.error("Error loading gravity game:", err);
             setIsLoading(false);
@@ -373,6 +384,20 @@ export function useGravityGame() {
 
         setFallingTerms([]);
     }, [isGameOver]);
+
+    React.useEffect(() => {
+        if (!isGameOver && !isAllLearntModalOpen) {
+            didFlushCompletionRef.current = false;
+            return;
+        }
+
+        if (didFlushCompletionRef.current) {
+            return;
+        }
+
+        didFlushCompletionRef.current = true;
+        flushGravityProgress();
+    }, [flushGravityProgress, isAllLearntModalOpen, isGameOver]);
 
     React.useEffect(() => {
         const hasUnlearntTerm = scopedTerms.some((term) =>

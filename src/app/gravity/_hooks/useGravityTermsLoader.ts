@@ -6,7 +6,10 @@ import { appendGameHistory, getGameHistory } from "@/lib/utils";
 import type { VocabTerm } from "@/lib/types/vocab";
 import type { SrsDashboardBucket, SrsDashboardTermRow } from "@/lib/types/srs";
 import { setFavoriteTerms } from "@/lib/favorites-storage";
-import { syncHistoryForKeyBestEffort } from "@/lib/storage-sync";
+import {
+    loadFavoriteTermsBestEffort,
+    syncHistoryForKeyBestEffort,
+} from "@/lib/storage-sync";
 import {
     applyLocalTermStatesToTerms,
     upsertLocalTermStatesFromTerms,
@@ -144,9 +147,9 @@ export function useGravityTermsLoader({
                     return;
                 }
             } else if (isReviewFavorites) {
-                cachedJsonString = localStorage.getItem("favoriteTerms");
+                parsedTerms = await loadFavoriteTermsBestEffort();
                 progressSourceRef.current = { mode: "favorites" };
-                if (!cachedJsonString) {
+                if (parsedTerms.length === 0) {
                     alert("No favorite terms found.");
                     setIsLoading(false);
                     return;
@@ -157,7 +160,7 @@ export function useGravityTermsLoader({
             }
 
             let reply = cachedJsonString ?? "";
-            if (!reply) {
+            if (!isReviewFavorites && !reply) {
                 const response = await fetch("/api/llm", {
                     method: "POST",
                     headers: {
@@ -187,43 +190,45 @@ export function useGravityTermsLoader({
                 void syncHistoryForKeyBestEffort(activeTextStr, false);
             }
 
-            try {
-                const asJson = JSON.parse(reply) as Array<Record<string, unknown>>;
-                parsedTerms = asJson
-                    .filter((item) => {
-                        return (
-                            typeof item.japanese === "string" &&
-                            typeof item.kana === "string" &&
-                            typeof item.english_definition === "string"
-                        );
-                    })
-                    .map((item) => {
-                        const score =
-                            typeof item.gravity_score === "number"
-                                ? item.gravity_score
-                                : undefined;
-                        const readingScore =
-                            typeof item.gravity_reading_score === "number"
-                                ? item.gravity_reading_score
-                                : undefined;
-                        return {
-                            japanese: item.japanese as string,
-                            kana: item.kana as string,
-                            english_definition: item.english_definition as string,
-                            example_sentences: Array.isArray(item.example_sentences) ? item.example_sentences : undefined,
-                            isFavorite: typeof item.isFavorite === "boolean" ? item.isFavorite : undefined,
-                            gravity_score: score,
-                            gravity_reading_score: readingScore,
-                            isLearnt:
-                                (score ?? 0) >= 2 || (readingScore ?? 0) >= 2,
-                            type: typeof item.type === "string" ? item.type : undefined,
-                        };
-                    });
-            } catch (error) {
-                console.error("Failed to parse game terms:", error);
-                alert("Could not parse terms for gravity game.");
-                setIsLoading(false);
-                return;
+            if (!isReviewFavorites) {
+                try {
+                    const asJson = JSON.parse(reply) as Array<Record<string, unknown>>;
+                    parsedTerms = asJson
+                        .filter((item) => {
+                            return (
+                                typeof item.japanese === "string" &&
+                                typeof item.kana === "string" &&
+                                typeof item.english_definition === "string"
+                            );
+                        })
+                        .map((item) => {
+                            const score =
+                                typeof item.gravity_score === "number"
+                                    ? item.gravity_score
+                                    : undefined;
+                            const readingScore =
+                                typeof item.gravity_reading_score === "number"
+                                    ? item.gravity_reading_score
+                                    : undefined;
+                            return {
+                                japanese: item.japanese as string,
+                                kana: item.kana as string,
+                                english_definition: item.english_definition as string,
+                                example_sentences: Array.isArray(item.example_sentences) ? item.example_sentences : undefined,
+                                isFavorite: typeof item.isFavorite === "boolean" ? item.isFavorite : undefined,
+                                gravity_score: score,
+                                gravity_reading_score: readingScore,
+                                isLearnt:
+                                    (score ?? 0) >= 2 || (readingScore ?? 0) >= 2,
+                                type: typeof item.type === "string" ? item.type : undefined,
+                            };
+                        });
+                } catch (error) {
+                    console.error("Failed to parse game terms:", error);
+                    alert("Could not parse terms for gravity game.");
+                    setIsLoading(false);
+                    return;
+                }
             }
         }
 
@@ -233,7 +238,9 @@ export function useGravityTermsLoader({
             return;
         }
 
-        parsedTerms = applyLocalTermStatesToTerms(parsedTerms);
+        if (!isReviewFavorites) {
+            parsedTerms = applyLocalTermStatesToTerms(parsedTerms);
+        }
 
         const filteredTerms = parsedTerms.filter((term) => {
             if (isSrsMode) {

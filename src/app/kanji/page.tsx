@@ -15,6 +15,7 @@ import {
     isKanjiGameTerm,
     isVocabTerm,
 } from "@/lib/utils";
+import { loadFavoriteTermsBestEffort } from "@/lib/storage-sync";
 import type { KanjiGameTerm, KanjiMasteryStage } from "@/lib/types/vocab";
 
 import {
@@ -222,12 +223,12 @@ export default function KanjiPage() {
             let nextTerms: KanjiGameTerm[] = [];
 
             if (isReviewFavorites || isReviewHistory) {
-                const rawTerms = isReviewFavorites
-                    ? localStorage.getItem("favoriteTerms")
-                    : getGameHistory(urlParams.get("historyTerms") ?? "", true);
-
-                const parsedTerms = JSON.parse(rawTerms ?? "[]") as unknown[];
-                const vocabTerms = parsedTerms.filter(isVocabTerm);
+                const vocabTerms = isReviewFavorites
+                    ? await loadFavoriteTermsBestEffort()
+                    : (JSON.parse(
+                          getGameHistory(urlParams.get("historyTerms") ?? "", true) ??
+                              "[]",
+                      ) as unknown[]).filter(isVocabTerm);
                 const kanjiSourceText = vocabTerms
                     .map((term) => term.japanese)
                     .join("\n");

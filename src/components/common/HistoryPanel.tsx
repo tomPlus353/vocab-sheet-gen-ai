@@ -22,8 +22,8 @@ import {
 } from "@/lib/utils";
 import {
     deleteHistoryEntryBestEffort,
-    fetchRemoteHistoryEntriesBestEffort,
     fetchRemoteHistoryEntryIdsWithStatusBestEffort,
+    loadHistoryEntriesBestEffort,
     syncMissingHistoryEntriesBestEffort,
     syncHistoryEntryBestEffort,
 } from "@/lib/storage-sync";
@@ -39,7 +39,6 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { ViewHistoryModal } from "@/app/_components/ViewHistoryModal";
-import { mergeMissingGameHistoryEntries } from "@/lib/utils";
 import { logHistorySyncEvent, summarizeHistoryEntry } from "@/lib/history-sync-logger";
 
 const LAST_PAGINATOR_PAGE_KEY = "lastPaginatorPage";
@@ -175,86 +174,26 @@ export function HistoryPanel() {
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = React.useState(false);
     const [deleteTargetKey, setDeleteTargetKey] = React.useState<string>("");
     const [isImportOpen, setIsImportOpen] = React.useState(false);
-    const reverseSyncRanRef = React.useRef(false);
+    const [isLoadingHistory, setIsLoadingHistory] = React.useState(true);
     const router = useRouter();
     const pathname = usePathname();
     const { toast } = useToast();
 
-    const loadHistoryEntries = React.useCallback(() => {
-        const entries = Object.values(getAllGameHistoryEntries()).sort((a, b) =>
-            b.createdAt.localeCompare(a.createdAt),
-        );
-        setHistoryEntries(entries);
+    const loadHistoryEntries = React.useCallback(async () => {
+        setIsLoadingHistory(true);
+        try {
+            const entries = await loadHistoryEntriesBestEffort();
+            setHistoryEntries(entries);
+        } catch (error) {
+            console.error("Error loading history entries: ", error);
+            setHistoryEntries([]);
+        } finally {
+            setIsLoadingHistory(false);
+        }
     }, []);
 
     React.useEffect(() => {
-        loadHistoryEntries();
-    }, [loadHistoryEntries]);
-
-    React.useEffect(() => {
-        if (reverseSyncRanRef.current) return;
-        reverseSyncRanRef.current = true;
-
-        let cancelled = false;
-
-        async function reverseSyncHistory() {
-            logHistorySyncEvent("history-reverse-sync-start", {
-                localHistoryEntryCount: Object.keys(getAllGameHistoryEntries()).length,
-            });
-            const remoteEntries = await fetchRemoteHistoryEntriesBestEffort();
-            if (!remoteEntries || cancelled) {
-                logHistorySyncEvent(
-                    "history-reverse-sync-skip",
-                    {
-                        cancelled,
-                        receivedRemoteEntries: Boolean(remoteEntries),
-                    },
-                    "warn",
-                );
-                return;
-            }
-
-            const localIds = new Set(Object.keys(getAllGameHistoryEntries()));
-            const missingRemoteEntries = remoteEntries.filter((entry) => !localIds.has(entry.id));
-            logHistorySyncEvent("history-reverse-sync-compare", {
-                remoteEntryCount: remoteEntries.length,
-                localEntryCount: localIds.size,
-                missingRemoteEntryCount: missingRemoteEntries.length,
-            });
-            if (missingRemoteEntries.length === 0) return;
-
-            const addedCount = mergeMissingGameHistoryEntries(missingRemoteEntries);
-            if (addedCount > 0) {
-                loadHistoryEntries();
-                logHistorySyncEvent("history-reverse-sync-complete", {
-                    addedCount,
-                    remoteEntryCount: remoteEntries.length,
-                });
-                toast({
-                    variant: "success",
-                    title: "History downloaded",
-                    description: `Imported ${addedCount} history sets from the server.`,
-                    duration: 3000,
-                });
-            }
-        }
-
-        void reverseSyncHistory();
-
-        return () => {
-            cancelled = true;
-        };
-    }, [loadHistoryEntries, toast]);
-
-    React.useEffect(() => {
-        function handleUpdated() {
-            loadHistoryEntries();
-        }
-
-        window.addEventListener("gameHistoryUpdated", handleUpdated);
-        return () => {
-            window.removeEventListener("gameHistoryUpdated", handleUpdated);
-        };
+        void loadHistoryEntries();
     }, [loadHistoryEntries]);
 
     function handleGoMatch(key: string) {
@@ -291,7 +230,7 @@ export function HistoryPanel() {
         removeGameHistory(deleteTargetKey, true);
         void deleteHistoryEntryBestEffort(deleteTargetKey);
         setDeleteTargetKey("");
-        loadHistoryEntries();
+        void loadHistoryEntries();
     }
 
     function handleImportHistory(title: string, rawInput: string) {
@@ -301,7 +240,7 @@ export function HistoryPanel() {
             logHistorySyncEvent("history-import-created", summarizeHistoryEntry(entry));
             void syncHistoryEntryBestEffort(entry);
             setIsImportOpen(false);
-            loadHistoryEntries();
+            void loadHistoryEntries();
             toast({
                 variant: "success",
                 description: `Saved ${terms.length} terms to history.`,
@@ -454,7 +393,11 @@ export function HistoryPanel() {
 
             <ScrollArea className="my-2 max-h-96 flex-1 overflow-y-auto rounded-md border">
                 <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-2">
-                    {historyEntries.length > 0 ? (
+                    {isLoadingHistory ? (
+                        <p className="text-sm text-slate-500">
+                            Loading history from the server...
+                        </p>
+                    ) : historyEntries.length > 0 ? (
                         historyEntries.map((entry) => (
                             <div
                                 key={entry.id}
@@ -564,7 +507,7 @@ export function HistoryPanel() {
                 onOpenChange={(open) => {
                     setIsModalOpen(open);
                     if (!open) {
-                        loadHistoryEntries();
+                        void loadHistoryEntries();
                     }
                 }}
                 historyTermsKey={modalTargetKey}

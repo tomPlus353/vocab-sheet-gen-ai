@@ -2,8 +2,15 @@
 
 import type { HistoryEntry, VocabTerm } from "@/lib/types/vocab";
 import type { SrsReviewRating } from "@/lib/types/srs";
-import { getAllGameHistoryEntries, getGameHistoryEntry } from "@/lib/utils";
-import { getLocalFavoriteTerms } from "@/lib/favorites-storage";
+import {
+    getAllGameHistoryEntries,
+    getGameHistoryEntry,
+    replaceGameHistoryEntries,
+} from "@/lib/utils";
+import {
+    getLocalFavoriteTerms,
+    setLocalFavoriteTerms,
+} from "@/lib/favorites-storage";
 import { logHistorySyncEvent, summarizeHistoryEntry } from "@/lib/history-sync-logger";
 
 type PostJsonResult =
@@ -293,6 +300,18 @@ export async function fetchRemoteHistoryEntriesBestEffort(): Promise<HistoryEntr
     return parsedEntries;
 }
 
+export async function loadHistoryEntriesBestEffort(): Promise<HistoryEntry[]> {
+    const remoteHistoryEntries = await fetchRemoteHistoryEntriesBestEffort();
+    if (remoteHistoryEntries !== null) {
+        replaceGameHistoryEntries(remoteHistoryEntries);
+        return remoteHistoryEntries;
+    }
+
+    return Object.values(getAllGameHistoryEntries()).sort((a, b) =>
+        b.createdAt.localeCompare(a.createdAt),
+    );
+}
+
 export async function fetchRemoteFavoriteTermsBestEffort(): Promise<VocabTerm[] | null> {
     logHistorySyncEvent("favorites-snapshot-fetch-start");
     const result = await fetchJson("/api/storage/favorites");
@@ -349,6 +368,32 @@ export async function fetchRemoteFavoriteTermsBestEffort(): Promise<VocabTerm[] 
         remoteFavoriteCount: parsedTerms.length,
     });
     return parsedTerms;
+}
+
+export async function loadFavoriteTermsBestEffort(): Promise<VocabTerm[]> {
+    const remoteFavoriteTerms = await fetchRemoteFavoriteTermsBestEffort();
+    if (remoteFavoriteTerms !== null) {
+        const normalizedFavoriteTerms = remoteFavoriteTerms.map((term) => ({
+            ...term,
+            isFavorite: true,
+        }));
+        setLocalFavoriteTerms(normalizedFavoriteTerms);
+        return normalizedFavoriteTerms;
+    }
+
+    return getLocalFavoriteTerms();
+}
+
+export async function syncGravityTermStatesBestEffort(terms: VocabTerm[]): Promise<void> {
+    try {
+        await fetch("/api/storage/term-states", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ terms }),
+        });
+    } catch {
+        // ignore network errors / anonymous sessions
+    }
 }
 
 export async function syncMissingHistoryEntriesBestEffort(existingIds: Set<string>): Promise<{
