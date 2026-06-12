@@ -4,11 +4,15 @@ Use this as a short speaking guide while demoing the app.
 
 ## Demo Flow
 
-1. Home page: paste a passage.
-2. E-reader page: show the text split into reading chunks.
-3. Gravity game: explain that AI returns structured JSON, and the game uses that JSON directly.
-4. Edit Terms modal: open one term and explain that the detail fields are AI generated.
-5. Long-term learning: explain SRS as a way to bring back words at the right time so they move into memory.
+1. Tool for studying Japanese.
+2. Paste Japanese text here.
+3. Press submit to split the text into pages (pagination).
+4. Press the `gravity` button to play the game.
+5. Words fall from the top of the screen.
+6. Type the answer before the word hits the bottom.
+7. If a word passes the red line, you must practice it.
+8. If you get 2 wrong in a row, it is game over.
+9. The terms fall faster and faster each time.
 
 ## Mermaid Diagram
 
@@ -68,21 +72,25 @@ flowchart TB
 
 ## Japanese Speaker Lines
 
-1. `ホーム画面に文章を貼り付けるだけで、AIが学習用の素材に変換します。`
-2. `このe-readerでは、長い文章を読みやすいかたまりに分けて、学習しやすい形で表示します。`
-3. `Gravityでは、AIが単なる文章ではなくJSON形式で単語データを返すので、アプリはそのまま各項目を使ってゲームを動かせます。`
-4. `単語の意味、読み方、例などの詳細はすべてAIが生成しているので、あとから編集しながら品質を確認できます。`
-5. `SRSは、忘れそうなタイミングで単語をもう一度出す仕組みで、短期記憶から長期記憶に移しやすくします。`
+1. 日本語を勉強するときに使うツールです。
+2. ここに日本語の文章を貼り付けます。
+3. submit を押すと、文章がページごとに分割されます。
+4. gravity ボタンを押すと、ゲームを始められます。
+5. 単語は画面の上から落ちてきます。
+6. 下まで落ちる前に、答えを入力します。
+7. 赤い線を越えると、その単語を練習することになります。
+8. 2回連続で間違えると、ゲームオーバーです。
+9. 単語は、進むほど速く落ちてきます。
 
 ## Sample Passage
 
-1. I opened the app and pasted a short article about daily routines.
-2. The passage described a person waking up early and making breakfast.
-3. It explained how the person walked to work instead of taking the bus.
-4. Along the way, the person noticed a quiet park and a busy bakery.
-5. The story mentioned a coworker who shared a useful language tip.
-6. After lunch, the person reviewed a list of new words from the text.
-7. Some of the words were easy to remember, but others needed more practice.
-8. In the evening, the person read the same passage one more time.
-9. This second review made the meanings feel more familiar.
-10. By the end of the day, the passage was easier to understand and recall.
+1. 毎朝、私は駅まで歩いて通勤します。
+2. 途中で、小さな公園の横を通ります。
+3. 近くのパン屋は、朝早くからいい香りがします。
+4. 仕事の前に、コーヒーを一杯買うことが多いです。
+5. 電車の中では、短い記事を読むようにしています。
+6. 新しい単語が出てきたら、ノートに書き留めます。
+7. 昼休みに、もう一度その単語を見直します。
+8. 何度か見ると、意味が少しずつ覚えやすくなります。
+9. 夕方には、文章全体の内容がだいぶ分かるようになります。
+10. こうして、毎日の読書が少しずつ学習につながります。
