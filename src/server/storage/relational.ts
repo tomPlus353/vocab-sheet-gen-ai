@@ -355,6 +355,25 @@ function buildSrsBucketFilter(bucket: SrsDashboardBucket, now: Date): Prisma.Sql
     return Prisma.sql`s."due" >= ${startOfTomorrow}`;
 }
 
+export async function getSrsDashboardTermCount(
+    userId: string,
+    bucket?: SrsDashboardBucket,
+    now: Date = new Date(),
+): Promise<number> {
+    const bucketFilter = bucket
+        ? Prisma.sql`AND ${buildSrsBucketFilter(bucket, now)}`
+        : Prisma.empty;
+
+    const [row] = await db.$queryRaw<Array<{ totalTracked: bigint | number | string }>>(Prisma.sql`
+        SELECT COUNT(*) AS "totalTracked"
+        FROM "UserTermSrsState" s
+        WHERE s."userId" = ${userId}
+        ${bucketFilter}
+    `);
+
+    return toCountNumber(row?.totalTracked);
+}
+
 export async function getSrsDashboardTerms(
     userId: string,
     options?: {
@@ -371,46 +390,44 @@ export async function getSrsDashboardTerms(
         ? Prisma.sql`AND ${buildSrsBucketFilter(options.bucket, now)}`
         : Prisma.empty;
 
-    const rows = await db.$queryRaw<Array<{
-        japanese: string;
-        kana: string;
-        englishDefinition: string;
-        due: Date | string;
-        lastReview: Date | string | null;
-        stability: number;
-        difficulty: number;
-        repetitions: number;
-        lapses: number;
-        state: number;
-        retrievability: number | null;
-        lastRating: number | null;
-        totalTracked: bigint | number | string;
-    }>>(Prisma.sql`
-        SELECT
-            t.japanese AS "japanese",
-            t.kana AS "kana",
-            t."englishDefinition" AS "englishDefinition",
-            s."due" AS "due",
-            s."lastReview" AS "lastReview",
-            s."stability" AS "stability",
-            s."difficulty" AS "difficulty",
-            s."repetitions" AS "repetitions",
-            s."lapses" AS "lapses",
-            s."state" AS "state",
-            s."retrievability" AS "retrievability",
-            s."lastRating" AS "lastRating",
-            COUNT(*) OVER() AS "totalTracked"
-        FROM "UserTermSrsState" s
-        INNER JOIN "Term" t ON t.id = s."termId"
-        WHERE s."userId" = ${userId}
-        ${bucketFilter}
-        ORDER BY s."due" ASC
-        LIMIT ${limit}
-        OFFSET ${offset}
-    `);
-
-    const firstRow = rows[0];
-    const total = firstRow ? toCountNumber(firstRow.totalTracked) : 0;
+    const [rows, totalRows] = await Promise.all([
+        db.$queryRaw<Array<{
+            japanese: string;
+            kana: string;
+            englishDefinition: string;
+            due: Date | string;
+            lastReview: Date | string | null;
+            stability: number;
+            difficulty: number;
+            repetitions: number;
+            lapses: number;
+            state: number;
+            retrievability: number | null;
+            lastRating: number | null;
+        }>>(Prisma.sql`
+            SELECT
+                t.japanese AS "japanese",
+                t.kana AS "kana",
+                t."englishDefinition" AS "englishDefinition",
+                s."due" AS "due",
+                s."lastReview" AS "lastReview",
+                s."stability" AS "stability",
+                s."difficulty" AS "difficulty",
+                s."repetitions" AS "repetitions",
+                s."lapses" AS "lapses",
+                s."state" AS "state",
+                s."retrievability" AS "retrievability",
+            s."lastRating" AS "lastRating"
+            FROM "UserTermSrsState" s
+            INNER JOIN "Term" t ON t.id = s."termId"
+            WHERE s."userId" = ${userId}
+            ${bucketFilter}
+            ORDER BY s."due" ASC
+            LIMIT ${limit}
+            OFFSET ${offset}
+        `),
+        getSrsDashboardTermCount(userId, options?.bucket, now),
+    ]);
 
     return {
         rows: rows.map((row) => ({
@@ -427,7 +444,7 @@ export async function getSrsDashboardTerms(
             retrievability: row.retrievability ?? undefined,
             lastRating: row.lastRating ?? undefined,
         })),
-        total,
+        total: totalRows,
     };
 }
 

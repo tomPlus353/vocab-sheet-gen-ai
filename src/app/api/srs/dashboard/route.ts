@@ -23,7 +23,7 @@ export async function GET(request: Request) {
 
     const url = new URL(request.url);
     const bucket = parseBucket(url.searchParams.get("bucket"));
-    const limit = Number(url.searchParams.get("limit") ?? "50");
+    const limit = Number(url.searchParams.get("limit") ?? "20");
     const offset = Number(url.searchParams.get("offset") ?? "0");
 
     const [summary, list] = await Promise.all([
