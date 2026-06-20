@@ -40,6 +40,11 @@ import {
 } from "@/components/ui/dialog";
 import { ViewHistoryModal } from "@/app/_components/ViewHistoryModal";
 import { logHistorySyncEvent, summarizeHistoryEntry } from "@/lib/history-sync-logger";
+import {
+    getCompletionPercent,
+    getCompletionTone,
+    getLearntCount,
+} from "@/lib/learning-progress";
 
 const LAST_PAGINATOR_PAGE_KEY = "lastPaginatorPage";
 
@@ -63,6 +68,19 @@ function getSampleTerms(entry: HistoryEntry): string {
         .join("、");
 
     return sample ? `${sample}...` : "No terms available.";
+}
+
+function getHistoryCompletion(entry: HistoryEntry): {
+    percent: number;
+    learntCount: number;
+    tone: ReturnType<typeof getCompletionTone>;
+} {
+    const percent = getCompletionPercent(entry.terms);
+    return {
+        percent,
+        learntCount: getLearntCount(entry.terms),
+        tone: getCompletionTone(percent),
+    };
 }
 
 type ManualHistoryImportModalProps = {
@@ -398,101 +416,116 @@ export function HistoryPanel() {
                             Loading history from the server...
                         </p>
                     ) : historyEntries.length > 0 ? (
-                        historyEntries.map((entry) => (
+                        historyEntries.map((entry) => {
+                            const completion = getHistoryCompletion(entry);
+                            return (
                             <div
                                 key={entry.id}
                                 className="mb-1 rounded-lg border border-slate-800 bg-black p-3 last:mb-0"
+                                style={completion.tone.accentStyle}
                             >
-                                <div className="flex flex-wrap items-start gap-2 sm:flex-nowrap sm:justify-between">
-                                    <div className="min-w-0 flex-1">
-                                        <p className="truncate text-sm font-medium text-slate-100 md:text-base">
-                                            {entry.title}
-                                        </p>
-                                        <p className="truncate text-sm text-slate-300">
-                                            {getSampleTerms(entry)}
-                                        </p>
-                                        <p className="text-xs text-slate-500">
-                                            {entry.terms.length} words •{" "}
-                                            {formatHistoryDate(entry.createdAt)}{" "}
-                                            • {entry.source}
-                                        </p>
-                                    </div>
-                                    <div className="flex w-full flex-wrap justify-end gap-2 text-xs sm:w-auto sm:flex-nowrap">
-                                        <button
-                                            className={ACTION_BUTTON_CLASSES}
-                                            onClick={() =>
-                                                handleGoMatch(entry.id)
-                                            }
-                                            aria-label="Study with Match"
-                                            title="Study with Match"
-                                        >
-                                            <span className="tooltip absolute bottom-full right-0 mt-8 rounded bg-black p-1 text-sm text-white shadow-lg">
-                                                Study (Match)
+                                    <div className="flex flex-wrap items-start gap-2 sm:flex-nowrap sm:justify-between">
+                                        <div className="min-w-0 flex-1">
+                                            <p className="truncate text-sm font-medium text-slate-100 md:text-base">
+                                                {entry.title}
+                                            </p>
+                                            <p className="truncate text-sm text-slate-300">
+                                                {getSampleTerms(entry)}
+                                            </p>
+                                            <p className="text-xs text-slate-500">
+                                                {entry.terms.length} words •{" "}
+                                                {formatHistoryDate(
+                                                    entry.createdAt,
+                                                )}{" "}
+                                                • {entry.source}
+                                            </p>
+                                        </div>
+                                        <div className="flex w-full flex-wrap items-center justify-end gap-2 text-xs sm:w-auto sm:flex-nowrap">
+                                            <span
+                                                className="inline-flex items-center gap-1 rounded-full border px-2 py-1 font-semibold"
+                                                style={completion.tone.badgeStyle}
+                                                title={`${completion.learntCount}/${entry.terms.length} learnt`}
+                                            >
+                                                {completion.percent}% learnt
                                             </span>
-                                            <Grid2x2Check className="mx-auto h-5 w-5" />
-                                        </button>
-                                        <button
-                                            className={ACTION_BUTTON_CLASSES}
-                                            onClick={() =>
-                                                handleGoGravity(entry.id)
-                                            }
-                                            aria-label="Study with Gravity"
-                                            title="Study with Gravity"
-                                        >
-                                            <span className="tooltip absolute bottom-full right-0 -mt-8 rounded bg-black p-1 text-sm text-white shadow-lg">
-                                                Study (Gravity)
-                                            </span>
-                                            <Orbit className="mx-auto h-5 w-5" />
-                                        </button>
-                                        <button
-                                            className={ACTION_BUTTON_CLASSES}
-                                            onClick={() =>
-                                                handleGoKanji(entry.id)
-                                            }
-                                            aria-label="Study with Kanji"
-                                            title="Study with Kanji"
-                                        >
-                                            <span className="tooltip absolute bottom-full right-0 -mt-8 rounded bg-black p-1 text-sm text-white shadow-lg">
-                                                Study (Kanji)
-                                            </span>
-                                            <HanIcon className="mx-auto h-5 w-5" />
-                                        </button>
-                                        <button
-                                            className={ACTION_BUTTON_CLASSES}
-                                            onClick={() =>
-                                                handleOpenTermsModal(entry.id)
-                                            }
-                                            aria-label="View all terms"
-                                            title="View all terms"
-                                        >
-                                            <span className="tooltip absolute bottom-full right-0 -mt-8 rounded bg-black p-1 text-sm text-white shadow-lg">
-                                                View all
-                                            </span>
-                                            <Eye className="mx-auto h-5 w-5" />
-                                        </button>
-                                        <button
-                                            className="has-tooltip group relative rounded border border-slate-700 px-2 py-1 hover:bg-slate-800"
-                                            aria-label="Delete history item"
-                                            title="Delete history item"
-                                            onClick={() =>
-                                                handleOpenDeleteConfirm(
-                                                    entry.id,
-                                                )
-                                            }
-                                        >
-                                            <span className="tooltip absolute bottom-full right-0 -mt-8 rounded bg-black p-1 text-sm text-white shadow-lg">
-                                                Delete
-                                            </span>
-                                            <Trash2 className="group-hover:hidden" />
-                                            <Trash2
-                                                className="hidden text-red-500 group-hover:block"
-                                                fill="red"
-                                            />
-                                        </button>
+                                            <button
+                                                className={ACTION_BUTTON_CLASSES}
+                                                onClick={() =>
+                                                    handleGoMatch(entry.id)
+                                                }
+                                                aria-label="Study with Match"
+                                                title="Study with Match"
+                                            >
+                                                <span className="tooltip absolute bottom-full right-0 mt-8 rounded bg-black p-1 text-sm text-white shadow-lg">
+                                                    Study (Match)
+                                                </span>
+                                                <Grid2x2Check className="mx-auto h-5 w-5" />
+                                            </button>
+                                            <button
+                                                className={ACTION_BUTTON_CLASSES}
+                                                onClick={() =>
+                                                    handleGoGravity(entry.id)
+                                                }
+                                                aria-label="Study with Gravity"
+                                                title="Study with Gravity"
+                                            >
+                                                <span className="tooltip absolute bottom-full right-0 -mt-8 rounded bg-black p-1 text-sm text-white shadow-lg">
+                                                    Study (Gravity)
+                                                </span>
+                                                <Orbit className="mx-auto h-5 w-5" />
+                                            </button>
+                                            <button
+                                                className={ACTION_BUTTON_CLASSES}
+                                                onClick={() =>
+                                                    handleGoKanji(entry.id)
+                                                }
+                                                aria-label="Study with Kanji"
+                                                title="Study with Kanji"
+                                            >
+                                                <span className="tooltip absolute bottom-full right-0 -mt-8 rounded bg-black p-1 text-sm text-white shadow-lg">
+                                                    Study (Kanji)
+                                                </span>
+                                                <HanIcon className="mx-auto h-5 w-5" />
+                                            </button>
+                                            <button
+                                                className={ACTION_BUTTON_CLASSES}
+                                                onClick={() =>
+                                                    handleOpenTermsModal(
+                                                        entry.id,
+                                                    )
+                                                }
+                                                aria-label="View all terms"
+                                                title="View all terms"
+                                            >
+                                                <span className="tooltip absolute bottom-full right-0 -mt-8 rounded bg-black p-1 text-sm text-white shadow-lg">
+                                                    View all
+                                                </span>
+                                                <Eye className="mx-auto h-5 w-5" />
+                                            </button>
+                                            <button
+                                                className="has-tooltip group relative rounded border border-slate-700 px-2 py-1 hover:bg-slate-800"
+                                                aria-label="Delete history item"
+                                                title="Delete history item"
+                                                onClick={() =>
+                                                    handleOpenDeleteConfirm(
+                                                        entry.id,
+                                                    )
+                                                }
+                                            >
+                                                <span className="tooltip absolute bottom-full right-0 -mt-8 rounded bg-black p-1 text-sm text-white shadow-lg">
+                                                    Delete
+                                                </span>
+                                                <Trash2 className="group-hover:hidden" />
+                                                <Trash2
+                                                    className="hidden text-red-500 group-hover:block"
+                                                    fill="red"
+                                                />
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))
+                            );
+                        })
                     ) : (
                         <p className="text-sm text-slate-500">
                             No history available.
@@ -506,9 +539,6 @@ export function HistoryPanel() {
                 open={isModalOpen}
                 onOpenChange={(open) => {
                     setIsModalOpen(open);
-                    if (!open) {
-                        void loadHistoryEntries();
-                    }
                 }}
                 historyTermsKey={modalTargetKey}
             />

@@ -300,6 +300,17 @@ export async function fetchRemoteHistoryEntriesBestEffort(): Promise<HistoryEntr
     return parsedEntries;
 }
 
+export async function fetchRemoteHistoryEntryByIdBestEffort(
+    entryId: string,
+): Promise<HistoryEntry | null> {
+    const remoteHistoryEntries = await fetchRemoteHistoryEntriesBestEffort();
+    if (remoteHistoryEntries === null) {
+        return null;
+    }
+
+    return remoteHistoryEntries.find((entry) => entry.id === entryId) ?? null;
+}
+
 export async function loadHistoryEntriesBestEffort(): Promise<HistoryEntry[]> {
     const remoteHistoryEntries = await fetchRemoteHistoryEntriesBestEffort();
     if (remoteHistoryEntries !== null) {

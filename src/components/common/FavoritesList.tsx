@@ -17,6 +17,11 @@ import CommonButton from "./CommonButton";
 import { ConfirmActionModal } from "./modals/ConfirmActionModal";
 import type { VocabTerm } from "@/lib/types/vocab";
 import { setFavoriteTerms } from "@/lib/favorites-storage";
+import {
+    getCompletionPercent,
+    getCompletionTone,
+    getLearntCount,
+} from "@/lib/learning-progress";
 import { syncHistoryForKeyBestEffort } from "@/lib/storage-sync";
 import { resolveHistoryStorageTarget } from "@/lib/history-storage-target";
 import { removeTermFromLocalStorage } from "@/lib/term-deletion";
@@ -102,6 +107,9 @@ export function FavoritesList({
     const learntCount = terms
         ? terms.filter((term) => (term.gravity_score ?? 0) >= 2).length
         : 0;
+    const completionPercent = getCompletionPercent(terms);
+    const completionTone = getCompletionTone(completionPercent);
+    const completionLearntCount = getLearntCount(terms);
 
     React.useEffect(() => {
         if (typeof localStorage === "undefined") return;
@@ -531,6 +539,13 @@ export function FavoritesList({
                         <span className="text-sm leading-none">●</span>
                         <span className="font-medium">learnt</span>
                         <span className="font-semibold">{learntCount}</span>
+                    </span>
+                    <span
+                        className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-semibold"
+                        style={completionTone.badgeStyle}
+                        title={`${completionLearntCount}/${terms.length} learnt`}
+                    >
+                        {completionPercent}% learnt
                     </span>
                 </div>
                 <a

@@ -15,7 +15,10 @@ import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
 
 import { getGameHistoryEntry } from "@/lib/utils";
-import { loadFavoriteTermsBestEffort } from "@/lib/storage-sync";
+import {
+    fetchRemoteHistoryEntryByIdBestEffort,
+    loadFavoriteTermsBestEffort,
+} from "@/lib/storage-sync";
 
 import type { VocabTerm } from "@/lib/types/vocab";
 interface ViewHistoryModalProps {
@@ -58,6 +61,31 @@ export function ViewHistoryModal({
                         return;
                     }
                 }
+                const storageMode =
+                    typeof localStorage !== "undefined"
+                        ? localStorage.getItem("storageMode")
+                        : null;
+                const remoteHistory = await fetchRemoteHistoryEntryByIdBestEffort(
+                    historyTermsKey,
+                );
+                if (remoteHistory && !cancelled) {
+                    setTerms(remoteHistory.terms);
+                    return;
+                }
+
+                if (storageMode === "server") {
+                    if (!cancelled) {
+                        setTerms([]);
+                        toast({
+                            title: "History unavailable",
+                            description:
+                                "Could not load the latest server copy of this history set.",
+                            variant: "destructive",
+                        });
+                    }
+                    return;
+                }
+
                 const storedHistory = getGameHistoryEntry(historyTermsKey, true);
                 if (storedHistory && !cancelled) {
                     setTerms(storedHistory.terms);
