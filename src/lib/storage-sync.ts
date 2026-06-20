@@ -1,6 +1,7 @@
 "use client";
 
 import type { HistoryEntry, VocabTerm } from "@/lib/types/vocab";
+import type { SrsPromptType } from "@/lib/types/srs";
 import type { SrsReviewRating } from "@/lib/types/srs";
 import {
     getAllGameHistoryEntries,
@@ -32,10 +33,11 @@ async function postJson(url: string, body: unknown): Promise<PostJsonResult> {
             body: JSON.stringify(body),
         });
         if (!response.ok) {
+            const text = await response.text().catch(() => "");
             return {
                 ok: false,
                 status: response.status,
-                error: `HTTP ${response.status}`,
+                error: text ? `HTTP ${response.status}: ${text}` : `HTTP ${response.status}`,
             };
         }
 
@@ -487,6 +489,16 @@ export async function syncFavoritesBestEffort(terms?: VocabTerm[]): Promise<void
 export async function syncSrsReviewBestEffort(
     term: VocabTerm,
     rating: SrsReviewRating,
+    promptType?: SrsPromptType,
 ): Promise<void> {
-    await postJson("/api/srs/review", { term, rating });
+    const result = await postJson("/api/srs/review", { term, rating, promptType });
+    if (!result.ok) {
+        console.error("Failed to sync SRS review", {
+            status: result.status,
+            error: result.error,
+            term,
+            rating,
+            promptType,
+        });
+    }
 }

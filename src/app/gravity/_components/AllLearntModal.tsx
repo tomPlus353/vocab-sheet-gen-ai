@@ -7,6 +7,7 @@ type Props = {
     open: boolean;
     isTestReading: boolean;
     showSwitchPractice: boolean;
+    isSrsMode: boolean;
     onSwitchPractice: () => void;
     onReturnToReader: () => void;
     onContinuePractice: () => void;
@@ -17,6 +18,7 @@ export function AllLearntModal(props: Props) {
         open,
         isTestReading,
         showSwitchPractice,
+        isSrsMode,
         onSwitchPractice,
         onReturnToReader,
         onContinuePractice,
@@ -50,28 +52,34 @@ export function AllLearntModal(props: Props) {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
             <div className="w-full max-w-lg rounded-xl border border-green-300/30 bg-slate-900 p-5 shadow-2xl">
                 <h3 className="text-xl font-bold text-green-500">
-                    All Terms Learnt
+                    {isSrsMode ? "SRS Session Complete" : "All Terms Learnt"}
                 </h3>
                 <p className="mt-2 text-sm text-gray-300">
-                    You got every term correct at least twice in a row.
+                    {isSrsMode
+                        ? "Every term in this review batch was answered correctly at least once."
+                        : "You got every term correct at least twice in a row."}
                 </p>
-                <p className="mt-2 text-sm text-gray-300">
-                    {showSwitchPractice
-                        ? `You completed ${currentModeLabel}. Would you like to switch to ${otherModeLabel} now?`
-                        : `You completed both ${currentModeLabel} and ${otherModeLabel}. Great job!`}
-                </p>
+                {!isSrsMode ? (
+                    <p className="mt-2 text-sm text-gray-300">
+                        {showSwitchPractice
+                            ? `You completed ${currentModeLabel}. Would you like to switch to ${otherModeLabel} now?`
+                            : `You completed both ${currentModeLabel} and ${otherModeLabel}. Great job!`}
+                    </p>
+                ) : null}
                 <div className="mt-4 flex flex-col gap-2 sm:flex-row">
                     <CommonButton
                         label={`Back to ${returnTargetLabel}`}
                         additionalclasses="mx-0 bg-green-700 text-white hover:bg-green-400 hover:font-semibold"
                         onClick={onReturnToReader}
                     />
-                    <CommonButton
-                        label="Keep Playing"
-                        additionalclasses="mx-0 bg-slate-500 text-white hover:bg-slate-400 hover:font-semibold"
-                        onClick={onContinuePractice}
-                    />
-                    {showSwitchPractice && (
+                    {!isSrsMode ? (
+                        <CommonButton
+                            label="Keep Playing"
+                            additionalclasses="mx-0 bg-slate-500 text-white hover:bg-slate-400 hover:font-semibold"
+                            onClick={onContinuePractice}
+                        />
+                    ) : null}
+                    {!isSrsMode && showSwitchPractice && (
                         <CommonButton
                             label={`Study ${otherModeLabel}`}
                             additionalclasses="mx-0 bg-indigo-600 text-white hover:bg-indigo-500 hover:font-semibold"

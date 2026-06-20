@@ -1,3 +1,5 @@
+import type { SrsPromptType } from "@/lib/types/srs";
+
 export type ExampleSentence = {
     japanese: string;
     kana: string;
@@ -12,6 +14,7 @@ export type VocabTerm = {
     gravity_score?: number;
     gravity_reading_score?: number;
     isLearnt?: boolean;
+    srsPromptType?: SrsPromptType;
     type?: string;
 };
 

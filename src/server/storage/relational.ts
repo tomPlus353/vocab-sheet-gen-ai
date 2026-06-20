@@ -5,10 +5,16 @@ import type {
     SrsDashboardBucket,
     SrsDashboardSummary,
     SrsDashboardTermRow,
+    SrsPromptType,
     SrsReviewRating,
 } from "@/lib/types/srs";
 import { db } from "@/server/db";
 import { createInitialSrsCard, reviewSrsCard } from "@/server/storage/srs";
+import {
+    flipSrsPromptType,
+    getRandomSrsPromptType,
+    resolveSrsPromptType,
+} from "@/lib/srs-prompt";
 
 const prisma = db as PrismaClient;
 
@@ -395,6 +401,7 @@ export async function getSrsDashboardTerms(
             japanese: string;
             kana: string;
             englishDefinition: string;
+            exampleSentences: Prisma.JsonValue | null;
             due: Date | string;
             lastReview: Date | string | null;
             stability: number;
@@ -404,11 +411,14 @@ export async function getSrsDashboardTerms(
             state: number;
             retrievability: number | null;
             lastRating: number | null;
+            nextPromptType: string;
         }>>(Prisma.sql`
             SELECT
                 t.japanese AS "japanese",
                 t.kana AS "kana",
                 t."englishDefinition" AS "englishDefinition",
+                t."exampleSentences" AS "exampleSentences",
+                s."nextPromptType" AS "nextPromptType",
                 s."due" AS "due",
                 s."lastReview" AS "lastReview",
                 s."stability" AS "stability",
@@ -417,7 +427,7 @@ export async function getSrsDashboardTerms(
                 s."lapses" AS "lapses",
                 s."state" AS "state",
                 s."retrievability" AS "retrievability",
-            s."lastRating" AS "lastRating"
+                s."lastRating" AS "lastRating"
             FROM "UserTermSrsState" s
             INNER JOIN "Term" t ON t.id = s."termId"
             WHERE s."userId" = ${userId}
@@ -434,6 +444,13 @@ export async function getSrsDashboardTerms(
             japanese: row.japanese,
             kana: row.kana,
             englishDefinition: row.englishDefinition,
+            exampleSentences:
+                (row.exampleSentences as unknown as VocabTerm["example_sentences"]) ??
+                undefined,
+            nextPromptType:
+                row.repetitions > 0
+                    ? resolveSrsPromptType(row.nextPromptType)
+                    : getRandomSrsPromptType(),
             due: new Date(row.due).toISOString(),
             lastReview: row.lastReview ? new Date(row.lastReview).toISOString() : undefined,
             stability: row.stability,
@@ -452,8 +469,9 @@ export async function recordUserTermSrsReview(params: {
     userId: string;
     term: Pick<VocabTerm, "japanese" | "kana" | "english_definition">;
     rating: SrsReviewRating;
+    promptType?: SrsPromptType;
     reviewedAt?: Date;
-}): Promise<SrsCardState> {
+}): Promise<SrsCardState & { nextPromptType: SrsPromptType }> {
     const reviewedAt = params.reviewedAt ?? new Date();
     const termIdMap = await upsertTermIds([
         {
@@ -491,6 +509,12 @@ export async function recordUserTermSrsReview(params: {
         : createInitialSrsCard(reviewedAt);
 
     const next = reviewSrsCard(currentCard, params.rating, reviewedAt);
+    const promptType =
+        params.promptType ??
+        (current && current.repetitions > 0
+            ? resolveSrsPromptType(current.nextPromptType)
+            : getRandomSrsPromptType());
+    const nextPromptType = flipSrsPromptType(promptType);
 
     await prisma.userTermSrsState.upsert({
         where: { userId_termId: { userId: params.userId, termId } },
@@ -508,6 +532,7 @@ export async function recordUserTermSrsReview(params: {
             learningSteps: next.learningSteps,
             retrievability: next.retrievability,
             lastRating: next.lastRating,
+            nextPromptType,
         },
         update: {
             due: new Date(next.due),
@@ -521,10 +546,11 @@ export async function recordUserTermSrsReview(params: {
             learningSteps: next.learningSteps,
             retrievability: next.retrievability,
             lastRating: next.lastRating,
+            nextPromptType,
         },
     });
 
-    return next;
+    return { ...next, nextPromptType };
 }
 
 export async function deleteUserTermEverywhere(

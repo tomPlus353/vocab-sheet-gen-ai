@@ -142,6 +142,8 @@ export function useGravityTermsLoader({
                         japanese: row.japanese,
                         kana: row.kana,
                         english_definition: row.englishDefinition,
+                        example_sentences: row.exampleSentences,
+                        srsPromptType: row.nextPromptType,
                         gravity_score: 0,
                         gravity_reading_score: 0,
                         isLearnt: false,
@@ -391,6 +393,9 @@ export function useGravityTermsLoader({
         if (!source) {
             return;
         }
+        if (source.mode === "srs") {
+            return;
+        }
 
         upsertLocalTermStatesFromTerms(allTerms);
 
@@ -402,9 +407,6 @@ export function useGravityTermsLoader({
         if (source.mode === "history") {
             void appendGameHistory(source.key, serializedTerms, true);
             void syncHistoryForKeyBestEffort(source.key, true);
-            return;
-        }
-        if (source.mode === "srs") {
             return;
         }
         void appendGameHistory(source.key, serializedTerms, false);

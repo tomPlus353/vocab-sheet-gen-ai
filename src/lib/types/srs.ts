@@ -1,4 +1,7 @@
+import type { ExampleSentence } from "@/lib/types/vocab";
+
 export type SrsReviewRating = "again" | "hard" | "good" | "easy";
+export type SrsPromptType = "reading" | "meaning";
 
 export type SrsCardState = {
     due: string;
@@ -27,6 +30,8 @@ export type SrsDashboardTermRow = {
     japanese: string;
     kana: string;
     englishDefinition: string;
+    exampleSentences?: ExampleSentence[];
+    nextPromptType: SrsPromptType;
     due: string;
     lastReview?: string;
     stability: number;

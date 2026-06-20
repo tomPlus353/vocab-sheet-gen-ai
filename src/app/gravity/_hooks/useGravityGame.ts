@@ -25,7 +25,12 @@ import { useGravityProgressReset } from "./useGravityProgressReset";
 import { useGravityTermsLoader } from "./useGravityTermsLoader";
 import { useGravityTermScore } from "./useGravityTermScore";
 import { useGravityTimer } from "./useGravityTimer";
-import { syncGravityTermStatesBestEffort } from "@/lib/storage-sync";
+import {
+    syncGravityTermStatesBestEffort,
+    syncSrsReviewBestEffort,
+} from "@/lib/storage-sync";
+import { applySrsSessionAnswer } from "../_lib/srs-gravity-session";
+import { resolveSrsPromptType } from "@/lib/srs-prompt";
 
 const TEST_READING_STORAGE_KEY = "gravityTestReadingMode";
 
@@ -195,6 +200,49 @@ export function useGravityGame() {
         isTestReadingRef,
     });
 
+    const handleSrsAnswer = React.useCallback(
+        (term: VocabTerm, isCorrect: boolean) => {
+            const promptType = resolveSrsPromptType(term.srsPromptType);
+            const rating = isCorrect
+                ? showReadingHint
+                    ? "hard"
+                    : "good"
+                : "again";
+
+            void syncSrsReviewBestEffort(term, rating, promptType);
+
+            const termKey = getTermKey(term);
+            setTermWrongCounts((prev) => {
+                const next = { ...prev };
+                if (isCorrect) {
+                    delete next[termKey];
+                } else {
+                    next[termKey] = (next[termKey] ?? 0) + 1;
+                }
+                return next;
+            });
+
+            if (!isCorrect) {
+                return;
+            }
+
+            setActiveTerms((prev) => applySrsSessionAnswer(prev, term, true));
+            setRemainingQueue((prev) =>
+                prev.filter((key) => key !== getTermKey(term)),
+            );
+        },
+        [showReadingHint],
+    );
+    const getReviewPromptType = React.useCallback(
+        (term: VocabTerm) =>
+            isSrsMode
+                ? resolveSrsPromptType(term.srsPromptType)
+                : isTestReadingRef.current
+                  ? "reading"
+                  : "meaning",
+        [isSrsMode],
+    );
+
     useGravityTimer({
         setTimer,
         isLoading,
@@ -230,6 +278,9 @@ export function useGravityGame() {
         correctionInput,
         remainingQueue,
         activeTerms,
+        isSrsMode,
+        onSrsAnswer: handleSrsAnswer,
+        getReviewPromptType,
         spawnTerm,
         setScore,
         updateTermScore,
@@ -263,12 +314,12 @@ export function useGravityGame() {
     });
 
     const flushGravityProgress = React.useCallback(() => {
-        if (allTerms.length === 0) {
+        if (isSrsMode || allTerms.length === 0) {
             return;
         }
 
         void syncGravityTermStatesBestEffort(allTerms);
-    }, [allTerms]);
+    }, [allTerms, isSrsMode]);
 
     React.useEffect(() => {
         if (
@@ -342,6 +393,7 @@ export function useGravityGame() {
         isCorrectionModalOpen,
         isAllLearntModalOpen,
         isEditTermsModalOpen,
+        isSrsMode,
         spawnTerm,
     ]);
 
@@ -384,7 +436,12 @@ export function useGravityGame() {
     ]);
 
     React.useEffect(() => {
-        if (scopedTerms.length === 0 || isGameOver || isKeepPlayingMode) {
+        if (
+            isSrsMode ||
+            scopedTerms.length === 0 ||
+            isGameOver ||
+            isKeepPlayingMode
+        ) {
             return;
         }
 
@@ -399,9 +456,33 @@ export function useGravityGame() {
     }, [
         hasShownAllLearntModal,
         isGameOver,
+        isSrsMode,
         isKeepPlayingMode,
         isTestReading,
         scopedTerms,
+    ]);
+
+    React.useEffect(() => {
+        if (
+            !isSrsMode ||
+            scopedTerms.length === 0 ||
+            activeTerms.length > 0 ||
+            fallingTerms.length > 0 ||
+            isGameOver ||
+            isAllLearntModalOpen
+        ) {
+            return;
+        }
+
+        setHasShownAllLearntModal(true);
+        setIsAllLearntModalOpen(true);
+    }, [
+        activeTerms.length,
+        fallingTerms.length,
+        isAllLearntModalOpen,
+        isGameOver,
+        isSrsMode,
+        scopedTerms.length,
     ]);
 
     React.useEffect(() => {
@@ -439,15 +520,24 @@ export function useGravityGame() {
         inputRef.current?.focus();
     }, [fallingTerms.length]);
 
-    const learntTermsCount = scopedTerms.filter((term) =>
-        isGravityTermLearnt(term, isTestReading),
-    ).length;
-    const learningTermsCount = scopedTerms.filter(
-        (term) => getGravityTermScore(term, isTestReading) === 1,
-    ).length;
-    const unlearntTermsCount = scopedTerms.filter(
-        (term) => getGravityTermScore(term, isTestReading) === 0,
-    ).length;
+    const srsCompletedTermsCount = Math.max(
+        0,
+        scopedTerms.length - activeTerms.length,
+    );
+    const learntTermsCount = isSrsMode
+        ? srsCompletedTermsCount
+        : scopedTerms.filter((term) => isGravityTermLearnt(term, isTestReading))
+              .length;
+    const learningTermsCount = isSrsMode
+        ? 0
+        : scopedTerms.filter(
+              (term) => getGravityTermScore(term, isTestReading) === 1,
+          ).length;
+    const unlearntTermsCount = isSrsMode
+        ? activeTerms.length
+        : scopedTerms.filter(
+              (term) => getGravityTermScore(term, isTestReading) === 0,
+          ).length;
 
     const resumeAfterAllLearntModal = React.useCallback(() => {
         setIsAllLearntModalOpen(false);
@@ -467,6 +557,7 @@ export function useGravityGame() {
     const isTermAtRisk = Object.values(termWrongCounts).some(
         (count) => count > 0,
     );
+    const srsCurrentPromptType = fallingTerms[0]?.term.srsPromptType;
     const oppositeModeHasUnlearntTerms = scopedTerms.some((term) =>
         !isGravityTermLearnt(term, !isTestReading),
     );
@@ -523,5 +614,6 @@ export function useGravityGame() {
         isTestReading,
         setIsTestReading,
         oppositeModeHasUnlearntTerms,
+        srsCurrentPromptType,
     };
 }

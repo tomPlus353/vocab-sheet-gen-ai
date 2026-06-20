@@ -6,6 +6,7 @@ import { isAnswerCorrect, getTermKey } from "../_lib/gravity-utils";
 import type { FallingTerm } from "../_lib/gravity-utils";
 import type { VocabTerm } from "@/lib/types/vocab";
 import { syncSrsReviewBestEffort } from "@/lib/storage-sync";
+import type { SrsPromptType } from "@/lib/types/srs";
 
 type AnswerHandlerInputs = {
     fallingTerms: FallingTerm[];
@@ -19,6 +20,9 @@ type AnswerHandlerInputs = {
     correctionInput: string;
     remainingQueue: string[];
     activeTerms: VocabTerm[];
+    isSrsMode: boolean;
+    onSrsAnswer: (term: VocabTerm, isCorrect: boolean) => void;
+    getReviewPromptType: (term: VocabTerm) => SrsPromptType;
     spawnTerm: (queue: string[], sourceTerms: VocabTerm[]) => void;
     setScore: React.Dispatch<React.SetStateAction<number>>;
     updateTermScore: (
@@ -55,6 +59,9 @@ export function useGravityAnswerHandlers({
     correctionInput,
     remainingQueue,
     activeTerms,
+    isSrsMode,
+    onSrsAnswer,
+    getReviewPromptType,
     spawnTerm,
     setScore,
     updateTermScore,
@@ -73,6 +80,15 @@ export function useGravityAnswerHandlers({
 
     const handleWrongAttempt = React.useCallback(
         (term: VocabTerm) => {
+            if (isSrsMode) {
+                onSrsAnswer(term, false);
+                setCorrectionTerm(term);
+                setIsCorrectionModalOpen(true);
+                setCorrectionInput(answer);
+                setCorrectionError("");
+                return;
+            }
+
             const termKey = getTermKey(term);
             const previousCount = termWrongCounts[termKey] ?? 0;
             const nextCount = previousCount + 1;
@@ -83,7 +99,11 @@ export function useGravityAnswerHandlers({
             }));
 
             if (nextCount >= 2) {
-                void syncSrsReviewBestEffort(term, "again");
+                void syncSrsReviewBestEffort(
+                    term,
+                    "again",
+                    getReviewPromptType(term),
+                );
                 setCorrectionTerm(term);
                 setIsCorrectionModalOpen(true);
                 setCorrectionInput(answer);
@@ -95,7 +115,11 @@ export function useGravityAnswerHandlers({
                 return;
             }
 
-            void syncSrsReviewBestEffort(term, "again");
+            void syncSrsReviewBestEffort(
+                term,
+                "again",
+                getReviewPromptType(term),
+            );
             setCorrectionTerm(term);
             setIsCorrectionModalOpen(true);
             setCorrectionInput(answer);
@@ -111,6 +135,9 @@ export function useGravityAnswerHandlers({
             setTermWrongCounts,
             setCorrectionTerm,
             termWrongCounts,
+            isSrsMode,
+            onSrsAnswer,
+            getReviewPromptType,
         ],
     );
 
@@ -137,10 +164,16 @@ export function useGravityAnswerHandlers({
                     prev.filter((term) => !matchedIds.has(term.id)),
                 );
                 matches.forEach((match) => {
+                    if (isSrsMode) {
+                        onSrsAnswer(match.term, true);
+                        return;
+                    }
+
                     updateTermScore(match.term, "correct", !showReadingHint);
                     void syncSrsReviewBestEffort(
                         match.term,
                         showReadingHint ? "hard" : "good",
+                        getReviewPromptType(match.term),
                     );
                 });
                 setScore((prev) => prev + matches.length);
@@ -170,6 +203,9 @@ export function useGravityAnswerHandlers({
             setFallingTerms,
             updateTermScore,
             showReadingHint,
+            isSrsMode,
+            onSrsAnswer,
+            getReviewPromptType,
             setScore,
             setAnswer,
             toast,

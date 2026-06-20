@@ -5,6 +5,7 @@ import { Trash2 } from "lucide-react";
 
 import type { SrsDashboardTermRow } from "@/lib/types/srs";
 import { removeTermFromLocalStorage } from "@/lib/term-deletion";
+import { getSrsPromptLabel } from "@/lib/srs-prompt";
 
 type SrsDashboardTableProps = {
     bucket?: "overdue" | "due_today" | "upcoming";
@@ -157,12 +158,13 @@ export function SrsDashboardTable({
             </div>
 
             <div className={isLoadingPage ? "pointer-events-none opacity-70" : ""}>
-                <table className="w-full min-w-[1020px] text-sm">
+                <table className="w-full min-w-[1120px] text-sm">
                     <thead className="bg-slate-800 text-slate-200">
                         <tr>
                             <th className="px-3 py-2 text-left">Term</th>
                             <th className="px-3 py-2 text-left">Reading</th>
                             <th className="px-3 py-2 text-left">Meaning</th>
+                            <th className="px-3 py-2 text-left">Next Prompt</th>
                             <th className="px-3 py-2 text-left">Next Review</th>
                             <th className="px-3 py-2 text-left">Last Review</th>
                             <th className="px-3 py-2 text-right">Stability</th>
@@ -184,6 +186,7 @@ export function SrsDashboardTable({
                                     <td className="px-3 py-2 font-semibold">{row.japanese}</td>
                                     <td className="px-3 py-2">{row.kana}</td>
                                     <td className="px-3 py-2 text-slate-300">{row.englishDefinition}</td>
+                                    <td className="px-3 py-2">{getSrsPromptLabel(row.nextPromptType)}</td>
                                     <td className="px-3 py-2">{formatDate(row.due)}</td>
                                     <td className="px-3 py-2">{formatDate(row.lastReview)}</td>
                                     <td className="px-3 py-2 text-right">{row.stability.toFixed(2)}</td>

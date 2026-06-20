@@ -15,6 +15,7 @@ import { useGravityGame } from "./_hooks/useGravityGame";
 import { getTermKey } from "./_lib/gravity-utils";
 import { EditTermsModal } from "../match/_components/EditTermsModal";
 import { GameControls } from "./_components/GameControls";
+import { getSrsPromptText } from "./_lib/srs-gravity-session";
 
 export default function GravityPage() {
     const router = useRouter();
@@ -68,6 +69,7 @@ export default function GravityPage() {
         termWrongCounts,
         isTermAtRisk,
         oppositeModeHasUnlearntTerms,
+        srsCurrentPromptType,
     } = useGravityGame();
 
     useEffect(() => {
@@ -81,6 +83,11 @@ export default function GravityPage() {
     }, []);
 
     const handleReturnFromGravityPage = () => {
+        if (isSrsMode) {
+            router.push("/dashboard");
+            return;
+        }
+
         const page = localStorage.getItem(LAST_PAGINATOR_PAGE_KEY) ?? "1";
         if (page === "0") {
             router.back();
@@ -182,6 +189,7 @@ export default function GravityPage() {
                 atRiskTermsCount={atRiskTermsCount}
                 learntTermsCount={learntTermsCount}
                 timer={timer}
+                srsCurrentPromptType={srsCurrentPromptType}
             />
 
             {isLoading ? (
@@ -201,10 +209,11 @@ export default function GravityPage() {
                                 const termKey = getTermKey(term.term);
                                 const termWrongCount =
                                     termWrongCounts[termKey] ?? 0;
-                                const isDisplayingReading = isTestReading;
-                                const prompt = isDisplayingReading
-                                    ? `Write: ${term.term.japanese}`
-                                    : term.term.english_definition;
+                                const prompt = isSrsMode
+                                    ? getSrsPromptText(term.term)
+                                    : isTestReading
+                                      ? `Write: ${term.term.japanese}`
+                                      : term.term.english_definition;
                                 const truncated =
                                     prompt.length > 50
                                         ? `${prompt.slice(0, 50)}…`
@@ -297,6 +306,7 @@ export default function GravityPage() {
                 open={isAllLearntModalOpen && !isGameOver}
                 isTestReading={isTestReading}
                 showSwitchPractice={oppositeModeHasUnlearntTerms}
+                isSrsMode={isSrsMode}
                 onSwitchPractice={handleSwitchPracticeMode}
                 onReturnToReader={handleReturnFromGravityPage}
                 onContinuePractice={resumeAfterAllLearntModal}

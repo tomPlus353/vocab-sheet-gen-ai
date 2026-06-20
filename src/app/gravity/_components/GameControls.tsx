@@ -15,6 +15,8 @@ import {
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { ConfirmActionModal } from "@/components/common/modals/ConfirmActionModal";
+import type { SrsPromptType } from "@/lib/types/srs";
+import { getSrsPromptLabel } from "@/lib/srs-prompt";
 
 type GameControlProps = {
     loadVocabTerms: () => Promise<void>;
@@ -38,6 +40,7 @@ type GameControlProps = {
     atRiskTermsCount: number;
     learntTermsCount: number;
     timer: number;
+    srsCurrentPromptType?: SrsPromptType;
 };
 
 function StatPill(props: {
@@ -81,6 +84,7 @@ export function GameControls(props: GameControlProps) {
         atRiskTermsCount,
         learntTermsCount,
         timer,
+        srsCurrentPromptType,
     } = props;
 
     const [isAllFavoritesReviewMode, setIsAllFavoritesReviewMode] =
@@ -158,7 +162,18 @@ export function GameControls(props: GameControlProps) {
                 <button
                     type="button"
                     onClick={() => setIsEditTermsModalOpen(true)}
-                    className="inline-flex shrink-0 items-center gap-1.5 px-1.5 py-1.5 text-sm font-semibold text-slate-300 hover:text-white"
+                    className={[
+                        "inline-flex shrink-0 items-center gap-1.5 px-1.5 py-1.5 text-sm font-semibold",
+                        isSrsMode
+                            ? "cursor-not-allowed text-slate-500"
+                            : "text-slate-300 hover:text-white",
+                    ].join(" ")}
+                    disabled={isSrsMode}
+                    title={
+                        isSrsMode
+                            ? "SRS sessions use the dashboard review batch."
+                            : undefined
+                    }
                 >
                     <Pencil className="h-3.5 w-3.5" />
                     <span>Edit</span>
@@ -176,7 +191,11 @@ export function GameControls(props: GameControlProps) {
                         icon={<CircleAlert className="h-3.5 w-3.5" />}
                         value={unlearntTermsCount}
                         className="border-red-500/65 bg-red-500/15 text-red-200"
-                        tooltip="Unlearnt terms remaining"
+                        tooltip={
+                            isSrsMode
+                                ? "SRS terms still needing one correct answer"
+                                : "Unlearnt terms remaining"
+                        }
                     />
                     <StatPill
                         icon={<BookOpen className="h-3.5 w-3.5" />}
@@ -188,7 +207,11 @@ export function GameControls(props: GameControlProps) {
                         icon={<CheckCircle2 className="h-3.5 w-3.5" />}
                         value={learntTermsCount}
                         className="border-emerald-500/65 bg-emerald-500/15 text-emerald-200"
-                        tooltip="Learnt terms in this run"
+                        tooltip={
+                            isSrsMode
+                                ? "SRS terms completed in this session"
+                                : "Learnt terms in this run"
+                        }
                     />
                     <StatPill
                         icon={<Clock3 className="h-3.5 w-3.5" />}
@@ -213,7 +236,11 @@ export function GameControls(props: GameControlProps) {
                     >
                         {isTermAtRisk
                             ? "Warning: one more miss can end the game"
-                            : "Miss twice = game over"}
+                            : isSrsMode
+                              ? srsCurrentPromptType
+                                  ? `Current prompt: ${getSrsPromptLabel(srsCurrentPromptType)}`
+                                  : "SRS review session"
+                              : "Miss twice = game over"}
                     </span>
                 </div>
             </div>
@@ -256,20 +283,22 @@ export function GameControls(props: GameControlProps) {
                             <span>Show reading hint (kana)</span>
                         </label>
 
-                        <label
-                            htmlFor="test-reading"
-                            className="flex cursor-pointer items-center gap-3"
-                        >
-                            <Checkbox
-                                className="h-6 w-6 rounded border-slate-400 data-[state=checked]:border-indigo-500 data-[state=checked]:bg-indigo-500"
-                                id="test-reading"
-                                checked={isTestReading}
-                                onCheckedChange={() =>
-                                    handleRequestModeChange("testReading")
-                                }
-                            />
-                            <span>Test reading</span>
-                        </label>
+                        {!isSrsMode ? (
+                            <label
+                                htmlFor="test-reading"
+                                className="flex cursor-pointer items-center gap-3"
+                            >
+                                <Checkbox
+                                    className="h-6 w-6 rounded border-slate-400 data-[state=checked]:border-indigo-500 data-[state=checked]:bg-indigo-500"
+                                    id="test-reading"
+                                    checked={isTestReading}
+                                    onCheckedChange={() =>
+                                        handleRequestModeChange("testReading")
+                                    }
+                                />
+                                <span>Test reading</span>
+                            </label>
+                        ) : null}
 
                         {!isAllFavoritesReviewMode && !isSrsMode ? (
                             <label
@@ -288,37 +317,39 @@ export function GameControls(props: GameControlProps) {
                             </label>
                         ) : null}
 
-                        <label
-                            htmlFor="extinction-mode"
-                            className={`flex items-center gap-3 ${
-                                isExtinctionModeDisabled || isKeepPlayingMode
-                                    ? "cursor-not-allowed opacity-60"
-                                    : "cursor-pointer"
-                            }`}
-                            title={
-                                isKeepPlayingMode
-                                    ? "Extinction mode is paused while Keep playing mode is on."
-                                    : isExtinctionModeDisabled
-                                      ? "Extinction mode is disabled because all terms in this set are already learnt."
-                                      : "Hide learnt terms and keep practicing only unlearnt terms."
-                            }
-                        >
-                            <Checkbox
-                                className="h-6 w-6 rounded border-slate-400 data-[state=checked]:border-indigo-500 data-[state=checked]:bg-indigo-500"
-                                id="extinction-mode"
-                                checked={isExtinctionMode}
-                                onCheckedChange={() => {
-                                    if (isExtinctionModeDisabled || isKeepPlayingMode) {
-                                        return;
-                                    }
-                                    handleRequestModeChange("extinction");
-                                }}
-                                disabled={isExtinctionModeDisabled || isKeepPlayingMode}
-                            />
-                            <span>Extinction mode</span>
-                        </label>
+                        {!isSrsMode ? (
+                            <label
+                                htmlFor="extinction-mode"
+                                className={`flex items-center gap-3 ${
+                                    isExtinctionModeDisabled || isKeepPlayingMode
+                                        ? "cursor-not-allowed opacity-60"
+                                        : "cursor-pointer"
+                                }`}
+                                title={
+                                    isKeepPlayingMode
+                                        ? "Extinction mode is paused while Keep playing mode is on."
+                                        : isExtinctionModeDisabled
+                                          ? "Extinction mode is disabled because all terms in this set are already learnt."
+                                          : "Hide learnt terms and keep practicing only unlearnt terms."
+                                }
+                            >
+                                <Checkbox
+                                    className="h-6 w-6 rounded border-slate-400 data-[state=checked]:border-indigo-500 data-[state=checked]:bg-indigo-500"
+                                    id="extinction-mode"
+                                    checked={isExtinctionMode}
+                                    onCheckedChange={() => {
+                                        if (isExtinctionModeDisabled || isKeepPlayingMode) {
+                                            return;
+                                        }
+                                        handleRequestModeChange("extinction");
+                                    }}
+                                    disabled={isExtinctionModeDisabled || isKeepPlayingMode}
+                                />
+                                <span>Extinction mode</span>
+                            </label>
+                        ) : null}
 
-                        {isKeepPlayingMode ? (
+                        {!isSrsMode && isKeepPlayingMode ? (
                             <div
                                 className="flex items-center gap-3 text-slate-300"
                                 title="Extra practice after the current set is fully learnt."
