@@ -132,6 +132,7 @@ export default function GravityPage() {
     };
 
     const handleSwitchPracticeMode = () => {
+        setIsKeepPlayingMode(false);
         setIsTestReading(!isTestReading);
         loadVocabTerms().catch((err) => {
             console.error("Error switching gravity practice mode:", err);

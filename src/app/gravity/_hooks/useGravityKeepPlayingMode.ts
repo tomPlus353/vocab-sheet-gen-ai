@@ -2,8 +2,6 @@
 
 import * as React from "react";
 
-const GRAVITY_KEEP_PLAYING_MODE_KEY = "gravityKeepPlayingMode";
-
 export function useGravityKeepPlayingMode() {
     const [isKeepPlayingMode, setIsKeepPlayingModeState] =
         React.useState(false);
@@ -26,24 +24,9 @@ export function useGravityKeepPlayingMode() {
     );
 
     React.useEffect(() => {
-        const persistedMode =
-            localStorage.getItem(GRAVITY_KEEP_PLAYING_MODE_KEY) === "true";
-
-        setIsKeepPlayingModeState(persistedMode);
-        isKeepPlayingModeRef.current = persistedMode;
+        isKeepPlayingModeRef.current = false;
         setIsKeepPlayingModeReady(true);
     }, []);
-
-    React.useEffect(() => {
-        if (!isKeepPlayingModeReady) {
-            return;
-        }
-
-        localStorage.setItem(
-            GRAVITY_KEEP_PLAYING_MODE_KEY,
-            isKeepPlayingMode ? "true" : "false",
-        );
-    }, [isKeepPlayingMode, isKeepPlayingModeReady]);
 
     return {
         isKeepPlayingMode,

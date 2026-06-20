@@ -114,6 +114,7 @@ export function GameControls(props: GameControlProps) {
         if (pendingModeChange === "favorites") {
             setIsFavoritesMode((prev) => !prev);
         } else if (pendingModeChange === "testReading") {
+            setIsKeepPlayingMode(false);
             setIsTestReading((prev) => !prev);
         } else if (pendingModeChange === "extinction") {
             if (!isExtinctionModeDisabled) {
