@@ -56,6 +56,8 @@ export default function GravityPage() {
         isExtinctionMode,
         setIsExtinctionMode,
         isExtinctionModeDisabled,
+        isKeepPlayingMode,
+        setIsKeepPlayingMode,
         timer,
         unlearntTermsCount,
         terms,
@@ -171,6 +173,8 @@ export default function GravityPage() {
                 isExtinctionMode={isExtinctionMode}
                 setIsExtinctionMode={setIsExtinctionMode}
                 isExtinctionModeDisabled={isExtinctionModeDisabled}
+                isKeepPlayingMode={isKeepPlayingMode}
+                setIsKeepPlayingMode={setIsKeepPlayingMode}
                 isSrsMode={isSrsMode}
                 learningTermsCount={learningTermsCount}
                 unlearntTermsCount={unlearntTermsCount}

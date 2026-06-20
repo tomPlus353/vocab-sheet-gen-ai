@@ -30,6 +30,7 @@ type ProgressSource =
 type TermsLoaderInputs = {
     isFavoritesModeRef: React.MutableRefObject<boolean>;
     isExtinctionModeRef: React.MutableRefObject<boolean>;
+    isKeepPlayingModeRef: React.MutableRefObject<boolean>;
     spawnTerm: (queue: string[], sourceTerms: VocabTerm[]) => void;
     setFallingTerms: React.Dispatch<React.SetStateAction<FallingTerm[]>>;
     setScore: React.Dispatch<React.SetStateAction<number>>;
@@ -59,6 +60,7 @@ type LoadVocabTermsOptions = {
 export function useGravityTermsLoader({
     isFavoritesModeRef,
     isExtinctionModeRef,
+    isKeepPlayingModeRef,
     spawnTerm,
     setScore,
     setTermWrongCounts,
@@ -323,15 +325,18 @@ export function useGravityTermsLoader({
 
             setAllTerms(parsedTerms);
             setScopedTerms(filteredTerms);
-            const nextActiveTerms = isExtinctionModeRef.current
-                ? filteredTerms.filter(
-                      (term) =>
-                          !isGravityTermLearnt(
-                              term,
-                              isTestReadingRef.current,
-                          ),
-                  )
-                : filteredTerms;
+            const nextActiveTerms =
+                isKeepPlayingModeRef.current
+                    ? filteredTerms
+                    : isExtinctionModeRef.current
+                      ? filteredTerms.filter(
+                            (term) =>
+                                !isGravityTermLearnt(
+                                    term,
+                                    isTestReadingRef.current,
+                                ),
+                        )
+                      : filteredTerms;
             setActiveTerms(nextActiveTerms);
             const queue = getShuffledTermKeys(nextActiveTerms);
             setScore(0);
@@ -358,6 +363,7 @@ export function useGravityTermsLoader({
         [
             isExtinctionModeRef,
             isFavoritesModeRef,
+            isKeepPlayingModeRef,
             setTimer,
             setAnswer,
             setCorrectionError,

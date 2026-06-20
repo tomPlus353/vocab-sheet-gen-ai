@@ -67,7 +67,7 @@ export function AllLearntModal(props: Props) {
                         onClick={onReturnToReader}
                     />
                     <CommonButton
-                        label="Keep Practicing"
+                        label="Keep Playing"
                         additionalclasses="mx-0 bg-slate-500 text-white hover:bg-slate-400 hover:font-semibold"
                         onClick={onContinuePractice}
                     />

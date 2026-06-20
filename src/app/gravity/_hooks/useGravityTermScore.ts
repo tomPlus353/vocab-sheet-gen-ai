@@ -10,6 +10,7 @@ type TermScoreInputs = {
     setScopedTerms: React.Dispatch<React.SetStateAction<VocabTerm[]>>;
     setActiveTerms: React.Dispatch<React.SetStateAction<VocabTerm[]>>;
     isExtinctionModeRef: React.MutableRefObject<boolean>;
+    isKeepPlayingModeRef: React.MutableRefObject<boolean>;
     isTestReadingRef: React.MutableRefObject<boolean>;
 };
 
@@ -18,6 +19,7 @@ export function useGravityTermScore({
     setScopedTerms,
     setActiveTerms,
     isExtinctionModeRef,
+    isKeepPlayingModeRef,
     isTestReadingRef,
 }: TermScoreInputs) {
     const updateTermScore = React.useCallback(
@@ -64,7 +66,9 @@ export function useGravityTermScore({
             setScopedTerms((prevTerms) => {
                 const updatedTerms = applyScoreUpdate(prevTerms);
                 setActiveTerms(
-                    isExtinctionModeRef.current
+                    isKeepPlayingModeRef.current
+                        ? updatedTerms
+                        : isExtinctionModeRef.current
                         ? updatedTerms.filter(
                               (oneTerm) =>
                                   !isGravityTermLearnt(
@@ -77,7 +81,13 @@ export function useGravityTermScore({
                 return updatedTerms;
             });
         },
-        [isExtinctionModeRef, setActiveTerms, setAllTerms, setScopedTerms],
+        [
+            isExtinctionModeRef,
+            isKeepPlayingModeRef,
+            setActiveTerms,
+            setAllTerms,
+            setScopedTerms,
+        ],
     );
 
     return { updateTermScore };

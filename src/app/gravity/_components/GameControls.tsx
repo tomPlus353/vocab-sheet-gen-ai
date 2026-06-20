@@ -30,6 +30,8 @@ type GameControlProps = {
     isExtinctionMode: boolean;
     setIsExtinctionMode: React.Dispatch<React.SetStateAction<boolean>>;
     isExtinctionModeDisabled: boolean;
+    isKeepPlayingMode: boolean;
+    setIsKeepPlayingMode: React.Dispatch<React.SetStateAction<boolean>>;
     isSrsMode: boolean;
     learningTermsCount: number;
     unlearntTermsCount: number;
@@ -71,6 +73,8 @@ export function GameControls(props: GameControlProps) {
         isExtinctionMode,
         setIsExtinctionMode,
         isExtinctionModeDisabled,
+        isKeepPlayingMode,
+        setIsKeepPlayingMode,
         isSrsMode,
         learningTermsCount,
         unlearntTermsCount,
@@ -85,7 +89,7 @@ export function GameControls(props: GameControlProps) {
     const [isRestartPromptOpen, setIsRestartPromptOpen] = useState(false);
     const [isResetPromptOpen, setIsResetPromptOpen] = useState(false);
     const [pendingModeChange, setPendingModeChange] = useState<
-        "favorites" | "testReading" | "extinction" | null
+        "favorites" | "testReading" | "extinction" | "keepPlaying" | null
     >(null);
 
     useEffect(() => {
@@ -100,7 +104,7 @@ export function GameControls(props: GameControlProps) {
     };
 
     const handleRequestModeChange = (
-        mode: "favorites" | "testReading" | "extinction",
+        mode: "favorites" | "testReading" | "extinction" | "keepPlaying",
     ) => {
         setPendingModeChange(mode);
         setIsRestartPromptOpen(true);
@@ -115,6 +119,8 @@ export function GameControls(props: GameControlProps) {
             if (!isExtinctionModeDisabled) {
                 setIsExtinctionMode((prev) => !prev);
             }
+        } else if (pendingModeChange === "keepPlaying") {
+            setIsKeepPlayingMode((prev) => !prev);
         }
         setPendingModeChange(null);
         setIsRestartPromptOpen(false);
@@ -284,14 +290,16 @@ export function GameControls(props: GameControlProps) {
                         <label
                             htmlFor="extinction-mode"
                             className={`flex items-center gap-3 ${
-                                isExtinctionModeDisabled
+                                isExtinctionModeDisabled || isKeepPlayingMode
                                     ? "cursor-not-allowed opacity-60"
                                     : "cursor-pointer"
                             }`}
                             title={
-                                isExtinctionModeDisabled
-                                    ? "Extinction mode is disabled because all terms in this set are already learnt."
-                                    : "Hide learnt terms and keep practicing only unlearnt terms."
+                                isKeepPlayingMode
+                                    ? "Extinction mode is paused while Keep playing mode is on."
+                                    : isExtinctionModeDisabled
+                                      ? "Extinction mode is disabled because all terms in this set are already learnt."
+                                      : "Hide learnt terms and keep practicing only unlearnt terms."
                             }
                         >
                             <Checkbox
@@ -299,15 +307,25 @@ export function GameControls(props: GameControlProps) {
                                 id="extinction-mode"
                                 checked={isExtinctionMode}
                                 onCheckedChange={() => {
-                                    if (isExtinctionModeDisabled) {
+                                    if (isExtinctionModeDisabled || isKeepPlayingMode) {
                                         return;
                                     }
                                     handleRequestModeChange("extinction");
                                 }}
-                                disabled={isExtinctionModeDisabled}
+                                disabled={isExtinctionModeDisabled || isKeepPlayingMode}
                             />
                             <span>Extinction mode</span>
                         </label>
+
+                        {isKeepPlayingMode ? (
+                            <div
+                                className="flex items-center gap-3 text-slate-300"
+                                title="Extra practice after the current set is fully learnt."
+                            >
+                                <span className="h-6 w-6 rounded border border-dashed border-slate-500/70" />
+                                <span>Extra practice</span>
+                            </div>
+                        ) : null}
 
                         {!isSrsMode ? (
                             <button
