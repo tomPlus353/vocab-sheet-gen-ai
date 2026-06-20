@@ -7,6 +7,7 @@ import type { VocabTerm } from "@/lib/types/vocab";
 import type { SrsDashboardBucket, SrsDashboardTermRow } from "@/lib/types/srs";
 import { setFavoriteTerms } from "@/lib/favorites-storage";
 import {
+    fetchRemoteHistoryEntryByIdBestEffort,
     loadFavoriteTermsBestEffort,
     syncHistoryForKeyBestEffort,
 } from "@/lib/storage-sync";
@@ -159,7 +160,21 @@ export function useGravityTermsLoader({
 
                 if (isReviewHistory) {
                     const historyHash = urlParams.get("historyTerms") ?? "";
-                    cachedJsonString = getGameHistory(historyHash, true);
+                    const storageMode =
+                        typeof localStorage !== "undefined"
+                            ? localStorage.getItem("storageMode")
+                            : null;
+                    if (storageMode === "server") {
+                        const remoteHistory =
+                            await fetchRemoteHistoryEntryByIdBestEffort(
+                                historyHash,
+                            );
+                        cachedJsonString = remoteHistory
+                            ? JSON.stringify(remoteHistory.terms)
+                            : null;
+                    } else {
+                        cachedJsonString = getGameHistory(historyHash, true);
+                    }
                     progressSourceRef.current = {
                         mode: "history",
                         key: historyHash,
@@ -276,7 +291,14 @@ export function useGravityTermsLoader({
                 return;
             }
 
-            if (!isReviewFavorites) {
+            const storageMode =
+                typeof localStorage !== "undefined"
+                    ? localStorage.getItem("storageMode")
+                    : null;
+            const shouldApplyLocalTermStates =
+                storageMode !== "server" && !isReviewFavorites;
+
+            if (shouldApplyLocalTermStates) {
                 parsedTerms = applyLocalTermStatesToTerms(parsedTerms);
             }
 

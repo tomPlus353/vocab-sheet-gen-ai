@@ -15,7 +15,10 @@ import {
     isKanjiGameTerm,
     isVocabTerm,
 } from "@/lib/utils";
-import { loadFavoriteTermsBestEffort } from "@/lib/storage-sync";
+import {
+    fetchRemoteHistoryEntryByIdBestEffort,
+    loadFavoriteTermsBestEffort,
+} from "@/lib/storage-sync";
 import type { KanjiGameTerm, KanjiMasteryStage } from "@/lib/types/vocab";
 
 import {
@@ -225,10 +228,26 @@ export default function KanjiPage() {
             if (isReviewFavorites || isReviewHistory) {
                 const vocabTerms = isReviewFavorites
                     ? await loadFavoriteTermsBestEffort()
-                    : (JSON.parse(
-                          getGameHistory(urlParams.get("historyTerms") ?? "", true) ??
-                              "[]",
-                      ) as unknown[]).filter(isVocabTerm);
+                    : (() => {
+                          const historyHash = urlParams.get("historyTerms") ?? "";
+                          const isServerMode =
+                              typeof localStorage !== "undefined" &&
+                              localStorage.getItem("storageMode") === "server";
+                          if (isServerMode) {
+                              return [];
+                          }
+                          return (JSON.parse(
+                              getGameHistory(historyHash, true) ?? "[]",
+                          ) as unknown[]).filter(isVocabTerm);
+                      })();
+                if (isReviewHistory && vocabTerms.length === 0) {
+                    const remoteHistory = await fetchRemoteHistoryEntryByIdBestEffort(
+                        urlParams.get("historyTerms") ?? "",
+                    );
+                    if (remoteHistory) {
+                        vocabTerms.push(...remoteHistory.terms.filter(isVocabTerm));
+                    }
+                }
                 const kanjiSourceText = vocabTerms
                     .map((term) => term.japanese)
                     .join("\n");

@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 // import common components and utils
 import { appendGameHistory, cn, getGameHistory } from "@/lib/utils";
 import {
+    fetchRemoteHistoryEntryByIdBestEffort,
     loadFavoriteTermsBestEffort,
     syncHistoryForKeyBestEffort,
     syncSrsReviewBestEffort,
@@ -175,7 +176,19 @@ export default function Match() {
             reply = JSON.stringify(favoriteTerms);
         } else if (isReviewHistory) {
             const historyHash = urlParams.get("historyTerms");
-            cachedJsonString = getGameHistory(historyHash ?? "", true);
+            const isServerMode =
+                typeof localStorage !== "undefined" &&
+                localStorage.getItem("storageMode") === "server";
+            if (isServerMode) {
+                const remoteHistory = await fetchRemoteHistoryEntryByIdBestEffort(
+                    historyHash ?? "",
+                );
+                cachedJsonString = remoteHistory
+                    ? JSON.stringify(remoteHistory.terms)
+                    : null;
+            } else {
+                cachedJsonString = getGameHistory(historyHash ?? "", true);
+            }
             if (!cachedJsonString) {
                 alert("No history terms found for key: " + historyHash);
                 setIsLoading(false);

@@ -94,6 +94,13 @@ async function fetchJson(url: string): Promise<FetchJsonResult> {
     }
 }
 
+function isServerStorageMode(): boolean {
+    return (
+        typeof localStorage !== "undefined" &&
+        localStorage.getItem("storageMode") === "server"
+    );
+}
+
 export async function syncHistoryEntryBestEffort(entry: HistoryEntry): Promise<void> {
     logHistorySyncEvent("history-upload-start", summarizeHistoryEntry(entry));
     const result = await postJson("/api/storage/history/upsert", { entry });
@@ -318,6 +325,10 @@ export async function loadHistoryEntriesBestEffort(): Promise<HistoryEntry[]> {
         return remoteHistoryEntries;
     }
 
+    if (isServerStorageMode()) {
+        return [];
+    }
+
     return Object.values(getAllGameHistoryEntries()).sort((a, b) =>
         b.createdAt.localeCompare(a.createdAt),
     );
@@ -390,6 +401,10 @@ export async function loadFavoriteTermsBestEffort(): Promise<VocabTerm[]> {
         }));
         setLocalFavoriteTerms(normalizedFavoriteTerms);
         return normalizedFavoriteTerms;
+    }
+
+    if (isServerStorageMode()) {
+        return [];
     }
 
     return getLocalFavoriteTerms();
