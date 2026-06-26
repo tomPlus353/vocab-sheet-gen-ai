@@ -4,6 +4,7 @@ import * as React from "react";
 
 import {
     FALLING_CARD_WIDTH,
+    GRAVITY_DROP_TICK_MS,
     HORIZONTAL_PADDING_PX,
 } from "../_lib/gravity-utils";
 import type { FallingTerm } from "../_lib/gravity-utils";
@@ -15,7 +16,7 @@ type PlayfieldInputs = {
     isGameOver: boolean;
     isCorrectionModalOpen: boolean;
     isEditTermsModalOpen: boolean;
-    score: number;
+    fallSpeed: number;
 };
 
 function getClampedX(
@@ -41,7 +42,7 @@ export function useGravityPlayfield({
     isGameOver,
     isCorrectionModalOpen,
     isEditTermsModalOpen,
-    score,
+    fallSpeed,
 }: PlayfieldInputs) {
     const playfieldRef = React.useRef<HTMLDivElement>(null);
 
@@ -55,12 +56,11 @@ export function useGravityPlayfield({
             return;
         }
 
-        const speedPerTick = Math.min(5, 1.3 + score * 0.08);
         const interval = setInterval(() => {
             setFallingTerms((prev) =>
-                prev.map((term) => ({ ...term, y: term.y + speedPerTick })),
+                prev.map((term) => ({ ...term, y: term.y + fallSpeed })),
             );
-        }, 50);
+        }, GRAVITY_DROP_TICK_MS);
 
         return () => clearInterval(interval);
     }, [
@@ -68,7 +68,7 @@ export function useGravityPlayfield({
         isLoading,
         isCorrectionModalOpen,
         isEditTermsModalOpen,
-        score,
+        fallSpeed,
         setFallingTerms,
     ]);
 

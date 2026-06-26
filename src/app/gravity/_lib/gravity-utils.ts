@@ -14,7 +14,15 @@ export const HORIZONTAL_PADDING_PX = 8;
 export const MAX_SIMULTANEOUS_TERMS = 2;
 export const FALLING_CARD_WIDTH = 220;
 export const FALLING_CARD_GAP = 2;
-export const WORD_SPAWN_INTERVAL_MS = 4000;
+export const GRAVITY_BATCH_SIZE = 20;
+export const GRAVITY_DROP_TICK_MS = 30;
+export const GRAVITY_INITIAL_FALL_SPEED = 1;
+export const GRAVITY_INITIAL_SPAWN_INTERVAL_MS = 3000;
+export const GRAVITY_LEVEL_SPEED_MULTIPLIER = 1.1;
+export const GRAVITY_LEVEL_SPAWN_MULTIPLIER = 0.9;
+export const GRAVITY_LEVEL_TRANSITION_BASE_DELAY_MS = 300;
+export const GRAVITY_LEVEL_TRANSITION_DELAY_PER_LEVEL_MS = 20;
+export const WORD_SPAWN_INTERVAL_MS = GRAVITY_INITIAL_SPAWN_INTERVAL_MS;
 
 export function normalizeAnswer(value: string): string {
     return value

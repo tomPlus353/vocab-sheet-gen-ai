@@ -6,9 +6,15 @@ import { useToast } from "@/hooks/use-toast";
 
 import {
     type FallingTerm,
+    GRAVITY_BATCH_SIZE,
+    GRAVITY_INITIAL_FALL_SPEED,
+    GRAVITY_INITIAL_SPAWN_INTERVAL_MS,
+    GRAVITY_LEVEL_SPAWN_MULTIPLIER,
+    GRAVITY_LEVEL_SPEED_MULTIPLIER,
+    GRAVITY_LEVEL_TRANSITION_BASE_DELAY_MS,
+    GRAVITY_LEVEL_TRANSITION_DELAY_PER_LEVEL_MS,
     HORIZONTAL_PADDING_PX,
     MAX_SIMULTANEOUS_TERMS,
-    WORD_SPAWN_INTERVAL_MS,
     getShuffledTermKeys,
     getTermKey,
     getGravityTermScore,
@@ -36,9 +42,17 @@ const TEST_READING_STORAGE_KEY = "gravityTestReadingMode";
 
 export function useGravityGame() {
     const [remainingQueue, setRemainingQueue] = React.useState<string[]>([]);
+    const [batchBacklog, setBatchBacklog] = React.useState<string[]>([]);
     const [fallingTerms, setFallingTerms] = React.useState<FallingTerm[]>([]);
     const [answer, setAnswer] = React.useState("");
-    const [score, setScore] = React.useState(0);
+    const [, setScore] = React.useState(0);
+    const [level, setLevel] = React.useState(1);
+    const [fallSpeed, setFallSpeed] = React.useState(
+        GRAVITY_INITIAL_FALL_SPEED,
+    );
+    const [spawnIntervalMs, setSpawnIntervalMs] = React.useState(
+        GRAVITY_INITIAL_SPAWN_INTERVAL_MS,
+    );
     const [termWrongCounts, setTermWrongCounts] = React.useState<
         Record<string, number>
     >({});
@@ -66,6 +80,7 @@ export function useGravityGame() {
     const [isAllLearntModalOpen, setIsAllLearntModalOpen] =
         React.useState(false);
     const didFlushCompletionRef = React.useRef(false);
+    const isBatchTransitioningRef = React.useRef(false);
 
     const isTestReadingRef = React.useRef(isTestReading);
     const setIsTestReading = React.useCallback(
@@ -118,9 +133,10 @@ export function useGravityGame() {
             const sourceTermKeys = new Set(
                 sourceTerms.map((term) => getTermKey(term)),
             );
-            let workingQueue = queue.filter((key) => sourceTermKeys.has(key));
+            const workingQueue = queue.filter((key) => sourceTermKeys.has(key));
             if (workingQueue.length === 0) {
-                workingQueue = getShuffledTermKeys(sourceTerms);
+                setRemainingQueue([]);
+                return;
             }
 
             const [nextKey, ...rest] = workingQueue;
@@ -157,6 +173,44 @@ export function useGravityGame() {
         ],
     );
 
+    const getNextBatchState = React.useCallback(
+        (sourceTerms: VocabTerm[], preferredBacklog: string[] = []) => {
+            const sourceTermKeys = new Set(
+                sourceTerms.map((term) => getTermKey(term)),
+            );
+            const nextKeys = preferredBacklog.filter((key) =>
+                sourceTermKeys.has(key),
+            );
+            const sourceKeys =
+                nextKeys.length > 0 ? nextKeys : getShuffledTermKeys(sourceTerms);
+
+            return {
+                batchKeys: sourceKeys.slice(0, GRAVITY_BATCH_SIZE),
+                backlogKeys: sourceKeys.slice(GRAVITY_BATCH_SIZE),
+            };
+        },
+        [],
+    );
+
+    const initializeGravityRun = React.useCallback(
+        (sourceTerms: VocabTerm[]) => {
+            setLevel(1);
+            setFallSpeed(GRAVITY_INITIAL_FALL_SPEED);
+            setSpawnIntervalMs(GRAVITY_INITIAL_SPAWN_INTERVAL_MS);
+            isBatchTransitioningRef.current = false;
+            setBatchBacklog([]);
+            setRemainingQueue([]);
+            setFallingTerms([]);
+
+            const { batchKeys, backlogKeys } = getNextBatchState(sourceTerms);
+            setBatchBacklog(backlogKeys);
+            if (batchKeys.length > 0) {
+                spawnTerm(batchKeys, sourceTerms);
+            }
+        },
+        [getNextBatchState, spawnTerm],
+    );
+
     const {
         allTerms,
         setAllTerms,
@@ -174,7 +228,7 @@ export function useGravityGame() {
         isExtinctionModeRef,
         isKeepPlayingModeRef,
         isTestReadingRef,
-        spawnTerm,
+        initializeGravityRun,
         setFallingTerms,
         setScore,
         setTermWrongCounts,
@@ -259,7 +313,7 @@ export function useGravityGame() {
         isGameOver,
         isCorrectionModalOpen,
         isEditTermsModalOpen,
-        score,
+        fallSpeed,
     });
 
     const {
@@ -352,6 +406,11 @@ export function useGravityGame() {
         remainingQueueRef.current = remainingQueue;
     }, [remainingQueue]);
 
+    const batchBacklogRef = React.useRef<string[]>(batchBacklog);
+    React.useEffect(() => {
+        batchBacklogRef.current = batchBacklog;
+    }, [batchBacklog]);
+
     const activeTermsRef = React.useRef<VocabTerm[]>(activeTerms);
     React.useEffect(() => {
         activeTermsRef.current = activeTerms;
@@ -360,6 +419,9 @@ export function useGravityGame() {
     React.useEffect(() => {
         const activeKeys = new Set(activeTerms.map((term) => getTermKey(term)));
         setRemainingQueue((prevQueue) =>
+            prevQueue.filter((key) => activeKeys.has(key)),
+        );
+        setBatchBacklog((prevQueue) =>
             prevQueue.filter((key) => activeKeys.has(key)),
         );
     }, [activeTerms]);
@@ -378,13 +440,14 @@ export function useGravityGame() {
         const interval = setInterval(() => {
             if (
                 fallingTermsRef.current.length >= MAX_SIMULTANEOUS_TERMS ||
-                activeTermsRef.current.length === 0
+                activeTermsRef.current.length === 0 ||
+                remainingQueueRef.current.length === 0
             ) {
                 return;
             }
 
             spawnTerm(remainingQueueRef.current, activeTermsRef.current);
-        }, WORD_SPAWN_INTERVAL_MS);
+        }, spawnIntervalMs);
 
         return () => clearInterval(interval);
     }, [
@@ -394,6 +457,77 @@ export function useGravityGame() {
         isAllLearntModalOpen,
         isEditTermsModalOpen,
         isSrsMode,
+        spawnIntervalMs,
+        spawnTerm,
+    ]);
+
+    React.useEffect(() => {
+        if (
+            isGameOver ||
+            isLoading ||
+            isCorrectionModalOpen ||
+            isAllLearntModalOpen ||
+            isEditTermsModalOpen ||
+            fallingTerms.length > 0 ||
+            remainingQueue.length > 0 ||
+            activeTerms.length === 0 ||
+            isBatchTransitioningRef.current
+        ) {
+            return;
+        }
+
+        const isCompletedNonSrsRun =
+            !isSrsMode &&
+            !isKeepPlayingMode &&
+            scopedTerms.length > 0 &&
+            scopedTerms.every((term) =>
+                isGravityTermLearnt(term, isTestReading),
+            );
+        if (isCompletedNonSrsRun) {
+            return;
+        }
+
+        const { batchKeys, backlogKeys } = getNextBatchState(
+            activeTerms,
+            batchBacklogRef.current,
+        );
+        if (batchKeys.length === 0) {
+            return;
+        }
+
+        isBatchTransitioningRef.current = true;
+        const nextLevel = level + 1;
+        const transitionDelayMs =
+            GRAVITY_LEVEL_TRANSITION_BASE_DELAY_MS +
+            GRAVITY_LEVEL_TRANSITION_DELAY_PER_LEVEL_MS * nextLevel;
+        const timeout = window.setTimeout(() => {
+            setLevel(nextLevel);
+            setFallSpeed((prev) => prev * GRAVITY_LEVEL_SPEED_MULTIPLIER);
+            setSpawnIntervalMs((prev) => prev * GRAVITY_LEVEL_SPAWN_MULTIPLIER);
+            setBatchBacklog(backlogKeys);
+            spawnTerm(batchKeys, activeTerms);
+            isBatchTransitioningRef.current = false;
+        }, transitionDelayMs);
+
+        return () => {
+            window.clearTimeout(timeout);
+            isBatchTransitioningRef.current = false;
+        };
+    }, [
+        activeTerms,
+        fallingTerms.length,
+        getNextBatchState,
+        isAllLearntModalOpen,
+        isCorrectionModalOpen,
+        isEditTermsModalOpen,
+        isGameOver,
+        isKeepPlayingMode,
+        isLoading,
+        isSrsMode,
+        isTestReading,
+        level,
+        remainingQueue.length,
+        scopedTerms,
         spawnTerm,
     ]);
 
@@ -602,6 +736,7 @@ export function useGravityGame() {
         isKeepPlayingMode,
         setIsKeepPlayingMode,
         totalTermsCount: scopedTerms.length,
+        level,
         timer,
         unlearntTermsCount,
         terms: allTerms,

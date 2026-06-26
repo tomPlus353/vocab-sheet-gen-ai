@@ -16,7 +16,6 @@ import {
     upsertLocalTermStatesFromTerms,
 } from "@/lib/term-state-storage";
 import {
-    getShuffledTermKeys,
     isGravityTermLearnt,
 } from "../_lib/gravity-utils";
 import type { FallingTerm } from "../_lib/gravity-utils";
@@ -31,7 +30,7 @@ type TermsLoaderInputs = {
     isFavoritesModeRef: React.MutableRefObject<boolean>;
     isExtinctionModeRef: React.MutableRefObject<boolean>;
     isKeepPlayingModeRef: React.MutableRefObject<boolean>;
-    spawnTerm: (queue: string[], sourceTerms: VocabTerm[]) => void;
+    initializeGravityRun: (sourceTerms: VocabTerm[]) => void;
     setFallingTerms: React.Dispatch<React.SetStateAction<FallingTerm[]>>;
     setScore: React.Dispatch<React.SetStateAction<number>>;
     setTermWrongCounts: React.Dispatch<
@@ -61,7 +60,7 @@ export function useGravityTermsLoader({
     isFavoritesModeRef,
     isExtinctionModeRef,
     isKeepPlayingModeRef,
-    spawnTerm,
+    initializeGravityRun,
     setScore,
     setTermWrongCounts,
     setTimer,
@@ -340,7 +339,6 @@ export function useGravityTermsLoader({
                         )
                       : filteredTerms;
             setActiveTerms(nextActiveTerms);
-            const queue = getShuffledTermKeys(nextActiveTerms);
             setScore(0);
             setTermWrongCounts({});
             setTimer(0);
@@ -354,9 +352,7 @@ export function useGravityTermsLoader({
             setHasShownAllLearntModal(false);
             setFallingTerms([]);
             setCorrectionTerm(null);
-            if (nextActiveTerms.length > 0) {
-                spawnTerm(queue, nextActiveTerms);
-            }
+            initializeGravityRun(nextActiveTerms);
             if (openEditTermsAfterLoad) {
                 setIsEditTermsModalOpen(true);
             }
@@ -377,7 +373,7 @@ export function useGravityTermsLoader({
             setIsGameOver,
             setScore,
             setTermWrongCounts,
-            spawnTerm,
+            initializeGravityRun,
             setFallingTerms,
             setCorrectionTerm,
             isTestReadingRef,
