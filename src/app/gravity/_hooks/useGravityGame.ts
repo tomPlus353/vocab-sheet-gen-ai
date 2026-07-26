@@ -1,11 +1,14 @@
 "use client";
 
 import * as React from "react";
+import { getTokenizer } from "kuromojin";
+import type { Tokenizer } from "kuromojin";
 
 import { useToast } from "@/hooks/use-toast";
 
 import {
     type FallingTerm,
+    type GravityChallenge,
     GRAVITY_BATCH_SIZE,
     GRAVITY_INITIAL_FALL_SPEED,
     GRAVITY_INITIAL_SPAWN_INTERVAL_MS,
@@ -19,6 +22,8 @@ import {
     getTermKey,
     getGravityTermScore,
     isGravityTermLearnt,
+    createExactGravityChallenge,
+    createGravityChallenge,
     PLAYFIELD_HEIGHT_PX,
 } from "../_lib/gravity-utils";
 import type { VocabTerm } from "@/lib/types/vocab";
@@ -71,6 +76,8 @@ export function useGravityGame() {
     const [correctionTerm, setCorrectionTerm] = React.useState<VocabTerm | null>(
         null,
     );
+    const [correctionChallenge, setCorrectionChallenge] =
+        React.useState<GravityChallenge | null>(null);
     const [hasShownAllLearntModal, setHasShownAllLearntModal] =
         React.useState(false);
     const [isCorrectionModalOpen, setIsCorrectionModalOpen] =
@@ -81,6 +88,10 @@ export function useGravityGame() {
         React.useState(false);
     const didFlushCompletionRef = React.useRef(false);
     const isBatchTransitioningRef = React.useRef(false);
+    const spawnGenerationRef = React.useRef(0);
+    const tokenizerPromiseRef = React.useRef<Promise<Tokenizer | null> | null>(
+        null,
+    );
 
     const isTestReadingRef = React.useRef(isTestReading);
     const setIsTestReading = React.useCallback(
@@ -128,8 +139,22 @@ export function useGravityGame() {
         isKeepPlayingModeReady,
     } = useGravityKeepPlayingMode();
 
+    const getTokenizerBestEffort = React.useCallback(() => {
+        if (!tokenizerPromiseRef.current) {
+            tokenizerPromiseRef.current = getTokenizer({ dicPath: "/dict" })
+                .then((tokenizer) => tokenizer)
+                .catch((error) => {
+                    console.error("Error loading gravity tokenizer:", error);
+                    return null;
+                });
+        }
+
+        return tokenizerPromiseRef.current;
+    }, []);
+
     const spawnTerm = React.useCallback(
         (queue: string[], sourceTerms: VocabTerm[]) => {
+            const generation = spawnGenerationRef.current;
             const sourceTermKeys = new Set(
                 sourceTerms.map((term) => getTermKey(term)),
             );
@@ -153,19 +178,43 @@ export function useGravityGame() {
             }
 
             setRemainingQueue(rest);
-            setFallingTerms((prev) => [
-                ...prev,
-                {
-                    id: Date.now(),
-                    term: nextTerm,
-                    y: 0,
-                    x: HORIZONTAL_PADDING_PX,
-                    isPositioned: false,
-                    laneIndex: undefined,
-                },
-            ]);
+            void getTokenizerBestEffort().then((tokenizer) => {
+                let challenge: GravityChallenge =
+                    createExactGravityChallenge(nextTerm);
+                if (tokenizer) {
+                    try {
+                        challenge = createGravityChallenge(
+                            nextTerm,
+                            tokenizer.tokenizeForSentence(nextTerm.japanese),
+                        );
+                    } catch (error) {
+                        console.error(
+                            "Error creating gravity star challenge:",
+                            error,
+                        );
+                    }
+                }
+
+                if (spawnGenerationRef.current !== generation) {
+                    return;
+                }
+
+                setFallingTerms((prev) => [
+                    ...prev,
+                    {
+                        id: Date.now(),
+                        term: nextTerm,
+                        challenge,
+                        y: 0,
+                        x: HORIZONTAL_PADDING_PX,
+                        isPositioned: false,
+                        laneIndex: undefined,
+                    },
+                ]);
+            });
         },
         [
+            getTokenizerBestEffort,
             setRemainingQueue,
             setFallingTerms,
             setIsGameOver,
@@ -198,9 +247,11 @@ export function useGravityGame() {
             setFallSpeed(GRAVITY_INITIAL_FALL_SPEED);
             setSpawnIntervalMs(GRAVITY_INITIAL_SPAWN_INTERVAL_MS);
             isBatchTransitioningRef.current = false;
+            spawnGenerationRef.current += 1;
             setBatchBacklog([]);
             setRemainingQueue([]);
             setFallingTerms([]);
+            setCorrectionChallenge(null);
 
             const { batchKeys, backlogKeys } = getNextBatchState(sourceTerms);
             setBatchBacklog(backlogKeys);
@@ -348,6 +399,8 @@ export function useGravityGame() {
         toast,
         correctionTerm,
         setCorrectionTerm,
+        correctionChallenge,
+        setCorrectionChallenge,
     });
 
     const { resetLearningProgress } = useGravityProgressReset({
@@ -556,7 +609,7 @@ export function useGravityGame() {
         });
         updateTermScore(missedTerm.term, "wrong", false);
         setFallingTerms((prev) => prev.filter((item) => item.id !== missedTerm.id));
-        handleWrongAttempt(missedTerm.term);
+        handleWrongAttempt(missedTerm);
     }, [
         fallingTerms,
         handleWrongAttempt,
@@ -707,6 +760,7 @@ export function useGravityGame() {
         correctionError,
         correctionInput,
         correctionTerm,
+        correctionChallenge,
         gameOverMessage,
         handleCorrectionSubmit,
         handleSubmit,

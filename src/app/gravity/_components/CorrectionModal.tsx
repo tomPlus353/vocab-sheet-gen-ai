@@ -4,11 +4,13 @@ import * as React from "react";
 import CommonButton from "@/components/common/CommonButton";
 import { speakJapanese, stopSpeech } from "@/lib/speech";
 import type { ExampleSentence, VocabTerm } from "@/lib/types/vocab";
+import type { GravityChallenge } from "../_lib/gravity-utils";
 
 type Props = {
     open: boolean;
     isGameOver: boolean;
     activeTerm: VocabTerm | null;
+    challenge: GravityChallenge | null;
     correctionInput: string;
     correctionError: string;
     onCorrectionInputChange: (value: string) => void;
@@ -20,6 +22,7 @@ export function CorrectionModal(props: Props) {
         open,
         isGameOver,
         activeTerm,
+        challenge,
         correctionInput,
         correctionError,
         onCorrectionInputChange,
@@ -86,6 +89,8 @@ export function CorrectionModal(props: Props) {
         return null;
     }
 
+    const isStarChallenge = challenge?.kind === "star";
+
     // if (exampleSentence) {
     //     alert("Example sentence found: " + exampleSentence.japanese);
     // } else {
@@ -101,13 +106,45 @@ export function CorrectionModal(props: Props) {
                     {isGameOver ? "Final correction" : "First mistake"}
                 </h3>
                 <p className="mt-2 text-sm text-gray-300">
-                    {isGameOver
-                        ? "Type the correct Japanese term one last time to finish."
-                        : "Type the correct Japanese term to resume."}
+                    {isStarChallenge
+                        ? isGameOver
+                            ? "Type the starred word one last time to finish."
+                            : "Type the starred word to resume."
+                        : isGameOver
+                          ? "Type the correct Japanese term one last time to finish."
+                          : "Type the correct Japanese term to resume."}
                 </p>
                 <p className="mt-3 rounded-md bg-slate-800 p-2 text-sm text-amber-100">
                     Clue: {activeTerm.english_definition}
                 </p>
+                {isStarChallenge ? (
+                    <div className="mt-2 rounded-md bg-slate-800 p-2">
+                        <div className="flex flex-wrap gap-1 text-xl font-bold leading-none tracking-normal">
+                            {challenge.slots.map((slot, index) => (
+                                <span
+                                    key={`${slot}-${index}`}
+                                    className={
+                                        slot === "★"
+                                            ? "text-yellow-200"
+                                            : "text-slate-300"
+                                    }
+                                >
+                                    {slot}
+                                </span>
+                            ))}
+                        </div>
+                        <div className="mt-2 flex flex-wrap gap-1">
+                            {challenge.chips.map((chip, index) => (
+                                <span
+                                    key={`${chip}-${index}`}
+                                    className="rounded border border-slate-500/50 bg-black/30 px-2 py-1 text-sm font-semibold text-slate-100"
+                                >
+                                    {chip}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                ) : null}
                 {exampleSentence && (
                     <div className="mt-2 break-words rounded-md bg-slate-800 p-2 text-sm text-slate-100">
                         <div className="flex items-start justify-between gap-2">
@@ -146,7 +183,11 @@ export function CorrectionModal(props: Props) {
                         autoFocus
                         type="text"
                         className="w-full rounded-md border border-red-400/40 bg-black px-3 py-2 text-white outline-none focus:border-red-400"
-                        placeholder="Enter the exact Japanese term"
+                        placeholder={
+                            isStarChallenge
+                                ? "Enter the starred word"
+                                : "Enter the exact Japanese term"
+                        }
                         value={correctionInput}
                         onChange={(event) =>
                             onCorrectionInputChange(event.target.value)

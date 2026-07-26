@@ -27,6 +27,7 @@ export default function GravityPage() {
     const {
         answer,
         correctionError,
+        correctionChallenge,
         correctionInput,
         correctionTerm,
         gameOverMessage,
@@ -209,7 +210,19 @@ export default function GravityPage() {
                                 const termKey = getTermKey(term.term);
                                 const termWrongCount =
                                     termWrongCounts[termKey] ?? 0;
-                                const prompt = isSrsMode
+                                const starChallenge =
+                                    term.challenge.kind === "star"
+                                        ? term.challenge
+                                        : null;
+                                const isStarChallenge = starChallenge !== null;
+                                const isReadingPrompt = isSrsMode
+                                    ? term.term.srsPromptType === "reading"
+                                    : isTestReading;
+                                const prompt = isStarChallenge
+                                    ? isReadingPrompt
+                                        ? "Reading review"
+                                        : term.term.english_definition
+                                    : isSrsMode
                                     ? getSrsPromptText(term.term)
                                     : isTestReading
                                       ? `Write: ${term.term.japanese}`
@@ -221,7 +234,7 @@ export default function GravityPage() {
                                 return (
                                     <div
                                         key={term.id}
-                                        className={`absolute max-w-[220px] rounded-[26px] border px-4 py-3 shadow-lg backdrop-blur-[1px] transition-all duration-200 ${
+                                        className={`absolute max-w-[220px] rounded-[26px] border px-3 py-2 shadow-lg backdrop-blur-[1px] transition-all duration-200 ${
                                             termWrongCount > 0
                                                 ? "border-red-500/70 bg-[radial-gradient(circle_at_20%_18%,rgba(190,18,60,0.5),rgba(69,10,10,0.84))] text-red-100"
                                                 : "border-amber-500/65 bg-[radial-gradient(circle_at_28%_20%,rgba(234,88,12,0.5),rgba(67,20,7,0.84))] text-amber-100"
@@ -238,9 +251,45 @@ export default function GravityPage() {
                                     >
                                         <span className="pointer-events-none absolute right-4 top-3 h-3.5 w-3.5 rounded-full bg-black/35" />
                                         <span className="pointer-events-none absolute bottom-3 left-4 h-2.5 w-2.5 rounded-full bg-black/30" />
-                                        <p className="whitespace-normal break-words font-bold">
-                                            {truncated}
-                                        </p>
+                                        {isStarChallenge ? (
+                                            <div className="relative space-y-1.5">
+                                                <p className="line-clamp-2 break-words text-[11px] font-semibold leading-snug text-amber-100/85">
+                                                    {truncated}
+                                                </p>
+                                                <div className="flex flex-wrap gap-0.5 text-lg font-bold leading-none tracking-normal">
+                                                    {starChallenge?.slots.map(
+                                                        (slot, index) => (
+                                                            <span
+                                                                key={`${slot}-${index}`}
+                                                                className={
+                                                                    slot === "★"
+                                                                        ? "text-yellow-200"
+                                                                        : "text-amber-100/80"
+                                                                }
+                                                            >
+                                                                {slot}
+                                                            </span>
+                                                        ),
+                                                    )}
+                                                </div>
+                                                <div className="flex flex-wrap gap-1">
+                                                    {starChallenge?.chips.map(
+                                                        (chip, index) => (
+                                                            <span
+                                                                key={`${chip}-${index}`}
+                                                                className="rounded border border-amber-100/25 bg-black/25 px-1.5 py-0.5 text-[11px] font-semibold leading-tight text-amber-50"
+                                                            >
+                                                                {chip}
+                                                            </span>
+                                                        ),
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <p className="whitespace-normal break-words font-bold">
+                                                {truncated}
+                                            </p>
+                                        )}
                                         {showReadingHint && (
                                             <p className="text-xs text-amber-100/80">
                                                 Hint: {term.term.kana}
@@ -265,7 +314,11 @@ export default function GravityPage() {
                                 ref={inputRef}
                                 type="text"
                                 className="h-12 w-full rounded-xl border border-indigo-300/25 bg-[#111b3d] px-4 text-2xl text-slate-100 outline-none placeholder:text-slate-400 focus:border-indigo-400"
-                                placeholder="Type the Japanese term"
+                                placeholder={
+                                    fallingTerms[0]?.challenge.kind === "star"
+                                        ? "Type the ★ word"
+                                        : "Type the Japanese term"
+                                }
                                 value={answer}
                                 disabled={
                                     isGameOver ||
@@ -297,6 +350,7 @@ export default function GravityPage() {
                 open={isCorrectionModalVisible}
                 isGameOver={isGameOver}
                 activeTerm={correctionTerm ?? null}
+                challenge={correctionChallenge}
                 correctionInput={correctionInput}
                 correctionError={correctionError}
                 onCorrectionInputChange={setCorrectionInput}

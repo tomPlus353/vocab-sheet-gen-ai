@@ -2,7 +2,12 @@
 
 import * as React from "react";
 
-import { isAnswerCorrect, getTermKey } from "../_lib/gravity-utils";
+import {
+    isAnswerCorrect,
+    getExpectedGravityAnswer,
+    getTermKey,
+} from "../_lib/gravity-utils";
+import type { GravityChallenge } from "../_lib/gravity-utils";
 import type { FallingTerm } from "../_lib/gravity-utils";
 import type { VocabTerm } from "@/lib/types/vocab";
 import { syncSrsReviewBestEffort } from "@/lib/storage-sync";
@@ -45,6 +50,10 @@ type AnswerHandlerInputs = {
     }) => void;
     correctionTerm: VocabTerm | null;
     setCorrectionTerm: React.Dispatch<React.SetStateAction<VocabTerm | null>>;
+    correctionChallenge: GravityChallenge | null;
+    setCorrectionChallenge: React.Dispatch<
+        React.SetStateAction<GravityChallenge | null>
+    >;
 };
 
 export function useGravityAnswerHandlers({
@@ -75,14 +84,17 @@ export function useGravityAnswerHandlers({
     toast,
     correctionTerm,
     setCorrectionTerm,
+    correctionChallenge,
+    setCorrectionChallenge,
 }: AnswerHandlerInputs) {
-    const getExpectedAnswer = React.useCallback((term: VocabTerm) => term.japanese, []);
-
     const handleWrongAttempt = React.useCallback(
-        (term: VocabTerm) => {
+        (falling: FallingTerm) => {
+            const { term, challenge } = falling;
+
             if (isSrsMode) {
                 onSrsAnswer(term, false);
                 setCorrectionTerm(term);
+                setCorrectionChallenge(challenge);
                 setIsCorrectionModalOpen(true);
                 setCorrectionInput(answer);
                 setCorrectionError("");
@@ -105,6 +117,7 @@ export function useGravityAnswerHandlers({
                     getReviewPromptType(term),
                 );
                 setCorrectionTerm(term);
+                setCorrectionChallenge(challenge);
                 setIsCorrectionModalOpen(true);
                 setCorrectionInput(answer);
                 setCorrectionError("");
@@ -121,6 +134,7 @@ export function useGravityAnswerHandlers({
                 getReviewPromptType(term),
             );
             setCorrectionTerm(term);
+            setCorrectionChallenge(challenge);
             setIsCorrectionModalOpen(true);
             setCorrectionInput(answer);
             setCorrectionError("");
@@ -134,6 +148,7 @@ export function useGravityAnswerHandlers({
             setIsGameOver,
             setTermWrongCounts,
             setCorrectionTerm,
+            setCorrectionChallenge,
             termWrongCounts,
             isSrsMode,
             onSrsAnswer,
@@ -154,7 +169,10 @@ export function useGravityAnswerHandlers({
             }
 
             const matches = fallingTerms.filter((falling) => {
-                const expected = getExpectedAnswer(falling.term);
+                const expected = getExpectedGravityAnswer(
+                    falling.term,
+                    falling.challenge,
+                );
                 return isAnswerCorrect(currentAnswer, expected);
             });
 
@@ -199,7 +217,6 @@ export function useGravityAnswerHandlers({
             isGameOver,
             isLoading,
             isCorrectionModalOpen,
-            getExpectedAnswer,
             setFallingTerms,
             updateTermScore,
             showReadingHint,
@@ -223,13 +240,17 @@ export function useGravityAnswerHandlers({
             return;
         }
 
-        const expected = getExpectedAnswer(correctionTerm);
+        const expected = getExpectedGravityAnswer(
+            correctionTerm,
+            correctionChallenge ?? undefined,
+        );
         if (isAnswerCorrect(correctionInput, expected)) {
             setIsCorrectionModalOpen(false);
             setCorrectionInput("");
             setCorrectionError("");
             setAnswer("");
             setCorrectionTerm(null);
+            setCorrectionChallenge(null);
             if (isGameOver) {
                 return;
             }
@@ -238,16 +259,17 @@ export function useGravityAnswerHandlers({
     }, [
         correctionInput,
         correctionTerm,
+        correctionChallenge,
         isGameOver,
         remainingQueue,
         activeTerms,
-        getExpectedAnswer,
         spawnTerm,
         setIsCorrectionModalOpen,
         setCorrectionInput,
         setCorrectionError,
         setAnswer,
         setCorrectionTerm,
+        setCorrectionChallenge,
     ]);
 
 
@@ -289,13 +311,17 @@ export function useGravityAnswerHandlers({
                 return;
             }
 
-            const expected = getExpectedAnswer(correctionTerm);
+            const expected = getExpectedGravityAnswer(
+                correctionTerm,
+                correctionChallenge ?? undefined,
+            );
             if (isAnswerCorrect(correctionInput, expected)) {
                 setIsCorrectionModalOpen(false);
                 setCorrectionInput("");
                 setCorrectionError("");
                 setAnswer("");
                 setCorrectionTerm(null);
+                setCorrectionChallenge(null);
                 if (isGameOver) {
                     return;
                 }
@@ -307,17 +333,18 @@ export function useGravityAnswerHandlers({
         },
         [
             correctionTerm,
+            correctionChallenge,
             correctionInput,
             isGameOver,
             remainingQueue,
             spawnTerm,
             activeTerms,
-            getExpectedAnswer,
             setIsCorrectionModalOpen,
             setCorrectionInput,
             setCorrectionError,
             setAnswer,
             setCorrectionTerm,
+            setCorrectionChallenge,
         ],
     );
 
