@@ -744,7 +744,6 @@ export function useGravityGame() {
     const isTermAtRisk = Object.values(termWrongCounts).some(
         (count) => count > 0,
     );
-    const srsCurrentPromptType = fallingTerms[0]?.term.srsPromptType;
     const oppositeModeHasUnlearntTerms = scopedTerms.some((term) =>
         !isGravityTermLearnt(term, !isTestReading),
     );
@@ -803,6 +802,5 @@ export function useGravityGame() {
         isTestReading,
         setIsTestReading,
         oppositeModeHasUnlearntTerms,
-        srsCurrentPromptType,
     };
 }

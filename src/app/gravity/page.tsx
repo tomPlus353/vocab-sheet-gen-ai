@@ -70,7 +70,6 @@ export default function GravityPage() {
         termWrongCounts,
         isTermAtRisk,
         oppositeModeHasUnlearntTerms,
-        srsCurrentPromptType,
     } = useGravityGame();
 
     useEffect(() => {
@@ -190,7 +189,6 @@ export default function GravityPage() {
                 atRiskTermsCount={atRiskTermsCount}
                 learntTermsCount={learntTermsCount}
                 timer={timer}
-                srsCurrentPromptType={srsCurrentPromptType}
             />
 
             {isLoading ? (
