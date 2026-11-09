@@ -32,7 +32,10 @@ declare module "next-auth" {
  */
 export const authConfig = {
   providers: [
-    DiscordProvider,
+    // Discord recently began including the RFC 9207 `iss` parameter in its
+    // OAuth callback. Auth.js needs the provider issuer configured to validate
+    // that parameter instead of treating it as an unexpected response value.
+    DiscordProvider({ issuer: "https://discord.com" }),
     /**
      * ...add more providers here.
      *
