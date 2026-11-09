@@ -112,6 +112,7 @@ export function useGravityTermsLoader({
             const isReviewFavorites =
                 !ignoreFavoritesMode && urlParams.get("favorites") === "1";
             const isReviewHistory = urlParams.get("history") === "1";
+            const limit = urlParams.get("limit") ?? 50;
             if (isSrsMode) {
                 if (!srsBucket) {
                     alert(
@@ -121,9 +122,10 @@ export function useGravityTermsLoader({
                     return;
                 }
                 progressSourceRef.current = { mode: "srs", bucket: srsBucket };
+
                 try {
                     const response = await fetch(
-                        `/api/srs/dashboard?bucket=${srsBucket}&limit=50&offset=0`,
+                        `/api/srs/dashboard?bucket=${srsBucket}&limit=${limit}&offset=0`,
                     );
                     const jsonResponse = (await response.json()) as {
                         rows?: SrsDashboardTermRow[];

@@ -607,7 +607,12 @@ export function useGravityGame() {
             duration: 800,
             variant: "destructive",
         });
-        updateTermScore(missedTerm.term, "wrong", false);
+        // SRS sessions track reviews separately and their remaining count is
+        // based on activeTerms. So must not call updateTermScore in SRS mode, otherwise the remaining count will be off.
+        // updateTermScore is used for non-SRS modes to track the score and remaining count of terms.
+        if (!isSrsMode) {
+            updateTermScore(missedTerm.term, "wrong", false);
+        }
         setFallingTerms((prev) => prev.filter((item) => item.id !== missedTerm.id));
         handleWrongAttempt(missedTerm);
     }, [
@@ -617,6 +622,7 @@ export function useGravityGame() {
         isLoading,
         isCorrectionModalOpen,
         isEditTermsModalOpen,
+        isSrsMode,
         playfieldRef,
         toast,
         updateTermScore,
