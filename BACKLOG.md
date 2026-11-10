@@ -54,3 +54,23 @@
 - [status: PENDING] Complete server-first hydration for all study flows.
   Context: History and favorites list elements now hydrate from the server first, but some study flows still have mixed local-first paths. Finish moving logged-in reads to server-first across the app so cross-environment term state stays consistent.
   Page: All
+
+### Proposed improvements: SRS study progress and feedback
+
+The following five separate items are linked under this proposal and remain under consideration. Prioritize or pursue them independently; there is no shared completion condition.
+
+- [status: pending] Add SRS filters to dashboard and Gravity study
+  Context: Proposed item linked under “SRS study progress and feedback.” Add useful filters for terms on the SRS dashboard and in the SRS Gravity game, updating the shared dashboard API as needed so both views use consistent filtering.
+  Page: /dashboard + /gravity
+- [status: pending] Add sorting to SRS dashboard and Gravity study
+  Context: Proposed item linked under “SRS study progress and feedback.” Allow the user to sort SRS terms in both the dashboard and SRS Gravity game. Keep the selected order consistent through the shared API where appropriate.
+  Page: /dashboard + /gravity
+- [status: pending] Review both prompt types during SRS study
+  Context: Proposed item linked under “SRS study progress and feedback.” Change SRS review so a term is studied in both reading and meaning prompt types during its review flow, rather than receiving only one prompt before going to the back of the queue. Decide whether both prompts are required or can be skipped as part of implementation.
+  Page: /gravity
+- [status: pending] Add multiple-choice answers to starred-word challenges
+  Context: Proposed item linked under “SRS study progress and feedback.” In Gravity’s long-sentence challenge, users currently type the word marked with a star, similar to a JLPT question. Add a multiple-choice answer option to make this mode practical on phones.
+  Page: /gravity
+- [status: pending] Keep answer feedback visible across study modes
+  Context: Proposed item linked under “SRS study progress and feedback.” Find a persistent, compact way to show correct/incorrect feedback in all study modes. Feedback should remain available long enough to be useful without using a blocking toast that covers gameplay.
+  Page: /gravity + /match
