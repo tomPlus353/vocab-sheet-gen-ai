@@ -25,7 +25,7 @@ export function AllLearntModal(props: Props) {
     } = props;
 
     const [returnTargetLabel, setReturnTargetLabel] = useState<
-        "Ereader" | "Home"
+        "Ereader" | "Home" | "SRS Dashboard"
     >("Ereader");
 
     useEffect(() => {
@@ -34,6 +34,9 @@ export function AllLearntModal(props: Props) {
         const isReviewHistory = urlParams.get("history") === "1";
         if (isReviewFavorites || isReviewHistory) {
             setReturnTargetLabel("Home");
+        }
+        if (isSrsMode) {
+            setReturnTargetLabel("SRS Dashboard");
         }
     }, [open]);
 
@@ -72,13 +75,11 @@ export function AllLearntModal(props: Props) {
                         additionalclasses="mx-0 bg-green-700 text-white hover:bg-green-400 hover:font-semibold"
                         onClick={onReturnToReader}
                     />
-                    {!isSrsMode ? (
-                        <CommonButton
-                            label="Keep Playing"
-                            additionalclasses="mx-0 bg-slate-500 text-white hover:bg-slate-400 hover:font-semibold"
-                            onClick={onContinuePractice}
-                        />
-                    ) : null}
+                    <CommonButton
+                        label="Keep Playing"
+                        additionalclasses="mx-0 bg-slate-500 text-white hover:bg-slate-400 hover:font-semibold"
+                        onClick={onContinuePractice}
+                    />
                     {!isSrsMode && showSwitchPractice && (
                         <CommonButton
                             label={`Study ${otherModeLabel}`}

@@ -713,6 +713,17 @@ export function useGravityGame() {
         inputRef.current?.focus();
     }, [fallingTerms.length]);
 
+    React.useEffect(() => {
+        if (isCorrectionModalOpen || isGameOver) {
+            return;
+        }
+
+        const frame = window.requestAnimationFrame(() => {
+            inputRef.current?.focus();
+        });
+        return () => window.cancelAnimationFrame(frame);
+    }, [isCorrectionModalOpen, isGameOver]);
+
     const srsCompletedTermsCount = Math.max(
         0,
         scopedTerms.length - activeTerms.length,
@@ -734,7 +745,9 @@ export function useGravityGame() {
 
     const resumeAfterAllLearntModal = React.useCallback(() => {
         setIsAllLearntModalOpen(false);
-        setIsKeepPlayingMode(true);
+        if (!isSrsMode) {
+            setIsKeepPlayingMode(true);
+        } 
         if (isGameOver) {
             return;
         }
