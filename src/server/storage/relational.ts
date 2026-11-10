@@ -390,7 +390,7 @@ export async function getSrsDashboardTerms(
     },
 ): Promise<{ rows: SrsDashboardTermRow[]; total: number }> {
     const now = options?.now ?? new Date();
-    const limit = Math.max(1, Math.min(options?.limit ?? 100, 200));
+    const limit = Math.max(1, Math.min(options?.limit ?? 20, 200));
     const offset = Math.max(0, options?.offset ?? 0);
     const bucketFilter = options?.bucket
         ? Prisma.sql`AND ${buildSrsBucketFilter(options.bucket, now)}`

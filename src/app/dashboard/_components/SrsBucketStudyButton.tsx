@@ -31,7 +31,7 @@ export function SrsBucketStudyButton({ bucket }: Props) {
             <ConfirmActionModal
                 open={isConfirmOpen}
                 title={`Start ${bucketLabel[bucket]} SRS Gravity Study?`}
-                description="This run will study only this bucket and disable Favorites mode and Edit Terms. Your gravity progress will be preserved. The game will pick up a maximum of 50 selected terms."
+                description="This run will study only this bucket and disable Favorites mode and Edit Terms. Your gravity progress will be preserved. The game will pick up a maximum of 20 selected terms."
                 confirmLabel="Continue to Gravity"
                 onOpenChange={setIsConfirmOpen}
                 onConfirm={() =>

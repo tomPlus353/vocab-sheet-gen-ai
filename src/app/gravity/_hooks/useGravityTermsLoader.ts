@@ -112,7 +112,7 @@ export function useGravityTermsLoader({
             const isReviewFavorites =
                 !ignoreFavoritesMode && urlParams.get("favorites") === "1";
             const isReviewHistory = urlParams.get("history") === "1";
-            const limit = urlParams.get("limit") ?? 50;
+            const limit = urlParams.get("limit") ?? 20;
             if (isSrsMode) {
                 if (!srsBucket) {
                     alert(
