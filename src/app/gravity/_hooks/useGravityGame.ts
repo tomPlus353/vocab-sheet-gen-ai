@@ -153,7 +153,7 @@ export function useGravityGame() {
     }, []);
 
     const spawnTerm = React.useCallback(
-        (queue: string[], sourceTerms: VocabTerm[]) => {
+        async (queue: string[], sourceTerms: VocabTerm[]) => {
             const generation = spawnGenerationRef.current;
             const sourceTermKeys = new Set(
                 sourceTerms.map((term) => getTermKey(term)),
@@ -178,40 +178,39 @@ export function useGravityGame() {
             }
 
             setRemainingQueue(rest);
-            void getTokenizerBestEffort().then((tokenizer) => {
-                let challenge: GravityChallenge =
-                    createExactGravityChallenge(nextTerm);
-                if (tokenizer) {
-                    try {
-                        challenge = createGravityChallenge(
-                            nextTerm,
-                            tokenizer.tokenizeForSentence(nextTerm.japanese),
-                        );
-                    } catch (error) {
-                        console.error(
-                            "Error creating gravity star challenge:",
-                            error,
-                        );
-                    }
+            const tokenizer = await getTokenizerBestEffort();
+            let challenge: GravityChallenge =
+                createExactGravityChallenge(nextTerm);
+            if (tokenizer) {
+                try {
+                    challenge = createGravityChallenge(
+                        nextTerm,
+                        tokenizer.tokenizeForSentence(nextTerm.japanese),
+                    );
+                } catch (error) {
+                    console.error(
+                        "Error creating gravity star challenge:",
+                        error,
+                    );
                 }
+            }
 
-                if (spawnGenerationRef.current !== generation) {
-                    return;
-                }
+            if (spawnGenerationRef.current !== generation) {
+                return;
+            }
 
-                setFallingTerms((prev) => [
-                    ...prev,
-                    {
-                        id: Date.now(),
-                        term: nextTerm,
-                        challenge,
-                        y: 0,
-                        x: HORIZONTAL_PADDING_PX,
-                        isPositioned: false,
-                        laneIndex: undefined,
-                    },
-                ]);
-            });
+            setFallingTerms((prev) => [
+                ...prev,
+                {
+                    id: Date.now(),
+                    term: nextTerm,
+                    challenge,
+                    y: 0,
+                    x: HORIZONTAL_PADDING_PX,
+                    isPositioned: false,
+                    laneIndex: undefined,
+                },
+            ]);
         },
         [
             getTokenizerBestEffort,
@@ -220,6 +219,27 @@ export function useGravityGame() {
             setIsGameOver,
             setGameOverMessage,
         ],
+    );
+
+    const spawnTermBestEffort = React.useCallback(
+        (queue: string[], sourceTerms: VocabTerm[]) => {
+            void spawnTerm(queue, sourceTerms).catch((error) => {
+                console.error("Error spawning gravity term:", error);
+            });
+        },
+        [spawnTerm],
+    );
+
+    const spawnTermWithTransitionLock = React.useCallback(
+        async (queue: string[], sourceTerms: VocabTerm[]) => {
+            isBatchTransitioningRef.current = true;
+            try {
+                await spawnTerm(queue, sourceTerms);
+            } finally {
+                isBatchTransitioningRef.current = false;
+            }
+        },
+        [spawnTerm],
     );
 
     const getNextBatchState = React.useCallback(
@@ -256,10 +276,14 @@ export function useGravityGame() {
             const { batchKeys, backlogKeys } = getNextBatchState(sourceTerms);
             setBatchBacklog(backlogKeys);
             if (batchKeys.length > 0) {
-                spawnTerm(batchKeys, sourceTerms);
+                void spawnTermWithTransitionLock(batchKeys, sourceTerms).catch(
+                    (error) => {
+                        console.error("Error spawning initial Gravity term:", error);
+                    },
+                );
             }
         },
-        [getNextBatchState, spawnTerm],
+        [getNextBatchState, spawnTermWithTransitionLock],
     );
 
     const {
@@ -387,7 +411,7 @@ export function useGravityGame() {
         isSrsMode,
         onSrsAnswer: handleSrsAnswer,
         getReviewPromptType,
-        spawnTerm,
+        spawnTerm: spawnTermBestEffort,
         setScore,
         updateTermScore,
         termWrongCounts,
@@ -500,7 +524,10 @@ export function useGravityGame() {
                 return;
             }
 
-            spawnTerm(remainingQueueRef.current, activeTermsRef.current);
+            spawnTermBestEffort(
+                remainingQueueRef.current,
+                activeTermsRef.current,
+            );
         }, spawnIntervalMs);
 
         return () => clearInterval(interval);
@@ -512,7 +539,7 @@ export function useGravityGame() {
         isEditTermsModalOpen,
         isSrsMode,
         spawnIntervalMs,
-        spawnTerm,
+        spawnTermBestEffort,
     ]);
 
     React.useEffect(() => {
@@ -554,18 +581,25 @@ export function useGravityGame() {
         const transitionDelayMs =
             GRAVITY_LEVEL_TRANSITION_BASE_DELAY_MS +
             GRAVITY_LEVEL_TRANSITION_DELAY_PER_LEVEL_MS * nextLevel;
+        let hasSpawnStarted = false;
         const timeout = window.setTimeout(() => {
+            hasSpawnStarted = true;
             setLevel(nextLevel);
             setFallSpeed((prev) => prev * GRAVITY_LEVEL_SPEED_MULTIPLIER);
             setSpawnIntervalMs((prev) => prev * GRAVITY_LEVEL_SPAWN_MULTIPLIER);
             setBatchBacklog(backlogKeys);
-            spawnTerm(batchKeys, activeTerms);
-            isBatchTransitioningRef.current = false;
+            void spawnTermWithTransitionLock(batchKeys, activeTerms).catch(
+                (error) => {
+                    console.error("Error spawning Gravity batch:", error);
+                },
+            );
         }, transitionDelayMs);
 
         return () => {
             window.clearTimeout(timeout);
-            isBatchTransitioningRef.current = false;
+            if (!hasSpawnStarted) {
+                isBatchTransitioningRef.current = false;
+            }
         };
     }, [
         activeTerms,
@@ -582,7 +616,7 @@ export function useGravityGame() {
         level,
         remainingQueue.length,
         scopedTerms,
-        spawnTerm,
+        spawnTermWithTransitionLock,
     ]);
 
     React.useEffect(() => {
