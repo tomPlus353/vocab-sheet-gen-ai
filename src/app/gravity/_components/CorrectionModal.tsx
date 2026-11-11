@@ -2,9 +2,12 @@
 
 import * as React from "react";
 import CommonButton from "@/components/common/CommonButton";
+import { Checkbox } from "@/components/ui/checkbox";
 import { speakJapanese, stopSpeech } from "@/lib/speech";
 import type { ExampleSentence, VocabTerm } from "@/lib/types/vocab";
 import type { GravityChallenge } from "../_lib/gravity-utils";
+
+const AUTO_PLAY_EXAMPLE_STORAGE_KEY = "gravityCorrectionAutoPlayExample";
 
 type Props = {
     open: boolean;
@@ -33,7 +36,38 @@ export function CorrectionModal(props: Props) {
     const [isSpeaking, setIsSpeaking] = React.useState(false);
     const [exampleSentence, setExampleSentence] =
         React.useState<ExampleSentence | null>(null);
+    const [showHint, setShowHint] = React.useState(false);
+    const [autoPlayExample, setAutoPlayExample] = React.useState(false);
+    const [isAutoPlayPreferenceLoaded, setIsAutoPlayPreferenceLoaded] =
+        React.useState(false);
 
+    // Load this device's auto-play choice once when the modal mounts.
+    React.useEffect(() => {
+        try {
+            setAutoPlayExample(
+                localStorage.getItem(AUTO_PLAY_EXAMPLE_STORAGE_KEY) === "true",
+            );
+        } catch {
+            setAutoPlayExample(false);
+        } finally {
+            setIsAutoPlayPreferenceLoaded(true);
+        }
+    }, []);
+
+    // Wait for the read above so the initial `false` state cannot overwrite a saved `true`.
+    React.useEffect(() => {
+        if (!isAutoPlayPreferenceLoaded) return;
+        try {
+            localStorage.setItem(
+                AUTO_PLAY_EXAMPLE_STORAGE_KEY,
+                autoPlayExample ? "true" : "false",
+            );
+        } catch {
+            // Ignore unavailable local storage.
+        }
+    }, [autoPlayExample, isAutoPlayPreferenceLoaded]);
+
+    // Pick an example and reset hint/audio state whenever the correction changes.
     React.useEffect(() => {
         if (!open || !activeTerm) {
             setExampleSentence(null);
@@ -50,14 +84,32 @@ export function CorrectionModal(props: Props) {
                       null)
                 : null,
         );
+        setShowHint(false);
         setTtsError("");
         setIsSpeaking(false);
         stopSpeech();
     }, [open, activeTerm]);
 
+    // Stop speech if this modal component is removed.
     React.useEffect(() => {
         return () => {
             stopSpeech();
+        };
+    }, []);
+
+    const playExampleSentence = React.useCallback(async (sentence: string) => {
+        setTtsError("");
+        const result = await speakJapanese(sentence);
+        if (!result.ok) {
+            setTtsError(result.message);
+            return;
+        }
+
+        setIsSpeaking(true);
+        result.utterance.onend = () => setIsSpeaking(false);
+        result.utterance.onerror = () => {
+            setIsSpeaking(false);
+            setTtsError("Text-to-speech failed. Try again.");
         };
     }, []);
 
@@ -70,20 +122,28 @@ export function CorrectionModal(props: Props) {
             return;
         }
 
-        setTtsError("");
-        const result = await speakJapanese(exampleSentence.japanese);
-        if (!result.ok) {
-            setTtsError(result.message);
+        await playExampleSentence(exampleSentence.japanese);
+    };
+
+    // Auto-play the selected example when enabled and the correction is open.
+    React.useEffect(() => {
+        if (
+            !open ||
+            !exampleSentence ||
+            !autoPlayExample ||
+            !isAutoPlayPreferenceLoaded
+        ) {
             return;
         }
 
-        setIsSpeaking(true);
-        result.utterance.onend = () => setIsSpeaking(false);
-        result.utterance.onerror = () => {
-            setIsSpeaking(false);
-            setTtsError("Text-to-speech failed. Try again.");
-        };
-    };
+        void playExampleSentence(exampleSentence.japanese);
+    }, [
+        open,
+        exampleSentence,
+        autoPlayExample,
+        isAutoPlayPreferenceLoaded,
+        playExampleSentence,
+    ]);
 
     if (!open || !activeTerm) {
         return null;
@@ -158,6 +218,16 @@ export function CorrectionModal(props: Props) {
                                 onClick={handleToggleSpeakExampleSentence}
                             />
                         </div>
+                        <label className="mt-2 flex items-center gap-2 text-xs text-slate-300">
+                            <Checkbox
+                                checked={autoPlayExample}
+                                onCheckedChange={(checked) =>
+                                    setAutoPlayExample(checked === true)
+                                }
+                                aria-label="Auto-play example sentence"
+                            />
+                            <span>Auto-play example sentence</span>
+                        </label>
                         <p className="mt-1">{exampleSentence.japanese}</p>
                         <p className="mt-1 text-xs text-slate-300">
                             {exampleSentence.kana}
@@ -175,9 +245,21 @@ export function CorrectionModal(props: Props) {
                         {activeTerm.japanese}
                     </span>
                 </p>
-                <p className="mt-2 text-xs text-amber-200/80">
-                    Hint: {activeTerm.kana}
-                </p>
+                <div className="mt-2">
+                    <button
+                        type="button"
+                        className="text-xs font-semibold text-amber-200/80 underline decoration-amber-200/40 underline-offset-2 hover:text-amber-100"
+                        aria-expanded={showHint}
+                        onClick={() => setShowHint((current) => !current)}
+                    >
+                        {showHint ? "Hide hint" : "Show hint"}
+                    </button>
+                    {showHint ? (
+                        <p className="mt-1 text-xs text-amber-200/80">
+                            Hint: {activeTerm.kana}
+                        </p>
+                    ) : null}
+                </div>
                 <form className="mt-4 flex flex-col gap-2" onSubmit={onSubmit}>
                     <input
                         autoFocus
