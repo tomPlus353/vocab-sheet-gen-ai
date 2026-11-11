@@ -156,6 +156,52 @@ export function useGravityAnswerHandlers({
         ],
     );
 
+    const applyCorrectAnswers = React.useCallback(
+        (matches: FallingTerm[]) => {
+            const matchedIds = new Set(matches.map((match) => match.id));
+            setFallingTerms((prev) =>
+                prev.filter((term) => !matchedIds.has(term.id)),
+            );
+            matches.forEach((match) => {
+                if (isSrsMode) {
+                    onSrsAnswer(match.term, true);
+                    return;
+                }
+
+                updateTermScore(match.term, "correct", !showReadingHint);
+                void syncSrsReviewBestEffort(
+                    match.term,
+                    showReadingHint ? "hard" : "good",
+                    getReviewPromptType(match.term),
+                );
+            });
+            setScore((prev) => prev + matches.length);
+            setAnswer("");
+            let toastDescription = `${matches.length} matching terms cleared.`;
+            if (matches.length === 1) {
+                const singleMatch = matches[0]!;
+                toastDescription = `${singleMatch.term.english_definition} = ${singleMatch.term.japanese}`;
+            }
+            toast({
+                title: "Correct",
+                description: toastDescription,
+                duration: 800,
+                variant: "success",
+            });
+        },
+        [
+            setFallingTerms,
+            updateTermScore,
+            showReadingHint,
+            isSrsMode,
+            onSrsAnswer,
+            getReviewPromptType,
+            setScore,
+            setAnswer,
+            toast,
+        ],
+    );
+
     const checkAndClearMatches = React.useCallback(
         (currentAnswer: string): boolean => {
             if (
@@ -176,55 +222,55 @@ export function useGravityAnswerHandlers({
                 return isAnswerCorrect(currentAnswer, expected);
             });
 
-            if (matches.length > 0) {
-                const matchedIds = new Set(matches.map((match) => match.id));
-                setFallingTerms((prev) =>
-                    prev.filter((term) => !matchedIds.has(term.id)),
-                );
-                matches.forEach((match) => {
-                    if (isSrsMode) {
-                        onSrsAnswer(match.term, true);
-                        return;
-                    }
-
-                    updateTermScore(match.term, "correct", !showReadingHint);
-                    void syncSrsReviewBestEffort(
-                        match.term,
-                        showReadingHint ? "hard" : "good",
-                        getReviewPromptType(match.term),
-                    );
-                });
-                setScore((prev) => prev + matches.length);
-                setAnswer("");
-                let toastDescription = `${matches.length} matching terms cleared.`;
-                if (matches.length === 1) {
-                    const singleMatch = matches[0]!;
-                    toastDescription = `${singleMatch.term.english_definition} = ${singleMatch.term.japanese}`;
-                }
-                toast({
-                    title: "Correct",
-                    description: toastDescription,
-                    duration: 800,
-                    variant: "success",
-                });
-                return true;
+            if (matches.length === 0) {
+                return false;
             }
 
-            return false;
+            applyCorrectAnswers(matches);
+            return true;
         },
         [
             fallingTerms,
             isGameOver,
             isLoading,
             isCorrectionModalOpen,
-            setFallingTerms,
-            updateTermScore,
-            showReadingHint,
-            isSrsMode,
-            onSrsAnswer,
-            getReviewPromptType,
-            setScore,
-            setAnswer,
+            applyCorrectAnswers,
+        ],
+    );
+
+    const handleStarChoice = React.useCallback(
+        (falling: FallingTerm, choice: string) => {
+            if (
+                isGameOver ||
+                isLoading ||
+                isCorrectionModalOpen ||
+                !fallingTerms.some((term) => term.id === falling.id)
+            ) {
+                return;
+            }
+
+            const expected = getExpectedGravityAnswer(
+                falling.term,
+                falling.challenge,
+            );
+            if (isAnswerCorrect(choice, expected)) {
+                applyCorrectAnswers([falling]);
+                return;
+            }
+
+            toast({
+                title: "Incorrect",
+                description: "Try again.",
+                duration: 800,
+                variant: "destructive",
+            });
+        },
+        [
+            isGameOver,
+            isLoading,
+            isCorrectionModalOpen,
+            fallingTerms,
+            applyCorrectAnswers,
             toast,
         ],
     );
@@ -352,5 +398,6 @@ export function useGravityAnswerHandlers({
         handleWrongAttempt,
         handleSubmit,
         handleCorrectionSubmit,
+        handleStarChoice,
     };
 }

@@ -32,6 +32,7 @@ export default function GravityPage() {
         correctionTerm,
         gameOverMessage,
         handleCorrectionSubmit,
+        handleStarChoice,
         handleSubmit,
         inputRef,
         isAllLearntModalOpen,
@@ -304,42 +305,74 @@ export default function GravityPage() {
                     </div>
 
                     {!showGameOverPanel && !isGameOver && (
-                        <form
-                            onSubmit={handleSubmit}
-                            className="mt-2 flex items-center gap-2 rounded-2xl border border-indigo-200/20 bg-[#0b1331]/90 p-2"
-                        >
-                            <input
-                                ref={inputRef}
-                                type="text"
-                                className="h-12 w-full rounded-xl border border-indigo-300/25 bg-[#111b3d] px-4 text-2xl text-slate-100 outline-none placeholder:text-slate-400 focus:border-indigo-400"
-                                placeholder={
-                                    fallingTerms[0]?.challenge.kind === "star"
-                                        ? "Type the ★ word"
-                                        : "Type the Japanese term"
-                                }
-                                value={answer}
-                                disabled={
-                                    isGameOver ||
-                                    isLoading ||
-                                    fallingTerms.length === 0 ||
-                                    isCorrectionModalOpen
-                                }
-                                onChange={(event) =>
-                                    setAnswer(event.target.value)
-                                }
-                            />
-                            <CommonButton
-                                type="submit"
-                                label="Submit"
-                                additionalclasses="mx-0 h-12 rounded-xl border-0 bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-7 text-xl font-semibold text-white hover:from-indigo-400 hover:to-fuchsia-400"
-                                disabled={
-                                    isGameOver ||
-                                    isLoading ||
-                                    fallingTerms.length === 0 ||
-                                    isCorrectionModalOpen
-                                }
-                            />
-                        </form>
+                        fallingTerms[0]?.challenge.kind === "star" ? (
+                            <div
+                                className="mt-2 rounded-2xl border border-indigo-200/20 bg-[#0b1331]/90 p-2"
+                                role="group"
+                                aria-label="Choose the word marked with a star"
+                            >
+                                <p className="mb-2 text-center text-xs text-slate-300">
+                                    Choose the word marked ★
+                                </p>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {fallingTerms[0].challenge.chips.map(
+                                        (choice, index) => (
+                                            <button
+                                                key={`${choice}-${index}`}
+                                                type="button"
+                                                className="min-h-12 rounded-xl border border-indigo-300/30 bg-[#111b3d] px-3 py-2 text-lg font-semibold text-slate-100 hover:border-indigo-300 hover:bg-indigo-900/60 disabled:cursor-not-allowed disabled:opacity-50"
+                                                disabled={
+                                                    isGameOver ||
+                                                    isLoading ||
+                                                    isCorrectionModalOpen
+                                                }
+                                                onClick={() =>
+                                                    handleStarChoice(
+                                                        fallingTerms[0]!,
+                                                        choice,
+                                                    )
+                                                }
+                                            >
+                                                {choice}
+                                            </button>
+                                        ),
+                                    )}
+                                </div>
+                            </div>
+                        ) : (
+                            <form
+                                onSubmit={handleSubmit}
+                                className="mt-2 flex items-center gap-2 rounded-2xl border border-indigo-200/20 bg-[#0b1331]/90 p-2"
+                            >
+                                <input
+                                    ref={inputRef}
+                                    type="text"
+                                    className="h-12 w-full rounded-xl border border-indigo-300/25 bg-[#111b3d] px-4 text-2xl text-slate-100 outline-none placeholder:text-slate-400 focus:border-indigo-400"
+                                    placeholder="Type the Japanese term"
+                                    value={answer}
+                                    disabled={
+                                        isGameOver ||
+                                        isLoading ||
+                                        fallingTerms.length === 0 ||
+                                        isCorrectionModalOpen
+                                    }
+                                    onChange={(event) =>
+                                        setAnswer(event.target.value)
+                                    }
+                                />
+                                <CommonButton
+                                    type="submit"
+                                    label="Submit"
+                                    additionalclasses="mx-0 h-12 rounded-xl border-0 bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-7 text-xl font-semibold text-white hover:from-indigo-400 hover:to-fuchsia-400"
+                                    disabled={
+                                        isGameOver ||
+                                        isLoading ||
+                                        fallingTerms.length === 0 ||
+                                        isCorrectionModalOpen
+                                    }
+                                />
+                            </form>
+                        )
                     )}
                 </div>
             )}

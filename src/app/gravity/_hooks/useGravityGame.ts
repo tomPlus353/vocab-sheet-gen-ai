@@ -371,6 +371,7 @@ export function useGravityGame() {
         handleWrongAttempt,
         handleSubmit,
         handleCorrectionSubmit,
+        handleStarChoice,
     } = useGravityAnswerHandlers({
         fallingTerms,
         setFallingTerms,
@@ -781,6 +782,7 @@ export function useGravityGame() {
         correctionChallenge,
         gameOverMessage,
         handleCorrectionSubmit,
+        handleStarChoice,
         handleSubmit,
         inputRef,
         isAllLearntModalOpen,
