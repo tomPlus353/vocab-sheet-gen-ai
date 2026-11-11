@@ -167,38 +167,42 @@ export default function GravityPage() {
     };
 
     return (
-        <div className="flex h-[100dvh] flex-col overflow-hidden bg-[#030611] text-slate-100">
-            <GameControls
-                loadVocabTerms={loadVocabTerms}
-                resetLearningProgress={resetLearningProgress}
-                setIsEditTermsModalOpen={setIsEditTermsModalOpen}
-                isTermAtRisk={isTermAtRisk}
-                showReadingHint={showReadingHint}
-                setShowReadingHint={setShowReadingHint}
-                isTestReading={isTestReading}
-                setIsTestReading={setIsTestReading}
-                isFavoritesMode={isFavoritesMode}
-                setIsFavoritesMode={setIsFavoritesMode}
-                isExtinctionMode={isExtinctionMode}
-                setIsExtinctionMode={setIsExtinctionMode}
-                isExtinctionModeDisabled={isExtinctionModeDisabled}
-                isKeepPlayingMode={isKeepPlayingMode}
-                setIsKeepPlayingMode={setIsKeepPlayingMode}
-                isSrsMode={isSrsMode}
-                learningTermsCount={learningTermsCount}
-                unlearntTermsCount={unlearntTermsCount}
-                atRiskTermsCount={atRiskTermsCount}
-                learntTermsCount={learntTermsCount}
-                timer={timer}
-            />
+        <div className="relative isolate flex h-[100dvh] flex-col overflow-hidden bg-[#030611] text-slate-100">
+            <div className="relative z-20 shrink-0">
+                <GameControls
+                    loadVocabTerms={loadVocabTerms}
+                    resetLearningProgress={resetLearningProgress}
+                    setIsEditTermsModalOpen={setIsEditTermsModalOpen}
+                    isTermAtRisk={isTermAtRisk}
+                    showReadingHint={showReadingHint}
+                    setShowReadingHint={setShowReadingHint}
+                    isTestReading={isTestReading}
+                    setIsTestReading={setIsTestReading}
+                    isFavoritesMode={isFavoritesMode}
+                    setIsFavoritesMode={setIsFavoritesMode}
+                    isExtinctionMode={isExtinctionMode}
+                    setIsExtinctionMode={setIsExtinctionMode}
+                    isExtinctionModeDisabled={isExtinctionModeDisabled}
+                    isKeepPlayingMode={isKeepPlayingMode}
+                    setIsKeepPlayingMode={setIsKeepPlayingMode}
+                    isSrsMode={isSrsMode}
+                    learningTermsCount={learningTermsCount}
+                    unlearntTermsCount={unlearntTermsCount}
+                    atRiskTermsCount={atRiskTermsCount}
+                    learntTermsCount={learntTermsCount}
+                    timer={timer}
+                />
+            </div>
 
             {isLoading ? (
-                <Loader />
+                <div className="relative z-10 flex min-h-0 flex-1 items-center justify-center">
+                    <Loader />
+                </div>
             ) : (
-                <div className="flex min-h-0 w-full flex-1 flex-col px-2 pb-2 pt-2 md:px-3">
+                <>
                     <div
                         ref={playfieldRef}
-                        className="relative min-h-0 w-full flex-1 overflow-hidden rounded-[28px] border border-indigo-200/20 bg-[#040818]"
+                        className="pointer-events-none absolute inset-0 z-0 overflow-hidden bg-[#040818]"
                     >
                         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_24%_14%,rgba(103,88,255,0.2),transparent_34%),radial-gradient(circle_at_72%_68%,rgba(255,95,31,0.13),transparent_36%),radial-gradient(circle_at_50%_80%,rgba(170,64,255,0.2),transparent_44%),linear-gradient(180deg,#090d2c_0%,#06091d_55%,#050614_100%)]" />
                         <div className="pointer-events-none absolute inset-0 opacity-[0.18] [background-image:radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.92)_1px,transparent_0)] [background-size:28px_28px]" />
@@ -304,10 +308,12 @@ export default function GravityPage() {
                         )}
                     </div>
 
+                    <div className="pointer-events-none relative z-20 flex min-h-0 w-full flex-1 flex-col px-2 pb-2 pt-2 md:px-3">
+                        <div className="min-h-0 flex-1" aria-hidden="true" />
                     {!showGameOverPanel && !isGameOver && (
                         fallingTerms[0]?.challenge.kind === "star" ? (
                             <div
-                                className="mt-2 rounded-2xl border border-indigo-200/20 bg-[#0b1331]/90 p-2"
+                                className="pointer-events-auto mt-2 rounded-2xl border border-indigo-200/20 bg-[#0b1331]/90 p-2"
                                 role="group"
                                 aria-label="Choose the word marked with a star"
                             >
@@ -342,7 +348,7 @@ export default function GravityPage() {
                         ) : (
                             <form
                                 onSubmit={handleSubmit}
-                                className="mt-2 flex items-center gap-2 rounded-2xl border border-indigo-200/20 bg-[#0b1331]/90 p-2"
+                                className="pointer-events-auto mt-2 flex items-center gap-2 rounded-2xl border border-indigo-200/20 bg-[#0b1331]/90 p-2"
                             >
                                 <input
                                     ref={inputRef}
@@ -374,7 +380,8 @@ export default function GravityPage() {
                             </form>
                         )
                     )}
-                </div>
+                    </div>
+                </>
             )}
 
             <CorrectionModal
